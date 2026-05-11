@@ -9,7 +9,6 @@ import { COLORS, navLinks } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
 
 interface NavbarProps {
-  page: string;
   setPage: (page: string) => void;
   cart: { id: number }[];
   wishlist: number[];
@@ -33,7 +32,7 @@ const getNavTarget = (link: string) => {
   return map[link] ?? "home";
 };
 
-export default function Navbar({ page, setPage, cart, wishlist }: NavbarProps) {
+export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
   const [search, setSearch]         = useState("");
   const [menuOpen, setMenuOpen]     = useState(false);
   const isMobile                    = useIsMobile();

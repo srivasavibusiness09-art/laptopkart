@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Check,
   PartyPopper,
@@ -58,10 +58,9 @@ export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPagePro
   const [step, setStep]       = useState(0);
   const [address, setAddress] = useState<Address>({ name: "", phone: "", pincode: "", city: "", state: "", street: "" });
   const [payment, setPayment] = useState("upi");
-  const [orderId, setOrderId] = useState("");
-  useEffect(() => {
-    setOrderId(Math.floor(100000 + Math.random() * 900000).toString());
-  }, []);
+  const [orderId] = useState(() =>
+    Math.floor(100000 + Math.random() * 900000).toString()
+  );
   const total = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
   const isMobile = useIsMobile();
 
@@ -77,13 +76,13 @@ export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPagePro
       </h1>
 
       {/* Steps */}
-      <div style={{ display: "flex", marginBottom: 36 }}>
+      <div style={{ display: "flex", marginBottom: 36, overflowX: isMobile ? "auto" : "visible", paddingBottom: isMobile ? 8 : 0 }}>
         {STEPS.map((s, i) => (
-          <div key={s} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", background: i <= step ? COLORS.green : COLORS.cardBg, border: `2px solid ${i <= step ? COLORS.green : COLORS.cardBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: i <= step ? COLORS.black : COLORS.muted, fontWeight: 700, fontSize: 14, zIndex: 1 }}>
+          <div key={s} style={{ flex: 1, minWidth: isMobile ? 88 : 0, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
+            <div style={{ width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, borderRadius: "50%", background: i <= step ? COLORS.green : COLORS.cardBg, border: `2px solid ${i <= step ? COLORS.green : COLORS.cardBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: i <= step ? COLORS.black : COLORS.muted, fontWeight: 700, fontSize: isMobile ? 12 : 14, zIndex: 1 }}>
               {i < step ? <Check size={16} strokeWidth={3} /> : i + 1}
             </div>
-            <div style={{ color: i === step ? COLORS.green : COLORS.muted, fontSize: 12, marginTop: 8, fontWeight: i === step ? 700 : 400 }}>{s}</div>
+            <div style={{ color: i === step ? COLORS.green : COLORS.muted, fontSize: isMobile ? 11 : 12, marginTop: 8, fontWeight: i === step ? 700 : 400, textAlign: "center" }}>{s}</div>
             {i < STEPS.length - 1 && (
               <div style={{ position: "absolute", top: 18, left: "50%", width: "100%", height: 2, background: i < step ? COLORS.green : COLORS.cardBorder }} />
             )}
@@ -93,7 +92,7 @@ export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPagePro
 
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 340px", gap: 28 }}>
         {/* Step content */}
-        <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 20, padding: 32 }}>
+        <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 20, padding: isMobile ? 18 : 32 }}>
 
           {/* Step 0: Address */}
           {step === 0 && (
@@ -101,7 +100,7 @@ export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPagePro
               <h2 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
                 <MapPin size={20} color={COLORS.green} /> Delivery Address
               </h2>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
                 {([ ["Full Name", "name", "text"], ["Phone", "phone", "tel"], ["Pincode", "pincode", "text"], ["City", "city", "text"], ["State", "state", "text"] ] as [string, keyof Address, string][]).map(([label, key, type]) => (
                   <div key={key}>
                     <label style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6, display: "block" }}>{label}</label>
@@ -123,7 +122,7 @@ export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPagePro
                 <Truck size={20} color={COLORS.green} /> Choose Delivery
               </h2>
               {DELIVERY_OPTIONS.map(({ name, time, price, icon }) => (
-                <div key={name} style={{ background: "#1C2133", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+                <div key={name} style={{ background: "#1C2133", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", cursor: "pointer", gap: 12, flexDirection: isMobile ? "column" : "row" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <span style={{ color: COLORS.green }}>{icon}</span>
                     <div>
@@ -172,13 +171,13 @@ export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPagePro
 
           {/* Nav buttons */}
           {step < 3 && (
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32 }}>
-              {step > 0 && (
-                <button onClick={() => setStep((s) => s - 1)} style={{ background: "transparent", color: COLORS.muted, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 24px", cursor: "pointer", fontSize: 14 }}>
+             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32, gap: 10, flexDirection: isMobile ? "column-reverse" : "row" }}>
+               {step > 0 && (
+                <button onClick={() => setStep((s) => s - 1)} style={{ background: "transparent", color: COLORS.muted, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 24px", cursor: "pointer", fontSize: 14, width: isMobile ? "100%" : "auto" }}>
                   ← Back
                 </button>
               )}
-              <button onClick={handleNext} style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginLeft: "auto" }}>
+              <button onClick={handleNext} style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginLeft: "auto", width: isMobile ? "100%" : "auto" }}>
                 {step === 2 ? "Place Order →" : "Continue →"}
               </button>
             </div>
@@ -186,7 +185,7 @@ export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPagePro
         </div>
 
         {/* Order summary */}
-        <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 20, padding: 24, height: "fit-content", position: "sticky", top: 140 }}>
+        <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 20, padding: 24, height: "fit-content", position: isMobile ? "static" : "sticky", top: isMobile ? 0 : 140 }}>
           <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, marginBottom: 16 }}>Order Summary</h3>
           {cart.map((item) => (
             <div key={item.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, paddingBottom: 12, borderBottom: `1px solid ${COLORS.cardBorder}` }}>

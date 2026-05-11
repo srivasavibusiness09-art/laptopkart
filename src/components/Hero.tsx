@@ -57,7 +57,13 @@ export default function Hero({ setPage }: HeroProps) {
           </div>
 
           {/* Stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: isMobile ? 8 : 16 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)",
+              gap: isMobile ? 8 : 16,
+            }}
+          >
             {[
               { value: `${Math.min(count, 50000).toLocaleString("en-IN")}+`, label: "Devices Sold" },
               { value: "1 Year",  label: "Warranty" },

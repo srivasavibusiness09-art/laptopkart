@@ -60,11 +60,24 @@ export default function CartPage({ cart, setCart, setPage }: CartPageProps) {
         {/* Items */}
         <div>
           {cart.map((item) => (
-            <div key={item.id} style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 16, padding: 20, marginBottom: 16, display: "flex", gap: 20, alignItems: "center" }}>
+            <div
+              key={item.id}
+              style={{
+                background: COLORS.cardBg,
+                border: `1px solid ${COLORS.cardBorder}`,
+                borderRadius: 16,
+                padding: isMobile ? 14 : 20,
+                marginBottom: 16,
+                display: "flex",
+                gap: 14,
+                alignItems: isMobile ? "flex-start" : "center",
+                flexDirection: isMobile ? "column" : "row",
+              }}
+            >
               <div
                 style={{
-                  width: 88,
-                  height: 88,
+                  width: isMobile ? "100%" : 88,
+                  height: isMobile ? 180 : 88,
                   background: "#0f1520",
                   borderRadius: 12,
                   overflow: "hidden",
@@ -81,7 +94,7 @@ export default function CartPage({ cart, setCart, setPage }: CartPageProps) {
               <div style={{ flex: 1 }}>
                 <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 16, fontFamily: "'Sora', sans-serif" }}>{item.name}</div>
                 <div style={{ color: COLORS.muted, fontSize: 13, margin: "4px 0 8px" }}>{item.specs}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ display: "flex", alignItems: "center", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 8, overflow: "hidden" }}>
                     <button onClick={() => updateQty(item.id, -1)} style={{ background: COLORS.darkBg, color: COLORS.text, border: "none", padding: "6px 14px", cursor: "pointer", fontSize: 16 }}>−</button>
                     <span style={{ padding: "6px 14px", color: COLORS.text, background: "#1C2133", fontWeight: 700 }}>{item.qty}</span>
@@ -90,7 +103,20 @@ export default function CartPage({ cart, setCart, setPage }: CartPageProps) {
                   <span style={{ color: COLORS.green, fontWeight: 800, fontSize: 18 }}>₹{(item.price * item.qty).toLocaleString('en-IN')}</span>
                 </div>
               </div>
-              <button onClick={() => removeItem(item.id)} style={{ background: "rgba(239,68,68,0.1)", color: "#EF4444", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "8px 12px", cursor: "pointer", display: "flex", alignItems: "center" }}>
+              <button
+                onClick={() => removeItem(item.id)}
+                style={{
+                  background: "rgba(239,68,68,0.1)",
+                  color: "#EF4444",
+                  border: "1px solid rgba(239,68,68,0.2)",
+                  borderRadius: 8,
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  marginLeft: isMobile ? 0 : "auto",
+                }}
+              >
                 <Trash2 size={16} />
               </button>
             </div>
@@ -99,7 +125,7 @@ export default function CartPage({ cart, setCart, setPage }: CartPageProps) {
 
         {/* Summary */}
         <div>
-          <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 16, padding: 24, position: "sticky", top: 140 }}>
+          <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 16, padding: isMobile ? 16 : 24, position: isMobile ? "static" : "sticky", top: isMobile ? 0 : 140 }}>
             <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, marginBottom: 20 }}>Order Summary</h3>
             {[
               { label: "Subtotal", value: `₹${total.toLocaleString('en-IN')}`,    green: false },
@@ -121,11 +147,11 @@ export default function CartPage({ cart, setCart, setPage }: CartPageProps) {
               <span style={{ color: COLORS.text, fontWeight: 700, fontSize: 16 }}>Total</span>
               <span style={{ color: COLORS.green, fontWeight: 800, fontSize: 20, fontFamily: "'Sora', sans-serif" }}>₹{(total - discount).toLocaleString('en-IN')}</span>
             </div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 16, flexDirection: isMobile ? "column" : "row" }}>
               <input value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="Enter coupon code"
                 style={{ flex: 1, background: "#1C2133", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 8, padding: "10px 12px", color: COLORS.text, fontSize: 13, outline: "none" }} />
               <button onClick={() => { if (coupon.toUpperCase() === "LAPTOP10") setCouponApplied(true); }}
-                style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
+                style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, cursor: "pointer", fontSize: 13, width: isMobile ? "100%" : "auto" }}>
                 Apply
               </button>
             </div>

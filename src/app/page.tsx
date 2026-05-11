@@ -62,7 +62,6 @@ export default function App() {
       }}
     >
       <Navbar
-        page={page}
         setPage={setPage}
         cart={cart}
         wishlist={wishlist}

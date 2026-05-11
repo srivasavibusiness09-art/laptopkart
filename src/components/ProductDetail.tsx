@@ -5,7 +5,6 @@ import { COLORS, products, reviews } from "@/data/products";
 import type { Product } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import { useIsMobile } from "@/lib/hooks";
-import { Star } from "lucide-react";
 
 interface ProductDetailProps {
   product: Product | null;
@@ -141,7 +140,7 @@ export default function ProductDetail({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
+              gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
               gap: 8,
             }}
           >
@@ -390,7 +389,7 @@ export default function ProductDetail({
           </div>
 
           {/* CTA */}
-          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+          <div style={{ display: "flex", gap: 12, marginBottom: 20, flexDirection: isMobile ? "column" : "row" }}>
             <button
               onClick={() => onAddToCart(product)}
               style={{
@@ -418,6 +417,7 @@ export default function ProductDetail({
                 padding: "16px 20px",
                 cursor: "pointer",
                 fontSize: 20,
+                width: isMobile ? "100%" : "auto",
               }}
             >
               {isWished ? "❤️" : "🤍"}
@@ -425,7 +425,7 @@ export default function ProductDetail({
           </div>
 
           <div
-            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}
+            style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 10 }}
           >
             {["🛡️ 1 Yr Warranty", "🔄 7 Day Return", "✅ Quality Checked"].map((b) => (
               <div
@@ -453,6 +453,8 @@ export default function ProductDetail({
           borderBottom: `1px solid ${COLORS.cardBorder}`,
           marginBottom: 32,
           display: "flex",
+          overflowX: isMobile ? "auto" : "visible",
+          whiteSpace: "nowrap",
         }}
       >
         {["specs", "quality", "reviews", "faq"].map((t) => (
@@ -469,6 +471,7 @@ export default function ProductDetail({
               fontSize: 14,
               fontWeight: tab === t ? 700 : 500,
               textTransform: "capitalize",
+              whiteSpace: "nowrap",
             }}
           >
             {t === "faq" ? "FAQ" : t.charAt(0).toUpperCase() + t.slice(1)}
@@ -485,9 +488,10 @@ export default function ProductDetail({
             borderRadius: 16,
             overflow: "hidden",
             marginBottom: 48,
+            overflowX: "auto",
           }}
         >
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table style={{ width: "100%", minWidth: isMobile ? 520 : "100%", borderCollapse: "collapse" }}>
             <tbody>
               {specRows.map(([key, val], i) => (
                 <tr

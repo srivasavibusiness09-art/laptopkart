@@ -4,6 +4,7 @@ import { Heart } from "lucide-react";
 import { COLORS, products } from "@/data/products";
 import type { Product } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
+import { useIsMobile } from "@/lib/hooks";
 
 interface WishlistPageProps {
   wishlist: number[];
@@ -13,6 +14,7 @@ interface WishlistPageProps {
 }
 
 export default function WishlistPage({ wishlist, onAddToCart, setPage, onWishlist }: WishlistPageProps) {
+  const isMobile = useIsMobile();
   const wished = products.filter((p) => wishlist.includes(p.id));
 
   if (wished.length === 0)
@@ -39,12 +41,12 @@ export default function WishlistPage({ wishlist, onAddToCart, setPage, onWishlis
     );
 
   return (
-    <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 20px" }}>
-      <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: 28, fontWeight: 800, color: COLORS.text, marginBottom: 32, display: "flex", alignItems: "center", gap: 10 }}>
+    <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "20px 14px" : "32px 20px" }}>
+      <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 24 : 28, fontWeight: 800, color: COLORS.text, marginBottom: 24, display: "flex", alignItems: "center", gap: 10 }}>
         <Heart size={26} fill={COLORS.green} color={COLORS.green} />
         My Wishlist ({wished.length})
       </h1>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(auto-fit, minmax(160px, 1fr))" : "repeat(auto-fill, minmax(240px, 1fr))", gap: 20 }}>
         {wished.map((p) => (
           <ProductCard key={p.id} product={p} onView={() => setPage("product")} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
         ))}

@@ -17,6 +17,7 @@ import { COLORS, products, categories, reviews } from "@/data/products";
 import type { Product } from "@/data/products";
 import Hero from "@/components/Hero";
 import ProductCard from "@/components/ProductCard";
+import { useIsMobile } from "@/lib/hooks";
 
 /* ── Trust Bar ───────────────────────────────────────────── */
 const trustItems = [
@@ -121,6 +122,7 @@ export default function Homepage({
   onWishlist,
   wishlist,
 }: HomepageProps) {
+  const isMobile = useIsMobile();
   const [finderStep, setFinderStep] = useState(0);
   const [finderAnswers, setFinderAnswers] = useState<Record<number, string>>({});
   const [finderResult, setFinderResult] = useState<Product[] | null>(null);
@@ -146,16 +148,18 @@ export default function Homepage({
       <Hero setPage={setPage} />
       <TrustBar />
 
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "60px 20px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "32px 14px" : "60px 20px" }}>
 
         {/* ── Categories ── */}
         <SectionTitle title="Shop By Category" subtitle="Browse our curated selection of refurbished tech" />
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-            gap: 16,
-            marginBottom: 60,
+            gridTemplateColumns: isMobile
+              ? "repeat(2, minmax(0, 1fr))"
+              : "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: isMobile ? 12 : 16,
+            marginBottom: isMobile ? 40 : 60,
           }}
         >
           {categories.map((cat) => (
@@ -219,8 +223,8 @@ export default function Homepage({
             background: "linear-gradient(135deg, #0D1F10 0%, #0A1520 100%)",
             border: "1px solid rgba(34,197,94,0.2)",
             borderRadius: 24,
-            padding: "40px",
-            marginBottom: 60,
+            padding: isMobile ? "24px 16px" : "40px",
+            marginBottom: isMobile ? 40 : 60,
           }}
         >
           <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -257,7 +261,15 @@ export default function Homepage({
               <p style={{ color: COLORS.green, textAlign: "center", fontWeight: 700, marginBottom: 20 }}>
                 ✨ Top picks for you:
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile
+                    ? "repeat(auto-fit, minmax(140px, 1fr))"
+                    : "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 16,
+                }}
+              >
                 {finderResult.map((p) => (
                   <div
                     key={p.id}
@@ -322,7 +334,15 @@ export default function Homepage({
                   />
                 ))}
               </div>
-              <p style={{ color: COLORS.text, textAlign: "center", fontSize: 18, fontWeight: 700, marginBottom: 20 }}>
+              <p
+                style={{
+                  color: COLORS.text,
+                  textAlign: "center",
+                  fontSize: isMobile ? 16 : 18,
+                  fontWeight: 700,
+                  marginBottom: 20,
+                }}
+              >
                 {finderQuestions[finderStep].q}
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
@@ -335,11 +355,12 @@ export default function Homepage({
                       color: COLORS.green,
                       border: "1.5px solid rgba(34,197,94,0.3)",
                       borderRadius: 10,
-                      padding: "12px 24px",
+                      padding: isMobile ? "10px 14px" : "12px 24px",
                       fontSize: 14,
                       fontWeight: 600,
                       cursor: "pointer",
                       transition: "all 0.2s",
+                      flex: isMobile ? "1 1 calc(50% - 12px)" : "0 1 auto",
                     }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLButtonElement).style.background = COLORS.green;
@@ -363,9 +384,11 @@ export default function Homepage({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+            gridTemplateColumns: isMobile
+              ? "repeat(auto-fit, minmax(160px, 1fr))"
+              : "repeat(auto-fill, minmax(240px, 1fr))",
             gap: 20,
-            marginBottom: 60,
+            marginBottom: isMobile ? 40 : 60,
           }}
         >
           {products.map((p) => (
@@ -386,12 +409,13 @@ export default function Homepage({
             background: "linear-gradient(135deg, #0D2010 0%, #1A3A20 100%)",
             border: "1px solid rgba(34,197,94,0.25)",
             borderRadius: 24,
-            padding: "40px 48px",
+            padding: isMobile ? "24px 16px" : "40px 48px",
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 60,
+            alignItems: isMobile ? "flex-start" : "center",
+            marginBottom: isMobile ? 40 : 60,
             flexWrap: "wrap",
+            flexDirection: isMobile ? "column" : "row",
             gap: 20,
           }}
         >
@@ -403,7 +427,7 @@ export default function Homepage({
             <h3
               style={{
                 fontFamily: "'Sora', sans-serif",
-                fontSize: 32,
+                fontSize: isMobile ? 26 : 32,
                 fontWeight: 800,
                 color: COLORS.text,
                 margin: "0 0 8px",
@@ -417,10 +441,10 @@ export default function Homepage({
               on your next purchase
             </p>
           </div>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <div style={{ fontSize: 80, opacity: 0.5 }}>💻</div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", alignSelf: isMobile ? "center" : "auto" }}>
+            <div style={{ fontSize: isMobile ? 56 : 80, opacity: 0.5 }}>💻</div>
             <ArrowRight size={28} color={COLORS.green} strokeWidth={2.5} />
-            <div style={{ fontSize: 80 }}>💻</div>
+            <div style={{ fontSize: isMobile ? 56 : 80 }}>💻</div>
           </div>
           <button
             style={{
@@ -437,6 +461,8 @@ export default function Homepage({
               display: "flex",
               alignItems: "center",
               gap: 8,
+              width: isMobile ? "100%" : "auto",
+              justifyContent: "center",
             }}
           >
             Exchange Now <ArrowRight size={16} />
@@ -448,9 +474,11 @@ export default function Homepage({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gridTemplateColumns: isMobile
+              ? "repeat(2, minmax(0, 1fr))"
+              : "repeat(auto-fit, minmax(180px, 1fr))",
             gap: 20,
-            marginBottom: 60,
+            marginBottom: isMobile ? 40 : 60,
           }}
         >
           {whyFeatures.map((f) => (
@@ -488,9 +516,11 @@ export default function Homepage({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gridTemplateColumns: isMobile
+              ? "repeat(auto-fit, minmax(200px, 1fr))"
+              : "repeat(auto-fit, minmax(240px, 1fr))",
             gap: 20,
-            marginBottom: 60,
+            marginBottom: isMobile ? 40 : 60,
           }}
         >
           {reviews.map((r) => (
@@ -549,9 +579,9 @@ export default function Homepage({
             background: COLORS.cardBg,
             border: `1px solid ${COLORS.cardBorder}`,
             borderRadius: 24,
-            padding: "48px 40px",
+            padding: isMobile ? "28px 16px" : "48px 40px",
             textAlign: "center",
-            marginBottom: 60,
+            marginBottom: isMobile ? 40 : 60,
           }}
         >
           <h3
@@ -568,7 +598,15 @@ export default function Homepage({
           <p style={{ color: COLORS.muted, margin: "0 0 28px" }}>
             Get exclusive offers, new arrivals, and tech news directly to your inbox
           </p>
-          <div style={{ display: "flex", maxWidth: 480, margin: "0 auto", gap: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              maxWidth: 480,
+              margin: "0 auto",
+              gap: 12,
+              flexDirection: isMobile ? "column" : "row",
+            }}
+          >
             <input
               placeholder="Enter your email"
               style={{
@@ -592,6 +630,7 @@ export default function Homepage({
                 fontWeight: 700,
                 fontSize: 14,
                 cursor: "pointer",
+                width: isMobile ? "100%" : "auto",
               }}
             >
               Subscribe

@@ -102,9 +102,9 @@ export default function ProductListing({
               background: COLORS.cardBg,
               border: `1px solid ${COLORS.cardBorder}`,
               borderRadius: 16,
-              padding: 24,
-              position: "sticky",
-              top: 120,
+              padding: isMobile ? 16 : 24,
+              position: isMobile ? "static" : "sticky",
+              top: isMobile ? 0 : 120,
             }}
           >
             <h3
@@ -208,8 +208,9 @@ export default function ProductListing({
           <div
             style={{
               display: "flex",
+              flexDirection: isMobile ? "column" : "row",
               justifyContent: "space-between",
-              alignItems: "center",
+              alignItems: isMobile ? "stretch" : "center",
               marginBottom: 20,
               flexWrap: "wrap",
               gap: 12,
@@ -218,7 +219,15 @@ export default function ProductListing({
             <div style={{ color: COLORS.muted, fontSize: 14 }}>
               {filtered.length} products found
             </div>
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                alignItems: "center",
+                width: isMobile ? "100%" : "auto",
+                flexDirection: isMobile ? "column" : "row",
+              }}
+            >
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -231,6 +240,7 @@ export default function ProductListing({
                   color: COLORS.text,
                   fontSize: 13,
                   outline: "none",
+                  width: isMobile ? "100%" : "auto",
                 }}
               />
               <select
@@ -244,6 +254,7 @@ export default function ProductListing({
                   color: COLORS.text,
                   fontSize: 13,
                   outline: "none",
+                  width: isMobile ? "100%" : "auto",
                 }}
               >
                 <option value="popular">Most Popular</option>
