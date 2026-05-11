@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
+
+/* ─── Reset ───────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ─── Base ────────────────────────────────────────────────── */
+:root {
+  --color-green: #22c55e;
+  --color-green-dark: #16a34a;
+  --color-dark-bg: #0f1117;
+  --color-card-bg: #161b27;
+  --color-card-border: #1e2535;
+  --color-text: #f0f4ff;
+  --color-muted: #8892a4;
+  --color-badge: #ff6b35;
+}
+
+html,
+body {
+  background: var(--color-dark-bg);
+  color: var(--color-text);
+  font-family: 'Sora', 'Inter', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-dark-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-card-border);
+  border-radius: 3px;
+}
+
+/* ─── Details / FAQ ───────────────────────────────────────── */
+details summary::-webkit-details-marker {
+  display: none;
+}
+details[open] summary::after {
+  content: ' ▲';
+  font-size: 12px;
+}
+details summary::after {
+  content: ' ▼';
+  font-size: 12px;
+  color: var(--color-muted);
+  float: right;
+}
+
+/* ─── Inputs ──────────────────────────────────────────────── */
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* ─── Button reset ────────────────────────────────────────── */
+button {
+  font-family: inherit;
+}
+
+/* ─── Animations ──────────────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-16px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.6; }
+  50%       { transform: scale(1.05); opacity: 1; }
+}
