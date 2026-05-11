@@ -84,7 +84,16 @@ export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPagePro
             </div>
             <div style={{ color: i === step ? COLORS.green : COLORS.muted, fontSize: isMobile ? 11 : 12, marginTop: 8, fontWeight: i === step ? 700 : 400, textAlign: "center" }}>{s}</div>
             {i < STEPS.length - 1 && (
-              <div style={{ position: "absolute", top: 18, left: "50%", width: "100%", height: 2, background: i < step ? COLORS.green : COLORS.cardBorder }} />
+              <div
+                style={{
+                  position: "absolute",
+                  top: 18,
+                  left: "50%",
+                  width: isMobile ? "50%" : "100%",
+                  height: 2,
+                  background: i < step ? COLORS.green : COLORS.cardBorder,
+                }}
+              />
             )}
           </div>
         ))}
