@@ -11,14 +11,18 @@
 
 /* ─── Base ────────────────────────────────────────────────── */
 :root {
-  --color-green: #22c55e;
-  --color-green-dark: #16a34a;
-  --color-dark-bg: #0f1117;
-  --color-card-bg: #161b27;
-  --color-card-border: #1e2535;
-  --color-text: #f0f4ff;
-  --color-muted: #8892a4;
-  --color-badge: #ff6b35;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-accent: #38bdf8;
+  --color-background: #0b1220;
+  --color-card-bg: #111a2b;
+  --color-card-border: #23324a;
+  --color-text: #e6eef8;
+  --color-muted: #93a4b8;
+  --color-badge: #ef4444;
+  --color-green: var(--color-primary);
+  --color-green-dark: var(--color-primary-hover);
+  --color-dark-bg: var(--color-background);
 }
 
 html,

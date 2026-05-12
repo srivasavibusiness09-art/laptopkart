@@ -78,7 +78,7 @@ export default function CartPage({ cart, setCart, setPage }: CartPageProps) {
                 style={{
                   width: isMobile ? "100%" : 88,
                   height: isMobile ? 180 : 88,
-                  background: "#0f1520",
+                  background: COLORS.background,
                   borderRadius: 12,
                   overflow: "hidden",
                   flexShrink: 0,
@@ -97,7 +97,7 @@ export default function CartPage({ cart, setCart, setPage }: CartPageProps) {
                 <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ display: "flex", alignItems: "center", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 8, overflow: "hidden" }}>
                     <button onClick={() => updateQty(item.id, -1)} style={{ background: COLORS.darkBg, color: COLORS.text, border: "none", padding: "6px 14px", cursor: "pointer", fontSize: 16 }}>−</button>
-                    <span style={{ padding: "6px 14px", color: COLORS.text, background: "#1C2133", fontWeight: 700 }}>{item.qty}</span>
+                    <span style={{ padding: "6px 14px", color: COLORS.text, background: COLORS.background, fontWeight: 700 }}>{item.qty}</span>
                     <button onClick={() => updateQty(item.id, 1)} style={{ background: COLORS.darkBg, color: COLORS.text, border: "none", padding: "6px 14px", cursor: "pointer", fontSize: 16 }}>+</button>
                   </div>
                   <span style={{ color: COLORS.green, fontWeight: 800, fontSize: 18 }}>₹{(item.price * item.qty).toLocaleString('en-IN')}</span>
@@ -149,7 +149,7 @@ export default function CartPage({ cart, setCart, setPage }: CartPageProps) {
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 16, flexDirection: isMobile ? "column" : "row" }}>
               <input value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="Enter coupon code"
-                style={{ flex: 1, background: "#1C2133", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 8, padding: "10px 12px", color: COLORS.text, fontSize: 13, outline: "none" }} />
+                style={{ flex: 1, background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 8, padding: "10px 12px", color: COLORS.text, fontSize: 13, outline: "none" }} />
               <button onClick={() => { if (coupon.toUpperCase() === "LAPTOP10") setCouponApplied(true); }}
                 style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, cursor: "pointer", fontSize: 13, width: isMobile ? "100%" : "auto" }}>
                 Apply

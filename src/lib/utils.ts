@@ -18,5 +18,5 @@ export function clamp(value: number, min: number, max: number): number {
 export function getBadgeColor(badge: string): string {
   if (badge === "Best Seller") return "#EF4444";
   if (badge === "Gaming") return "#8B5CF6";
-  return "#22C55E";
+  return "#3B82F6";
 }

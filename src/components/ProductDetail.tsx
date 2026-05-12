@@ -122,7 +122,7 @@ export default function ProductDetail({
         <div>
           <div
             style={{
-              background: "#0f1520",
+              background: COLORS.background,
               borderRadius: 20,
               marginBottom: 16,
               border: `1px solid ${COLORS.cardBorder}`,
@@ -148,7 +148,7 @@ export default function ProductDetail({
               <div
                 key={offset}
                 style={{
-                  background: "#0f1520",
+                  background: COLORS.background,
                   border: `1px solid ${COLORS.cardBorder}`,
                   borderRadius: 10,
                   height: 72,
@@ -272,7 +272,7 @@ export default function ProductDetail({
                 style={{
                   width: "88%",
                   height: "100%",
-                  background: `linear-gradient(90deg, ${COLORS.green}, #4ADE80)`,
+                  background: `linear-gradient(90deg, ${COLORS.primary}, ${COLORS.accent})`,
                   borderRadius: 6,
                 }}
               />
@@ -367,7 +367,7 @@ export default function ProductDetail({
                 style={{
                   padding: "8px 16px",
                   color: COLORS.text,
-                  background: "#1C2133",
+                  background: COLORS.background,
                 }}
               >
                 {qty}

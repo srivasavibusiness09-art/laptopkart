@@ -44,11 +44,11 @@ interface Address { name: string; phone: string; pincode: string; city: string; 
 
 const inputStyle = {
   width: "100%",
-  background: "#1C2133",
-  border: `1px solid #1E2535`,
+  background: COLORS.background,
+  border: `1px solid ${COLORS.cardBorder}`,
   borderRadius: 10,
   padding: "12px 14px",
-  color: "#F0F4FF",
+  color: COLORS.text,
   fontSize: 14,
   outline: "none",
   boxSizing: "border-box" as const,
@@ -131,7 +131,7 @@ export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPagePro
                 <Truck size={20} color={COLORS.green} /> Choose Delivery
               </h2>
               {DELIVERY_OPTIONS.map(({ name, time, price, icon }) => (
-                <div key={name} style={{ background: "#1C2133", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", cursor: "pointer", gap: 12, flexDirection: isMobile ? "column" : "row" }}>
+                <div key={name} style={{ background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", cursor: "pointer", gap: 12, flexDirection: isMobile ? "column" : "row" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <span style={{ color: COLORS.green }}>{icon}</span>
                     <div>
@@ -154,7 +154,7 @@ export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPagePro
                 <CreditCard size={20} color={COLORS.green} /> Payment Method
               </h2>
               {PAYMENT_OPTIONS.map(({ val, label, icon }) => (
-                <label key={val} style={{ display: "flex", alignItems: "center", gap: 14, background: payment === val ? "rgba(34,197,94,0.08)" : "#1C2133", border: `1px solid ${payment === val ? COLORS.green : COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, cursor: "pointer" }}>
+                <label key={val} style={{ display: "flex", alignItems: "center", gap: 14, background: payment === val ? "rgba(59,130,246,0.12)" : COLORS.background, border: `1px solid ${payment === val ? COLORS.green : COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, cursor: "pointer" }}>
                   <input type="radio" name="payment" value={val} checked={payment === val} onChange={() => setPayment(val)} style={{ accentColor: COLORS.green }} />
                   <span style={{ color: payment === val ? COLORS.green : COLORS.muted }}>{icon}</span>
                   <span style={{ color: COLORS.text, fontWeight: 600 }}>{label}</span>

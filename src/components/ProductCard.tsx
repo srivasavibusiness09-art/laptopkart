@@ -89,7 +89,7 @@ export default function ProductCard({
         cursor: "pointer",
         transition: "all 0.25s ease",
         transform: hovered ? "translateY(-4px)" : "none",
-        boxShadow: hovered ? "0 12px 40px rgba(34,197,94,0.12)" : "none",
+        boxShadow: hovered ? "0 12px 40px rgba(59,130,246,0.2)" : "none",
         position: "relative",
       }}
     >
@@ -135,7 +135,7 @@ export default function ProductCard({
       <div
         onClick={() => onView(product)}
         style={{
-          background: "linear-gradient(135deg, #1a2035 0%, #0f1520 100%)",
+          background: "linear-gradient(135deg, #16243B 0%, #0B1220 100%)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -174,7 +174,7 @@ export default function ProductCard({
         >
           <span
             style={{
-              background: "#1E3A2A",
+              background: "rgba(59,130,246,0.16)",
               color: COLORS.green,
               fontSize: 11,
               fontWeight: 700,

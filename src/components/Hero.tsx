@@ -17,12 +17,12 @@ export default function Hero({ setPage }: HeroProps) {
 
   return (
     <section style={{
-      background: "linear-gradient(135deg,#0A0F1E 0%,#0F1A2E 50%,#091A0F 100%)",
+      background: "linear-gradient(135deg,#0B1220 0%,#111A2B 55%,#0F1E36 100%)",
       minHeight: isMobile ? "auto" : 520,
       display: "flex", alignItems: "center", position: "relative", overflow: "hidden",
     }}>
       {/* Glow */}
-      <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 20% 50%,rgba(34,197,94,0.08) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(59,130,246,0.06) 0%,transparent 40%)" }} />
+      <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 20% 50%,rgba(59,130,246,0.14) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(56,189,248,0.12) 0%,transparent 40%)" }} />
 
       <div style={{
         maxWidth: 1280, margin: "0 auto", padding: isMobile ? "36px 16px" : "60px 20px",
@@ -34,7 +34,7 @@ export default function Hero({ setPage }: HeroProps) {
 
         {/* Left: Text */}
         <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 20, padding: "6px 14px", marginBottom: 20 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(59,130,246,0.16)", border: "1px solid rgba(59,130,246,0.4)", borderRadius: 20, padding: "6px 14px", marginBottom: 20 }}>
             <span style={{ color: COLORS.green, fontSize: 12, fontWeight: 700 }}>⚡ SAVE UP TO 70% OFF</span>
           </div>
 
@@ -81,8 +81,8 @@ export default function Hero({ setPage }: HeroProps) {
         {/* Right: Laptop Image */}
         {!isMobile && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-            <div style={{ position: "absolute", width: 350, height: 350, background: "radial-gradient(circle,rgba(34,197,94,0.15) 0%,transparent 70%)", borderRadius: "50%", animation: "pulse 3s ease-in-out infinite" }} />
-            <div style={{ width: 340, height: 340, borderRadius: 24, overflow: "hidden", boxShadow: "0 24px 80px rgba(34,197,94,0.25),0 8px 32px rgba(0,0,0,0.6)", animation: "float 4s ease-in-out infinite", border: "1px solid rgba(34,197,94,0.2)" }}>
+            <div style={{ position: "absolute", width: 350, height: 350, background: "radial-gradient(circle,rgba(59,130,246,0.2) 0%,transparent 70%)", borderRadius: "50%", animation: "pulse 3s ease-in-out infinite" }} />
+            <div style={{ width: 340, height: 340, borderRadius: 24, overflow: "hidden", boxShadow: "0 24px 80px rgba(59,130,246,0.28),0 8px 32px rgba(0,0,0,0.6)", animation: "float 4s ease-in-out infinite", border: "1px solid rgba(59,130,246,0.3)" }}>
               <img src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=700&q=85&auto=format&fit=crop" alt="Refurbished Laptop" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
             {/* Badges */}

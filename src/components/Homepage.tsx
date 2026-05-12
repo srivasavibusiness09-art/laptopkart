@@ -220,8 +220,8 @@ export default function Homepage({
         {/* ── Smart Finder ── */}
         <div
           style={{
-            background: "linear-gradient(135deg, #0D1F10 0%, #0A1520 100%)",
-            border: "1px solid rgba(34,197,94,0.2)",
+            background: "linear-gradient(135deg, #0F1E36 0%, #0B1220 100%)",
+            border: "1px solid rgba(59,130,246,0.35)",
             borderRadius: 24,
             padding: isMobile ? "24px 16px" : "40px",
             marginBottom: isMobile ? 40 : 60,
@@ -281,13 +281,13 @@ export default function Homepage({
                     }}
                   >
                     <div
-                      style={{
-                        height: 100,
-                        borderRadius: 8,
-                        overflow: "hidden",
-                        marginBottom: 8,
-                        background: "#0f1520",
-                      }}
+                        style={{
+                          height: 100,
+                          borderRadius: 8,
+                          overflow: "hidden",
+                          marginBottom: 8,
+                          background: COLORS.background,
+                        }}
                     >
                       <img
                         src={p.img}
@@ -351,9 +351,9 @@ export default function Homepage({
                     key={opt}
                     onClick={() => handleFinderAnswer(opt)}
                     style={{
-                      background: "rgba(34,197,94,0.1)",
+                      background: "rgba(59,130,246,0.14)",
                       color: COLORS.green,
-                      border: "1.5px solid rgba(34,197,94,0.3)",
+                      border: "1.5px solid rgba(59,130,246,0.35)",
                       borderRadius: 10,
                       padding: isMobile ? "10px 14px" : "12px 24px",
                       fontSize: 14,
@@ -367,7 +367,7 @@ export default function Homepage({
                       (e.currentTarget as HTMLButtonElement).style.color = COLORS.black;
                     }}
                     onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(34,197,94,0.1)";
+                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(59,130,246,0.14)";
                       (e.currentTarget as HTMLButtonElement).style.color = COLORS.green;
                     }}
                   >
@@ -406,8 +406,8 @@ export default function Homepage({
         {/* ── Exchange Banner ── */}
         <div
           style={{
-            background: "linear-gradient(135deg, #0D2010 0%, #1A3A20 100%)",
-            border: "1px solid rgba(34,197,94,0.25)",
+            background: "linear-gradient(135deg, #0F1E36 0%, #1A2F4F 100%)",
+            border: "1px solid rgba(59,130,246,0.35)",
             borderRadius: 24,
             padding: isMobile ? "24px 16px" : "40px 48px",
             display: "flex",
@@ -552,8 +552,8 @@ export default function Homepage({
                     width: 36,
                     height: 36,
                     borderRadius: "50%",
-                    background: "rgba(34,197,94,0.15)",
-                    border: "1px solid rgba(34,197,94,0.3)",
+                    background: "rgba(59,130,246,0.2)",
+                    border: "1px solid rgba(59,130,246,0.35)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -611,7 +611,7 @@ export default function Homepage({
               placeholder="Enter your email"
               style={{
                 flex: 1,
-                background: "#1C2133",
+                background: COLORS.background,
                 border: `1px solid ${COLORS.cardBorder}`,
                 borderRadius: 10,
                 padding: "12px 16px",

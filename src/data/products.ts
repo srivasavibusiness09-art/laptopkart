@@ -132,18 +132,31 @@ export const reviews: Review[] = [
 
 export const navLinks = ["Laptops", "Desktops", "Accessories", "Offers", "Resell Laptop", "Blog", "About"];
 
+export const COLOR_TOKENS = {
+  primary: "#3B82F6",
+  primaryHover: "#2563EB",
+  accent: "#38BDF8",
+  background: "#0B1220",
+  cardBackground: "#111A2B",
+  border: "#23324A",
+  mainText: "#E6EEF8",
+  mutedText: "#93A4B8",
+} as const;
+
 export const COLORS = {
-  green:       "#22C55E",
-  greenDark:   "#16A34A",
-  greenLight:  "#DCFCE7",
-  greenAccent: "#4ADE80",
-  black:       "#0A0A0A",
-  darkBg:      "#0F1117",
-  cardBg:      "#161B27",
-  cardBorder:  "#1E2535",
-  text:        "#F0F4FF",
-  muted:       "#8892A4",
-  white:       "#FFFFFF",
-  badge:       "#FF6B35",
-  badgeBlue:   "#3B82F6",
+  ...COLOR_TOKENS,
+  // Legacy aliases retained for existing components.
+  green: COLOR_TOKENS.primary,
+  greenDark: COLOR_TOKENS.primaryHover,
+  greenLight: "#DBEAFE",
+  greenAccent: COLOR_TOKENS.accent,
+  black: COLOR_TOKENS.mainText,
+  darkBg: COLOR_TOKENS.background,
+  cardBg: COLOR_TOKENS.cardBackground,
+  cardBorder: COLOR_TOKENS.border,
+  text: COLOR_TOKENS.mainText,
+  muted: COLOR_TOKENS.mutedText,
+  white: "#FFFFFF",
+  badge: "#EF4444",
+  badgeBlue: COLOR_TOKENS.accent,
 };

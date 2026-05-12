@@ -20,7 +20,7 @@ export function ComparePage() {
               <th style={{ padding: isMobile ? "12px 12px" : "16px 20px", background: COLORS.cardBg, color: COLORS.muted, textAlign: "left", fontSize: 14, border: `1px solid ${COLORS.cardBorder}` }}>Feature</th>
               {selected.map(p => (
                 <th key={p.id} style={{ padding: isMobile ? "12px" : "20px", background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, minWidth: isMobile ? 180 : 200 }}>
-                  <div style={{ width: 120, height: 120, margin: "0 auto 12px", background: "#0f1520", borderRadius: 12, overflow: "hidden" }}>
+                  <div style={{ width: 120, height: 120, margin: "0 auto 12px", background: COLORS.background, borderRadius: 12, overflow: "hidden" }}>
                     <img src={p.img} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </div>
                   <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 14, fontFamily: "'Sora', sans-serif" }}>{p.name}</div>
@@ -41,7 +41,7 @@ export function ComparePage() {
                   const val = spec === "price" || spec === "mrp" ? `₹${(rawVal as number).toLocaleString('en-IN')}` : spec === "discount" ? `${rawVal}%` : spec === "rating" ? `★ ${rawVal}` : rawVal;
                   const best = spec === "price" ? Math.min(...selected.map(s => s.price)) === p.price : spec === "rating" ? Math.max(...selected.map(s => s.rating)) === p.rating : spec === "discount" ? Math.max(...selected.map(s => s.discount)) === p.discount : false;
                   return (
-                    <td key={p.id} style={{ padding: isMobile ? "10px 12px" : "14px 20px", textAlign: "center", color: best ? COLORS.green : COLORS.text, fontWeight: best ? 800 : 500, fontSize: 14, border: `1px solid ${COLORS.cardBorder}`, background: best ? "rgba(34,197,94,0.06)" : "transparent" }}>
+                    <td key={p.id} style={{ padding: isMobile ? "10px 12px" : "14px 20px", textAlign: "center", color: best ? COLORS.green : COLORS.text, fontWeight: best ? 800 : 500, fontSize: 14, border: `1px solid ${COLORS.cardBorder}`, background: best ? "rgba(59,130,246,0.12)" : "transparent" }}>
                       {val}{best && <span style={{ display: "block", fontSize: 10, color: COLORS.green }}>Best</span>}
                     </td>
                   );
@@ -102,7 +102,7 @@ export function BlogPage() {
             onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.green; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.cardBorder; (e.currentTarget as HTMLDivElement).style.transform = "none"; }}
           >
-            <div style={{ background: "linear-gradient(135deg, #1a2035, #0f1520)", height: 140, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 60 }}>{post.icon}</div>
+            <div style={{ background: "linear-gradient(135deg, #16243B, #0B1220)", height: 140, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 60 }}>{post.icon}</div>
             <div style={{ padding: 20 }}>
               <span style={{ background: COLORS.greenDark, color: "#fff", fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, textTransform: "uppercase" }}>{post.cat}</span>
               <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 16, lineHeight: 1.5, margin: "10px 0 12px" }}>{post.title}</h3>
@@ -142,13 +142,13 @@ export function ContactPage() {
                 <div key={key} style={{ marginBottom: 16 }}>
                   <label style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6, display: "block" }}>{label}</label>
                   <input type={type} value={form[key as keyof typeof form]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                    style={{ width: "100%", background: "#1C2133", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                    style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
                 </div>
               ))}
               <div style={{ marginBottom: 20 }}>
                 <label style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6, display: "block" }}>Message</label>
                 <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} rows={4}
-                  style={{ width: "100%", background: "#1C2133", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: COLORS.text, fontSize: 14, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+                  style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: COLORS.text, fontSize: 14, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
               </div>
               <button onClick={() => setSent(true)} style={{ width: "100%", background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 12, padding: "14px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>Send Message →</button>
             </>
@@ -184,7 +184,7 @@ export function LoginPage({ setPage }: { setPage: (p: string) => void }) {
           </div>
           <div style={{ color: COLORS.muted, marginTop: 8 }}>{mode === "login" ? "Welcome back!" : "Create your account"}</div>
         </div>
-        <div style={{ display: "flex", gap: 0, marginBottom: 28, background: "#1C2133", borderRadius: 12, padding: 4 }}>
+        <div style={{ display: "flex", gap: 0, marginBottom: 28, background: COLORS.background, borderRadius: 12, padding: 4 }}>
           {["login", "signup"].map(m => (
             <button key={m} onClick={() => setMode(m)} style={{ flex: 1, background: mode === m ? COLORS.green : "transparent", color: mode === m ? COLORS.black : COLORS.muted, border: "none", borderRadius: 10, padding: "10px 0", cursor: "pointer", fontWeight: 700, fontSize: 14, transition: "all 0.2s" }}>
               {m === "login" ? "Login" : "Sign Up"}
@@ -194,13 +194,13 @@ export function LoginPage({ setPage }: { setPage: (p: string) => void }) {
         {mode === "signup" && (
           <div style={{ marginBottom: 16 }}>
             <label style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6, display: "block" }}>Full Name</label>
-            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ width: "100%", background: "#1C2133", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
           </div>
         )}
         {[["Email", "email", "email"], ["Password", "password", "password"]].map(([label, key, type]) => (
           <div key={key} style={{ marginBottom: 16 }}>
             <label style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6, display: "block" }}>{label}</label>
-            <input type={type} value={form[key as keyof typeof form]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: "100%", background: "#1C2133", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+            <input type={type} value={form[key as keyof typeof form]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
           </div>
         ))}
         <button onClick={() => setPage("home")} style={{ width: "100%", background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 12, padding: "14px 0", fontWeight: 800, fontSize: 16, cursor: "pointer", fontFamily: "'Sora', sans-serif", marginBottom: 16 }}>

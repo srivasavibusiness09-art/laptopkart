@@ -21,6 +21,19 @@ The application offers a seamless shopping experience from browsing products to 
 - **Styling:** [Tailwind CSS 4](https://tailwindcss.com/) & Custom Inline Styles
 - **Icons:** [Lucide React](https://lucide.dev/) & [React Icons](https://react-icons.github.io/react-icons/) (Brand specific icons)
 
+## 🎨 Color Tokens
+
+The UI theme is centralized in `src/data/products.ts` via `COLOR_TOKENS`:
+
+- **Primary:** `#3B82F6`
+- **Primary Hover:** `#2563EB`
+- **Accent:** `#38BDF8`
+- **Background:** `#0B1220`
+- **Card Background:** `#111A2B`
+- **Border:** `#23324A`
+- **Main Text:** `#E6EEF8`
+- **Muted Text:** `#93A4B8`
+
 ## 📁 Project Structure
 
 ```

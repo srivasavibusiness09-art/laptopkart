@@ -66,7 +66,7 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
               <input
                 value={search} onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search for laptops, brands, models..."
-                style={{ width: "100%", background: "#1C2133", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "9px 16px 9px 38px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "9px 16px 9px 38px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }}
               />
               <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: COLORS.muted, display: "flex" }}><Search size={15} /></span>
             </div>
@@ -113,7 +113,7 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
           <div style={{ padding: "0 12px 10px", display: "flex", gap: 8 }}>
             <div style={{ flex: 1, position: "relative" }}>
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search laptops..."
-                style={{ width: "100%", background: "#1C2133", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 8, padding: "9px 12px 9px 34px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 8, padding: "9px 12px 9px 34px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
               <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: COLORS.muted, display: "flex" }}><Search size={14} /></span>
             </div>
           </div>
@@ -121,7 +121,7 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
 
         {/* Desktop Category Links */}
         {!isMobile && (
-          <div style={{ background: "#0D1120", borderTop: `1px solid ${COLORS.cardBorder}`, display: "flex", justifyContent: "center", overflowX: "auto" }}>
+          <div style={{ background: COLORS.background, borderTop: `1px solid ${COLORS.cardBorder}`, display: "flex", justifyContent: "center", overflowX: "auto" }}>
             {navLinks.map((link) => (
               <button key={link} onClick={() => go(getNavTarget(link))}
                 style={{ padding: "11px 18px", background: "transparent", border: "none", color: link === "Offers" ? COLORS.green : COLORS.muted, cursor: "pointer", fontSize: 13, fontWeight: link === "Offers" ? 700 : 500, whiteSpace: "nowrap", borderBottom: "2px solid transparent", display: "flex", alignItems: "center", gap: 5 }}>
@@ -133,7 +133,7 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
 
         {/* Mobile Drawer Menu */}
         {isMobile && menuOpen && (
-          <div style={{ background: "#0D1120", borderTop: `1px solid ${COLORS.cardBorder}`, padding: "8px 0" }}>
+          <div style={{ background: COLORS.background, borderTop: `1px solid ${COLORS.cardBorder}`, padding: "8px 0" }}>
             {navLinks.map((link) => (
               <button key={link} onClick={() => go(getNavTarget(link))}
                 style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "13px 20px", background: "transparent", border: "none", color: link === "Offers" ? COLORS.green : COLORS.text, cursor: "pointer", fontSize: 15, fontWeight: link === "Offers" ? 700 : 500, textAlign: "left", borderBottom: `1px solid ${COLORS.cardBorder}` }}>
@@ -156,14 +156,14 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
 
 /* ── Helpers ── */
 const iconBtn: React.CSSProperties = {
-  background: "transparent", border: `1px solid #1E2535`, borderRadius: 8,
+  background: "transparent", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 8,
   width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center",
   cursor: "pointer", position: "relative",
 };
 
 function Badge({ count, dark }: { count: number; dark?: boolean }) {
   return (
-    <span style={{ position: "absolute", top: -6, right: -6, background: dark ? COLORS.black : "#EF4444", color: "#fff", borderRadius: "50%", width: 17, height: 17, fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <span style={{ position: "absolute", top: -6, right: -6, background: dark ? COLORS.background : "#EF4444", color: "#fff", borderRadius: "50%", width: 17, height: 17, fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>
       {count}
     </span>
   );

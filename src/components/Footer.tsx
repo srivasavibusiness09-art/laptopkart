@@ -31,7 +31,7 @@ export default function Footer({ setPage }: FooterProps) {
   const isMobile = useIsMobile();
 
   return (
-    <footer style={{ background: "#070C14", borderTop: `1px solid ${COLORS.cardBorder}`, padding: isMobile ? "36px 16px 20px" : "56px 20px 24px", marginTop: 60 }}>
+    <footer style={{ background: COLORS.background, borderTop: `1px solid ${COLORS.cardBorder}`, padding: isMobile ? "36px 16px 20px" : "56px 20px 24px", marginTop: 60 }}>
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
         {/* Grid */}
