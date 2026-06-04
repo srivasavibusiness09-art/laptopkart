@@ -398,10 +398,10 @@ export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishli
         </div>
       )}
 
-      {/* ── Why LaptopLux ──────────────────────── */}
+      {/* ── Why Techstore Pro ──────────────────────── */}
       {section(
         <>
-          <SectionHeader eyebrow="Why Us" title="The LaptopLux Promise" subtitle="We make refurbished trustworthy and reliable" />
+          <SectionHeader eyebrow="Why Us" title="The Techstore Pro Promise" subtitle="We make refurbished trustworthy and reliable" />
           <div style={{
             display: "grid",
             gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(5,1fr)",

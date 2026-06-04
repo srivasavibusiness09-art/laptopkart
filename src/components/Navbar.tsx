@@ -78,13 +78,13 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
               fontWeight: 800, fontSize: isMobile ? 16 : 18,
               letterSpacing: "-0.02em",
             }}>
-              <span style={{ color: COLORS.text }}>Laptop</span>
+              <span style={{ color: COLORS.text }}>Techstore</span>
               <span style={{
                 color: "transparent",
                 backgroundClip: "text",
                 WebkitBackgroundClip: "text",
                 backgroundImage: "linear-gradient(135deg, #38BDF8, #6366F1)",
-              }}>Lux</span>
+              }}> Pro</span>
             </span>
           </div>
 

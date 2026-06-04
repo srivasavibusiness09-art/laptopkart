@@ -12,7 +12,7 @@ const TOUCH_SENS    = 0.045;  // touch delta → frame units
 
 /* ── Scene text definitions ─────────────────────────────── */
 const scenes = [
-  { from: 1,  to: 8,  h: "LaptopLux",               s: "Premium Refurbished Technology",    b: "Built for performance.\nTested for reliability." },
+  { from: 1,  to: 8,  h: "Techstore Pro",           s: "Premium Refurbished Technology",    b: "Built for performance.\nTested for reliability." },
   { from: 9,  to: 16, h: "Performance Restored",     s: "Every core re-engineered",          b: "" },
   { from: 17, to: 24, h: "Memory Upgraded",           s: "Max RAM. Maximum possibilities.",   b: "" },
   { from: 25, to: 32, h: "Lightning Fast Storage",    s: "NVMe SSD. Zero wait time.",         b: "" },
@@ -301,8 +301,8 @@ export default function LandingPage({ onEnterStore }: Props) {
           fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 20,
           letterSpacing: "-0.02em",
         }}>
-          <span style={{ color: "#fff" }}>Laptop</span>
-          <span style={{ color: "#38BDF8" }}>Lux</span>
+          <span style={{ color: "#fff" }}>Techstore</span>
+          <span style={{ color: "#38BDF8" }}> Pro</span>
         </div>
 
         {/* Home skip button */}
@@ -436,8 +436,8 @@ export default function LandingPage({ onEnterStore }: Props) {
             style={{
               background: "#38BDF8", color: "#000",
               border: "none", borderRadius: "100px",
-              padding: "16px 48px",
-              fontSize: 17, fontWeight: 800,
+              padding: isMobile ? "12px 28px" : "16px 48px",
+              fontSize: isMobile ? 14 : 17, fontWeight: 800,
               cursor: "pointer",
               fontFamily: "'Sora', sans-serif",
               boxShadow: "0 0 60px rgba(56,189,248,0.45)",

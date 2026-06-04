@@ -1,6 +1,6 @@
-# LaptopKart 💻
+# Techstore Pro 💻
 
-LaptopKart is a modern, responsive, and high-performance e-commerce web application built specifically for buying certified refurbished laptops, desktops, and tech accessories. 
+Techstore Pro is a modern, responsive, and high-performance e-commerce web application built specifically for buying certified refurbished laptops, desktops, and tech accessories. 
 
 The application offers a seamless shopping experience from browsing products to checkout, complete with dynamic product filtering, a shopping cart, a wishlist, and side-by-side product comparisons.
 
@@ -8,7 +8,7 @@ The application offers a seamless shopping experience from browsing products to 
 
 - **Modern UI/UX**: Sleek, dark-mode design with smooth gradients, responsive layouts, and interactive hover effects.
 - **Product Discovery**: Dynamic grid layouts, category browsing, and a fully functional product filtering system (by brand, RAM, grade, and price).
-- **Shopping Cart & Checkout**: Interactive cart with quantity adjustments, coupon code support (try `LAPTOP10`), and a multi-step checkout flow (Address → Delivery → Payment → Confirmation).
+- **Shopping Cart & Checkout**: Interactive cart with quantity adjustments, coupon code support (try `TECH10`), and a multi-step checkout flow (Address → Delivery → Payment → Confirmation).
 - **Wishlist & Compare**: Save items for later and compare multiple devices side-by-side to find the best deal.
 - **Fully Responsive**: Optimized for all devices (mobile, tablet, and desktop) using modern responsive design patterns and a custom `useIsMobile` hook.
 - **Fast & SEO Friendly**: Built on Next.js App Router for optimal Server-Side Rendering (SSR) and SEO performance.

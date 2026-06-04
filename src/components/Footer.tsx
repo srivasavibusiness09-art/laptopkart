@@ -72,13 +72,13 @@ export default function Footer({ setPage }: FooterProps) {
               fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 22,
               letterSpacing: "-0.02em",
             }}>
-              <span style={{ color: COLORS.text }}>Laptop</span>
+              <span style={{ color: COLORS.text }}>Techstore</span>
               <span style={{
                 color: "transparent",
                 backgroundClip: "text",
                 WebkitBackgroundClip: "text",
                 backgroundImage: "linear-gradient(135deg, #38BDF8, #6366F1)",
-              }}>Lux</span>
+              }}> Pro</span>
             </div>
             <p style={{ color: COLORS.muted, fontSize: 13, lineHeight: 1.7, maxWidth: 260, marginBottom: 20 }}>
               India's most trusted refurbished laptop store. Best prices, best quality, backed by warranty.
@@ -87,7 +87,7 @@ export default function Footer({ setPage }: FooterProps) {
             <div style={{ marginBottom: 20 }}>
               {[
                 { icon: <Phone size={12} color={COLORS.green} />, text: "+91 99999 99999" },
-                { icon: <Mail size={12} color={COLORS.green} />, text: "support@laptoplux.in" },
+                { icon: <Mail size={12} color={COLORS.green} />, text: "support@techstorepro.com" },
                 { icon: <Clock size={12} color={COLORS.green} />, text: "Mon–Sat: 10AM – 7PM" },
               ].map(({ icon, text }) => (
                 <div key={text} style={{
@@ -189,7 +189,7 @@ export default function Footer({ setPage }: FooterProps) {
           flexWrap: "wrap", gap: 12,
         }}>
           <div style={{ color: COLORS.muted, fontSize: 12 }}>
-            © 2024 LaptopLux. All Rights Reserved.
+            © 2024 Techstore Pro. All Rights Reserved.
           </div>
           {!isMobile && (
             <div style={{ display: "flex", gap: 20 }}>

@@ -1,8 +1,8 @@
-# LaptopKart V2 Landing Page Design Specification
+# Techstore Pro V2 Landing Page Design Specification
 
 ## Vision
 
-Transform LaptopKart from a traditional ecommerce homepage into a premium Apple-style storytelling experience.
+Transform Techstore Pro from a traditional ecommerce homepage into a premium Apple-style storytelling experience.
 
 The user should experience a cinematic product reveal before reaching the actual shopping homepage.
 
@@ -133,14 +133,14 @@ Left:
 Menu Icon
 
 Center:
-LaptopKart Logo
+Techstore Pro Logo
 
 Right:
 Skip Intro
 
 Example
 
-[ ☰ ]     LaptopKart     [ Home ]
+[ ☰ ]     Techstore Pro     [ Home ]
 
 ---
 
@@ -220,7 +220,7 @@ Motherboard appears.
 
 Text:
 
-LaptopKart
+Techstore Pro
 
 Premium Refurbished Technology
 
@@ -462,7 +462,7 @@ Text below animation.
 
 # Design Goal
 
-When users visit LaptopKart they should immediately think:
+When users visit Techstore Pro they should immediately think:
 
 "This feels like an Apple product page."
 
