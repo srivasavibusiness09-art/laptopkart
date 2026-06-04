@@ -4,6 +4,7 @@ import { useState } from "react";
 import { COLORS } from "@/data/products";
 import type { Product } from "@/data/products";
 
+import LandingPage from "@/components/LandingPage";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Homepage from "@/components/Homepage";
@@ -25,10 +26,22 @@ interface CartItem extends Product {
 }
 
 export default function App() {
+  /* Show landing intro first; after user enters store, show main app */
+  const [showLanding, setShowLanding] = useState(true);
   const [page, setPage] = useState("home");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<number[]>([]);
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
+
+  /* When transitioning from landing → store, scroll to top and reset horizontal offsets */
+  const handleEnterStore = () => {
+    setShowLanding(false);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    if (typeof document !== "undefined") {
+      document.documentElement.scrollLeft = 0;
+      document.body.scrollLeft = 0;
+    }
+  };
 
   const handleAddToCart = (product: Product) => {
     setCart((c) => {
@@ -52,6 +65,12 @@ export default function App() {
     setPage("product");
   };
 
+  /* ── Landing experience ─────────────────────────────── */
+  if (showLanding) {
+    return <LandingPage onEnterStore={handleEnterStore} />;
+  }
+
+  /* ── Main store experience ──────────────────────────── */
   return (
     <div
       style={{

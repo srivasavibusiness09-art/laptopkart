@@ -1,16 +1,8 @@
 "use client";
 
 import {
-  Shield,
-  RefreshCw,
-  Truck,
-  CreditCard,
-  CheckCircle2,
-  Microscope,
-  BadgeDollarSign,
-  ArrowRight,
-  Recycle,
-  Star,
+  Shield, RefreshCw, Truck, CreditCard, CheckCircle2,
+  Microscope, BadgeDollarSign, ArrowRight, Recycle, Star,
 } from "lucide-react";
 import { useState } from "react";
 import { COLORS, products, categories, reviews } from "@/data/products";
@@ -19,47 +11,33 @@ import Hero from "@/components/Hero";
 import ProductCard from "@/components/ProductCard";
 import { useIsMobile } from "@/lib/hooks";
 
-/* ── Trust Bar ───────────────────────────────────────────── */
+/* ── Trust Strip ──────────────────────────────────────── */
 const trustItems = [
-  { icon: <Shield size={16} color={COLORS.green} />, text: "1 Year Warranty" },
-  { icon: <RefreshCw size={16} color={COLORS.green} />, text: "7 Day Replacement" },
-  { icon: <Truck size={16} color={COLORS.green} />, text: "Free Shipping" },
-  { icon: <CreditCard size={16} color={COLORS.green} />, text: "EMI Available" },
-  { icon: <CheckCircle2 size={16} color={COLORS.green} />, text: "Quality Checked" },
+  { icon: <Shield size={15} color={COLORS.green} />, text: "1 Year Warranty" },
+  { icon: <RefreshCw size={15} color={COLORS.green} />, text: "7 Day Replacement" },
+  { icon: <Truck size={15} color={COLORS.green} />, text: "Free Shipping" },
+  { icon: <CreditCard size={15} color={COLORS.green} />, text: "EMI Available" },
+  { icon: <CheckCircle2 size={15} color={COLORS.green} />, text: "Quality Checked" },
 ];
 
-function TrustBar() {
+function TrustStrip() {
   return (
-    <div
-      style={{
-        background: COLORS.cardBg,
-        borderTop: `1px solid ${COLORS.cardBorder}`,
-        borderBottom: `1px solid ${COLORS.cardBorder}`,
-        padding: "14px 20px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1280,
-          margin: "0 auto",
-          display: "flex",
-          justifyContent: "space-around",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
+    <div style={{
+      background: COLORS.background,
+      borderTop: "1px solid rgba(56,150,240,0.08)",
+      borderBottom: "1px solid rgba(56,150,240,0.08)",
+      padding: "18px 24px",
+    }}>
+      <div style={{
+        maxWidth: 1200, margin: "0 auto",
+        display: "flex", justifyContent: "space-around",
+        flexWrap: "wrap", gap: 14,
+      }}>
         {trustItems.map((item) => (
-          <div
-            key={item.text}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              color: COLORS.muted,
-              fontSize: 13,
-              fontWeight: 500,
-            }}
-          >
+          <div key={item.text} style={{
+            display: "flex", alignItems: "center", gap: 9,
+            color: COLORS.muted, fontSize: 13, fontWeight: 500,
+          }}>
             {item.icon}
             <span>{item.text}</span>
           </div>
@@ -69,44 +47,49 @@ function TrustBar() {
   );
 }
 
-/* ── Section Title ───────────────────────────────────────── */
-function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+/* ── Section header ───────────────────────────────────── */
+function SectionHeader({ eyebrow, title, subtitle }: { eyebrow?: string; title: string; subtitle?: string }) {
   return (
-    <div style={{ marginBottom: 32 }}>
-      <h2
-        style={{
-          fontFamily: "'Sora', sans-serif",
-          fontSize: 30,
-          fontWeight: 800,
-          color: COLORS.text,
-          margin: "0 0 8px",
-        }}
-      >
-        {title}
-      </h2>
-      {subtitle && <p style={{ color: COLORS.muted, fontSize: 15 }}>{subtitle}</p>}
+    <div style={{ marginBottom: 48, textAlign: "center" }}>
+      {eyebrow && (
+        <div style={{
+          display: "inline-block",
+          color: COLORS.green, fontSize: 12, fontWeight: 700,
+          letterSpacing: "0.08em", textTransform: "uppercase",
+          marginBottom: 12,
+          background: "rgba(56,189,248,0.08)",
+          padding: "4px 14px", borderRadius: 100,
+          border: "1px solid rgba(56,189,248,0.15)",
+        }}>{eyebrow}</div>
+      )}
+      <h2 style={{
+        fontFamily: "'Sora', sans-serif",
+        fontSize: "clamp(26px, 4vw, 46px)",
+        fontWeight: 800, letterSpacing: "-0.03em",
+        color: COLORS.text, margin: "0 0 12px", lineHeight: 1.1,
+      }}>{title}</h2>
+      {subtitle && <p style={{ color: COLORS.muted, fontSize: 15, maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>{subtitle}</p>}
     </div>
   );
 }
 
-/* ── Why features ────────────────────────────────────────── */
-const whyFeatures = [
-  { icon: <Microscope size={32} color={COLORS.green} />, title: "Quality Tested", desc: "72+ Quality Checks" },
-  { icon: <CheckCircle2 size={32} color={COLORS.green} />, title: "100% Original", desc: "Genuine Parts" },
-  { icon: <Shield size={32} color={COLORS.green} />, title: "1 Year Warranty", desc: "Hassle Free" },
-  { icon: <RefreshCw size={32} color={COLORS.green} />, title: "7 Days Replacement", desc: "No Questions Asked" },
-  { icon: <BadgeDollarSign size={32} color={COLORS.green} />, title: "Best Price", desc: "Save up to 70%" },
+/* ── Smart finder ─────────────────────────────────────── */
+const finderQ = [
+  { q: "What's your budget?",  opts: ["Under ₹20,000", "₹20K–₹40K", "₹40K–₹70K", "₹70K+"] },
+  { q: "Primary usage?",       opts: ["Student / Office", "Gaming", "Creative Work", "Business"] },
+  { q: "RAM preference?",      opts: ["8GB", "16GB", "32GB", "Any"] },
+  { q: "Brand preference?",    opts: ["Dell", "HP", "Lenovo", "Apple", "Any"] },
 ];
 
-/* ── Smart Finder ────────────────────────────────────────── */
-const finderQuestions = [
-  { q: "What's your budget?", options: ["Under ₹20,000", "₹20K-₹40K", "₹40K-₹70K", "₹70K+"] },
-  { q: "Primary usage?", options: ["Student / Office", "Gaming", "Creative Work", "Business"] },
-  { q: "RAM preference?", options: ["8GB", "16GB", "32GB", "Any"] },
-  { q: "Brand preference?", options: ["Dell", "HP", "Lenovo", "Apple", "Any"] },
+const whyItems = [
+  { icon: <Microscope size={28} color={COLORS.green} />, t: "Quality Tested",      d: "72+ point checks" },
+  { icon: <CheckCircle2 size={28} color={COLORS.green} />, t: "100% Original",     d: "Genuine parts" },
+  { icon: <Shield size={28} color={COLORS.green} />,       t: "1 Year Warranty",   d: "Hassle free" },
+  { icon: <RefreshCw size={28} color={COLORS.green} />,    t: "7-Day Returns",     d: "No questions asked" },
+  { icon: <BadgeDollarSign size={28} color={COLORS.green} />, t: "Best Price",     d: "Save up to 70%" },
 ];
 
-/* ── Homepage ────────────────────────────────────────────── */
+/* ── Homepage ─────────────────────────────────────────── */
 interface HomepageProps {
   setPage: (p: string) => void;
   onViewProduct: (p: Product) => void;
@@ -115,530 +98,454 @@ interface HomepageProps {
   wishlist: number[];
 }
 
-export default function Homepage({
-  setPage,
-  onViewProduct,
-  onAddToCart,
-  onWishlist,
-  wishlist,
-}: HomepageProps) {
+export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishlist, wishlist }: HomepageProps) {
   const isMobile = useIsMobile();
-  const [finderStep, setFinderStep] = useState(0);
-  const [finderAnswers, setFinderAnswers] = useState<Record<number, string>>({});
-  const [finderResult, setFinderResult] = useState<Product[] | null>(null);
+  const [step, setStep]       = useState(0);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [result, setResult]   = useState<Product[] | null>(null);
 
-  const handleFinderAnswer = (ans: string) => {
-    const newAnswers = { ...finderAnswers, [finderStep]: ans };
-    setFinderAnswers(newAnswers);
-    if (finderStep < finderQuestions.length - 1) {
-      setFinderStep(finderStep + 1);
-    } else {
-      setFinderResult(products.slice(0, 3));
-    }
+  const answer = (a: string) => {
+    const na = { ...answers, [step]: a };
+    setAnswers(na);
+    if (step < finderQ.length - 1) setStep(step + 1);
+    else setResult(products.slice(0, 3));
   };
+  const reset = () => { setStep(0); setAnswers({}); setResult(null); };
 
-  const resetFinder = () => {
-    setFinderStep(0);
-    setFinderAnswers({});
-    setFinderResult(null);
-  };
+  const section = (children: React.ReactNode, alt = false) => (
+    <section style={{
+      background: alt ? COLORS.background : COLORS.darkBg,
+      padding: `${isMobile ? 56 : 100}px ${isMobile ? 18 : 24}px`,
+      position: "relative", overflow: "hidden",
+    }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>{children}</div>
+    </section>
+  );
 
   return (
     <main>
       <Hero setPage={setPage} />
-      <TrustBar />
+      <TrustStrip />
 
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "32px 14px" : "60px 20px" }}>
+      {/* ── Categories ──────────────────────────── */}
+      {section(
+        <>
+          <SectionHeader eyebrow="Browse" title="Shop By Category" subtitle="Curated selection of certified refurbished tech" />
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(3,1fr)",
+            gap: isMobile ? 12 : 20,
+          }}>
+            {categories.map((cat, i) => (
+              <div
+                key={cat.name}
+                onClick={() => setPage("listing")}
+                style={{
+                  background: COLORS.cardBg,
+                  border: `1px solid ${COLORS.cardBorder}`,
+                  borderRadius: 20,
+                  overflow: "hidden",
+                  cursor: "pointer",
+                  transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
+                  animation: `fadeUp 0.5s ease ${i * 0.07}s both`,
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLDivElement;
+                  el.style.borderColor = "rgba(56,189,248,0.30)";
+                  el.style.transform = "translateY(-6px)";
+                  el.style.boxShadow = "0 20px 60px rgba(0,0,0,0.4), 0 0 30px rgba(56,189,248,0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLDivElement;
+                  el.style.borderColor = COLORS.cardBorder;
+                  el.style.transform = "translateY(0)";
+                  el.style.boxShadow = "none";
+                }}
+              >
+                <div style={{ height: isMobile ? 100 : 140, overflow: "hidden" }}>
+                  <img src={cat.icon} alt={cat.name}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1.08)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"; }}
+                  />
+                </div>
+                <div style={{ padding: isMobile ? "12px 14px" : "18px 20px" }}>
+                  <div style={{
+                    color: COLORS.text, fontWeight: 700, fontSize: isMobile ? 13 : 14,
+                    fontFamily: "'Sora', sans-serif", marginBottom: 3,
+                  }}>{cat.name}</div>
+                  <div style={{ color: COLORS.muted, fontSize: 11 }}>{cat.count}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>, true
+      )}
 
-        {/* ── Categories ── */}
-        <SectionTitle title="Shop By Category" subtitle="Browse our curated selection of refurbished tech" />
-        <div
-          style={{
+      {/* ── Smart Finder ────────────────────────── */}
+      {section(
+        <>
+          <div style={{
+            background: COLORS.cardBg,
+            border: `1px solid rgba(56,189,248,0.15)`,
+            borderRadius: 28,
+            padding: isMobile ? "28px 18px" : "56px 48px",
+            backgroundImage: "radial-gradient(ellipse at 0% 0%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(ellipse at 100% 100%, rgba(56,189,248,0.06) 0%, transparent 50%)",
+          }}>
+            <div style={{ textAlign: "center", marginBottom: 36 }}>
+              <span style={{
+                background: "rgba(99,102,241,0.12)", color: "#818CF8",
+                fontSize: 10, fontWeight: 700, padding: "4px 12px",
+                borderRadius: 100, textTransform: "uppercase", letterSpacing: "0.1em",
+              }}>AI-Powered</span>
+              <h2 style={{
+                fontFamily: "'Sora', sans-serif", fontSize: "clamp(22px,4vw,38px)",
+                fontWeight: 800, color: COLORS.text,
+                margin: "14px 0 8px", letterSpacing: "-0.02em",
+              }}>Smart Product Finder</h2>
+              <p style={{ color: COLORS.muted, fontSize: 15 }}>
+                Answer 4 quick questions — we'll find your perfect laptop
+              </p>
+            </div>
+
+            {result ? (
+              <div>
+                <p style={{ color: COLORS.green, textAlign: "center", fontWeight: 700, marginBottom: 20, fontSize: 15 }}>
+                  ✦ Top picks for you
+                </p>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+                  gap: 16,
+                }}>
+                  {result.map((p) => (
+                    <div key={p.id} style={{
+                      background: COLORS.background, borderRadius: 16, overflow: "hidden",
+                      border: `1px solid ${COLORS.cardBorder}`,
+                    }}>
+                      <div style={{ height: 120, overflow: "hidden" }}>
+                        <img src={p.img} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </div>
+                      <div style={{ padding: "14px 16px" }}>
+                        <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{p.name}</div>
+                        <div style={{ color: COLORS.green, fontWeight: 800, fontSize: 18, fontFamily: "'Sora', sans-serif" }}>
+                          ₹{p.price.toLocaleString("en-IN")}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ textAlign: "center", marginTop: 24 }}>
+                  <button onClick={reset} style={{
+                    background: "transparent", color: COLORS.muted,
+                    border: `1px solid ${COLORS.cardBorder}`,
+                    borderRadius: 10, padding: "10px 24px",
+                    cursor: "pointer", fontSize: 13,
+                  }}>Start Over</button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                {/* Progress dots */}
+                <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
+                  {finderQ.map((_, i) => (
+                    <div key={i} style={{
+                      height: 4, borderRadius: 2,
+                      width: i <= step ? 32 : 16,
+                      background: i <= step ? COLORS.green : "rgba(255,255,255,0.08)",
+                      transition: "all 0.3s ease",
+                    }} />
+                  ))}
+                </div>
+                <p style={{
+                  color: COLORS.text, textAlign: "center",
+                  fontSize: isMobile ? 16 : 20, fontWeight: 700,
+                  marginBottom: 24, fontFamily: "'Sora', sans-serif",
+                }}>
+                  {finderQ[step].q}
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+                  {finderQ[step].opts.map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => answer(opt)}
+                      style={{
+                        background: "rgba(56,189,248,0.08)",
+                        color: COLORS.green,
+                        border: "1px solid rgba(56,189,248,0.22)",
+                        borderRadius: 100,
+                        padding: isMobile ? "10px 16px" : "13px 26px",
+                        fontSize: isMobile ? 13 : 14, fontWeight: 600,
+                        cursor: "pointer", transition: "all 0.2s ease",
+                        fontFamily: "'Sora', sans-serif",
+                        minHeight: 44,
+                      }}
+                      onMouseEnter={(e) => {
+                        const b = e.currentTarget as HTMLButtonElement;
+                        b.style.background = "linear-gradient(135deg, #3B82F6, #38BDF8)"; b.style.color = "#000";
+                        b.style.border = "1px solid transparent";
+                      }}
+                      onMouseLeave={(e) => {
+                        const b = e.currentTarget as HTMLButtonElement;
+                        b.style.background = "rgba(56,189,248,0.08)"; b.style.color = COLORS.green;
+                        b.style.border = "1px solid rgba(56,189,248,0.22)";
+                      }}
+                    >{opt}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ── Top Picks ───────────────────────────── */}
+      {section(
+        <>
+          <SectionHeader eyebrow="Featured" title="Top Picks For You" subtitle="Handpicked devices with best value and performance" />
+          <div style={{
             display: "grid",
             gridTemplateColumns: isMobile
-              ? "repeat(2, minmax(0, 1fr))"
-              : "repeat(auto-fit, minmax(160px, 1fr))",
-            gap: isMobile ? 12 : 16,
-            marginBottom: isMobile ? 40 : 60,
-          }}
-        >
-          {categories.map((cat) => (
-            <div
-              key={cat.name}
+              ? "repeat(auto-fill,minmax(148px,1fr))"
+              : "repeat(auto-fill,minmax(260px,1fr))",
+            gap: isMobile ? 12 : 20,
+          }}>
+            {products.map((p, i) => (
+              <div key={p.id} style={{ animation: `fadeUp 0.5s ease ${i * 0.06}s both` }}>
+                <ProductCard product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
+              </div>
+            ))}
+          </div>
+          <div style={{ textAlign: "center", marginTop: 40 }}>
+            <button
               onClick={() => setPage("listing")}
               style={{
-                background: COLORS.cardBg,
-                border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 16,
-                padding: "24px 16px",
-                textAlign: "center",
-                cursor: "pointer",
-                transition: "all 0.25s",
+                background: "rgba(56,189,248,0.07)", color: COLORS.text,
+                border: "1px solid rgba(56,189,248,0.18)",
+                borderRadius: 100, padding: "14px 36px",
+                fontSize: 15, fontWeight: 600,
+                cursor: "pointer", fontFamily: "'Sora', sans-serif",
+                display: "inline-flex", alignItems: "center", gap: 8,
+                transition: "all 0.2s",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.green;
-                (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)";
+                const b = e.currentTarget as HTMLButtonElement;
+                b.style.borderColor = "rgba(56,189,248,0.38)";
+                b.style.background = "rgba(56,189,248,0.12)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.cardBorder;
-                (e.currentTarget as HTMLDivElement).style.transform = "none";
+                const b = e.currentTarget as HTMLButtonElement;
+                b.style.borderColor = "rgba(56,189,248,0.18)";
+                b.style.background = "rgba(56,189,248,0.07)";
               }}
             >
-              {/* Keep category emoji as product imagery */}
-              <div
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  marginBottom: 12,
-                  margin: "0 auto 12px",
-                }}
-              >
-                <img
-                  src={cat.icon}
-                  alt={cat.name}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              </div>
-              <div
-                style={{
-                  color: COLORS.text,
-                  fontWeight: 700,
-                  fontSize: 14,
-                  fontFamily: "'Sora', sans-serif",
-                  marginBottom: 4,
-                }}
-              >
-                {cat.name}
-              </div>
-              <div style={{ color: COLORS.muted, fontSize: 12 }}>{cat.count}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Smart Finder ── */}
-        <div
-          style={{
-            background: "linear-gradient(135deg, #0F1E36 0%, #0B1220 100%)",
-            border: "1px solid rgba(59,130,246,0.35)",
-            borderRadius: 24,
-            padding: isMobile ? "24px 16px" : "40px",
-            marginBottom: isMobile ? 40 : 60,
-          }}
-        >
-          <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <span
-              style={{
-                background: COLORS.green,
-                color: "#fff",
-                fontSize: 10,
-                fontWeight: 700,
-                padding: "3px 8px",
-                borderRadius: 20,
-                textTransform: "uppercase",
-              }}
-            >
-              AI-Powered
-            </span>
-            <h2
-              style={{
-                fontFamily: "'Sora', sans-serif",
-                fontSize: 28,
-                fontWeight: 800,
-                color: COLORS.text,
-                margin: "12px 0 8px",
-              }}
-            >
-              Smart Product Finder
-            </h2>
-            <p style={{ color: COLORS.muted }}>
-              Answer 4 quick questions — we&apos;ll find your perfect laptop
-            </p>
+              View All Laptops <ArrowRight size={15} />
+            </button>
           </div>
-          {finderResult ? (
-            <div>
-              <p style={{ color: COLORS.green, textAlign: "center", fontWeight: 700, marginBottom: 20 }}>
-                ✨ Top picks for you:
-              </p>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile
-                    ? "repeat(auto-fit, minmax(140px, 1fr))"
-                    : "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: 16,
-                }}
-              >
-                {finderResult.map((p) => (
-                  <div
-                    key={p.id}
-                    style={{
-                      background: COLORS.cardBg,
-                      borderRadius: 12,
-                      padding: 16,
-                      border: `1px solid ${COLORS.cardBorder}`,
-                    }}
-                  >
-                    <div
-                        style={{
-                          height: 100,
-                          borderRadius: 8,
-                          overflow: "hidden",
-                          marginBottom: 8,
-                          background: COLORS.background,
-                        }}
-                    >
-                      <img
-                        src={p.img}
-                        alt={p.name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400&q=80"; }}
-                      />
-                    </div>
-                    <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 14 }}>{p.name}</div>
-                    <div style={{ color: COLORS.green, fontWeight: 800, fontSize: 18 }}>
-                      ₹{p.price.toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ textAlign: "center", marginTop: 20 }}>
-                <button
-                  onClick={resetFinder}
-                  style={{
-                    background: "transparent",
-                    color: COLORS.muted,
-                    border: `1px solid ${COLORS.cardBorder}`,
-                    borderRadius: 8,
-                    padding: "8px 20px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Start Over
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24 }}>
-                {finderQuestions.map((_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: 32,
-                      height: 4,
-                      borderRadius: 2,
-                      background: i <= finderStep ? COLORS.green : COLORS.cardBorder,
-                    }}
-                  />
-                ))}
-              </div>
-              <p
-                style={{
-                  color: COLORS.text,
-                  textAlign: "center",
-                  fontSize: isMobile ? 16 : 18,
-                  fontWeight: 700,
-                  marginBottom: 20,
-                }}
-              >
-                {finderQuestions[finderStep].q}
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-                {finderQuestions[finderStep].options.map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => handleFinderAnswer(opt)}
-                    style={{
-                      background: "rgba(59,130,246,0.14)",
-                      color: COLORS.green,
-                      border: "1.5px solid rgba(59,130,246,0.35)",
-                      borderRadius: 10,
-                      padding: isMobile ? "10px 14px" : "12px 24px",
-                      fontSize: 14,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                      flex: isMobile ? "1 1 calc(50% - 12px)" : "0 1 auto",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.background = COLORS.green;
-                      (e.currentTarget as HTMLButtonElement).style.color = COLORS.black;
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(59,130,246,0.14)";
-                      (e.currentTarget as HTMLButtonElement).style.color = COLORS.green;
-                    }}
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        </>, true
+      )}
 
-        {/* ── Top Picks ── */}
-        <SectionTitle title="Top Picks For You" subtitle="Handpicked devices with best value and performance" />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile
-              ? "repeat(auto-fit, minmax(160px, 1fr))"
-              : "repeat(auto-fill, minmax(240px, 1fr))",
-            gap: 20,
-            marginBottom: isMobile ? 40 : 60,
-          }}
-        >
-          {products.map((p) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              onView={onViewProduct}
-              onAddToCart={onAddToCart}
-              onWishlist={onWishlist}
-              wishlist={wishlist}
-            />
-          ))}
-        </div>
-
-        {/* ── Exchange Banner ── */}
-        <div
-          style={{
-            background: "linear-gradient(135deg, #0F1E36 0%, #1A2F4F 100%)",
-            border: "1px solid rgba(59,130,246,0.35)",
-            borderRadius: 24,
-            padding: isMobile ? "24px 16px" : "40px 48px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: isMobile ? "flex-start" : "center",
-            marginBottom: isMobile ? 40 : 60,
-            flexWrap: "wrap",
-            flexDirection: isMobile ? "column" : "row",
-            gap: 20,
-          }}
-        >
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, color: COLORS.muted, fontSize: 14, marginBottom: 8 }}>
-              <Recycle size={16} color={COLORS.green} />
-              Eco-friendly Exchange Program
+      {/* ── Exchange Banner ──────────────────────── */}
+      {section(
+        <div style={{
+          background: COLORS.cardBg,
+          border: `1px solid ${COLORS.cardBorder}`,
+          borderRadius: 28,
+          padding: isMobile ? "28px 18px" : "56px 60px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: isMobile ? "flex-start" : "center",
+          flexWrap: "wrap", gap: 24,
+          flexDirection: isMobile ? "column" : "row",
+          backgroundImage: "radial-gradient(ellipse at 0% 50%, rgba(56,189,248,0.07) 0%, transparent 55%), radial-gradient(ellipse at 100% 50%, rgba(99,102,241,0.06) 0%, transparent 55%)",
+          overflow: "hidden",
+          position: "relative",
+        }}>
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, color: COLORS.muted, fontSize: 13, marginBottom: 10 }}>
+              <Recycle size={15} color={COLORS.green} />
+              <span>Eco-friendly Exchange Program</span>
             </div>
-            <h3
-              style={{
-                fontFamily: "'Sora', sans-serif",
-                fontSize: isMobile ? 26 : 32,
-                fontWeight: 800,
-                color: COLORS.text,
-                margin: "0 0 8px",
-              }}
-            >
-              Exchange Your Old Laptop
-            </h3>
-            <p style={{ color: COLORS.muted, fontSize: 16, margin: 0 }}>
-              Get Up to{" "}
-              <span style={{ color: COLORS.green, fontWeight: 800 }}>₹15,000 Off</span>{" "}
-              on your next purchase
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 12, alignItems: "center", alignSelf: isMobile ? "center" : "auto" }}>
-            <div style={{ fontSize: isMobile ? 56 : 80, opacity: 0.5 }}>💻</div>
-            <ArrowRight size={28} color={COLORS.green} strokeWidth={2.5} />
-            <div style={{ fontSize: isMobile ? 56 : 80 }}>💻</div>
-          </div>
-          <button
-            style={{
-              background: COLORS.green,
-              color: COLORS.black,
-              border: "none",
-              borderRadius: 12,
-              padding: "14px 28px",
-              fontSize: 16,
-              fontWeight: 800,
-              cursor: "pointer",
+            <h3 style={{
               fontFamily: "'Sora', sans-serif",
-              whiteSpace: "nowrap",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              width: isMobile ? "100%" : "auto",
-              justifyContent: "center",
-            }}
-          >
-            Exchange Now <ArrowRight size={16} />
+              fontSize: isMobile ? 24 : 38, fontWeight: 800,
+              color: COLORS.text, margin: "0 0 10px",
+              letterSpacing: "-0.025em",
+            }}>Exchange Your Old Laptop</h3>
+            <p style={{ color: COLORS.muted, fontSize: 15, margin: 0 }}>
+              Get up to{" "}
+              <span style={{ color: COLORS.green, fontWeight: 800 }}>₹15,000 Off</span>
+              {" "}on your next purchase
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <div style={{ fontSize: isMobile ? 48 : 64, opacity: 0.4 }}>💻</div>
+            <ArrowRight size={22} color={COLORS.green} />
+            <div style={{ fontSize: isMobile ? 48 : 64 }}>💻</div>
+          </div>
+          <button style={{
+            background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000",
+            border: "none", borderRadius: 100,
+            padding: "15px 32px", fontSize: 15, fontWeight: 800,
+            cursor: "pointer", fontFamily: "'Sora', sans-serif",
+            display: "flex", alignItems: "center", gap: 8,
+            width: isMobile ? "100%" : "auto", justifyContent: "center",
+            boxShadow: "0 0 40px rgba(56,189,248,0.25)",
+            minHeight: 48,
+          }}>
+            Exchange Now <ArrowRight size={15} />
           </button>
         </div>
+      )}
 
-        {/* ── Why NewJaisa ── */}
-        <SectionTitle title="Why Choose NewJaisa?" subtitle="We make refurbished trustworthy and reliable" />
-        <div
-          style={{
+      {/* ── Why LaptopKart ──────────────────────── */}
+      {section(
+        <>
+          <SectionHeader eyebrow="Why Us" title="The LaptopKart Promise" subtitle="We make refurbished trustworthy and reliable" />
+          <div style={{
             display: "grid",
-            gridTemplateColumns: isMobile
-              ? "repeat(2, minmax(0, 1fr))"
-              : "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 20,
-            marginBottom: isMobile ? 40 : 60,
-          }}
-        >
-          {whyFeatures.map((f) => (
-            <div
-              key={f.title}
-              style={{
+            gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(5,1fr)",
+            gap: isMobile ? 12 : 20,
+          }}>
+            {whyItems.map((f, i) => (
+              <div key={f.t} style={{
                 background: COLORS.cardBg,
                 border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 16,
-                padding: "24px 20px",
+                borderRadius: 20, padding: isMobile ? "20px 14px" : "28px 20px",
                 textAlign: "center",
+                animation: `fadeUp 0.5s ease ${i * 0.08}s both`,
+                transition: "all 0.3s ease",
+                position: "relative", overflow: "hidden",
               }}
-            >
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-                {f.icon}
-              </div>
-              <div
-                style={{
-                  color: COLORS.text,
-                  fontWeight: 700,
-                  fontSize: 14,
-                  fontFamily: "'Sora', sans-serif",
-                  marginBottom: 4,
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLDivElement;
+                  el.style.borderColor = "rgba(56,189,248,0.28)";
+                  el.style.transform = "translateY(-4px)";
+                  el.style.boxShadow = "0 16px 48px rgba(0,0,0,0.3)";
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLDivElement;
+                  el.style.borderColor = COLORS.cardBorder;
+                  el.style.transform = "none";
+                  el.style.boxShadow = "none";
                 }}
               >
-                {f.title}
+                {/* Top accent line */}
+                <div style={{
+                  position: "absolute", top: 0, left: 0, right: 0, height: 2,
+                  background: `linear-gradient(90deg, transparent, rgba(56,189,248,0.4), transparent)`,
+                }} />
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>{f.icon}</div>
+                <div style={{ color: COLORS.text, fontWeight: 700, fontSize: isMobile ? 12 : 13, fontFamily: "'Sora', sans-serif", marginBottom: 4 }}>{f.t}</div>
+                <div style={{ color: COLORS.muted, fontSize: isMobile ? 11 : 12 }}>{f.d}</div>
               </div>
-              <div style={{ color: COLORS.muted, fontSize: 13 }}>{f.desc}</div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>, true
+      )}
 
-        {/* ── Reviews ── */}
-        <SectionTitle title="Happy Customers" subtitle="Join 50,000+ satisfied customers" />
-        <div
-          style={{
+      {/* ── Customer Reviews ─────────────────────── */}
+      {section(
+        <>
+          <SectionHeader eyebrow="Reviews" title="50,000+ Happy Customers" subtitle="Trusted by students, professionals, and businesses across India" />
+          <div style={{
             display: "grid",
-            gridTemplateColumns: isMobile
-              ? "repeat(auto-fit, minmax(200px, 1fr))"
-              : "repeat(auto-fit, minmax(240px, 1fr))",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit,minmax(250px,1fr))",
             gap: 20,
-            marginBottom: isMobile ? 40 : 60,
-          }}
-        >
-          {reviews.map((r) => (
-            <div
-              key={r.name}
-              style={{
+          }}>
+            {reviews.map((r, i) => (
+              <div key={r.name} style={{
                 background: COLORS.cardBg,
                 border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 16,
-                padding: 24,
+                borderRadius: 20, padding: 24,
+                animation: `fadeUp 0.5s ease ${i * 0.1}s both`,
+                transition: "border-color 0.2s",
               }}
-            >
-              <div style={{ display: "flex", gap: 2 }}>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star
-                    key={i}
-                    size={12}
-                    fill={i <= r.rating ? "#FBBF24" : "transparent"}
-                    color={i <= r.rating ? "#FBBF24" : "#374151"}
-                  />
-                ))}
-              </div>
-              <p style={{ color: COLORS.text, fontSize: 14, lineHeight: 1.6, margin: "12px 0 16px" }}>
-                &ldquo;{r.text}&rdquo;
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: "50%",
-                    background: "rgba(59,130,246,0.2)",
-                    border: "1px solid rgba(59,130,246,0.35)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: COLORS.green,
-                    fontWeight: 700,
-                    fontSize: 12,
-                  }}
-                >
-                  {r.avatar}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(56,189,248,0.22)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.cardBorder; }}
+              >
+                <div style={{ display: "flex", gap: 2, marginBottom: 12 }}>
+                  {[1,2,3,4,5].map((s) => (
+                    <Star key={s} size={13}
+                      fill={s <= r.rating ? "#F59E0B" : "transparent"}
+                      color={s <= r.rating ? "#F59E0B" : "rgba(255,255,255,0.15)"} />
+                  ))}
                 </div>
-                <div>
-                  <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 13 }}>{r.name}</div>
-                  <div style={{ color: COLORS.muted, fontSize: 12 }}>{r.city}</div>
+                <p style={{ color: COLORS.text, fontSize: 14, lineHeight: 1.7, margin: "0 0 16px" }}>
+                  &ldquo;{r.text}&rdquo;
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: "50%",
+                    background: "linear-gradient(135deg, rgba(56,189,248,0.15), rgba(99,102,241,0.15))",
+                    border: "1px solid rgba(56,189,248,0.22)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: COLORS.green, fontWeight: 800, fontSize: 12,
+                    fontFamily: "'Sora', sans-serif",
+                  }}>
+                    {r.avatar}
+                  </div>
+                  <div>
+                    <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 13 }}>{r.name}</div>
+                    <div style={{ color: COLORS.muted, fontSize: 12 }}>{r.city}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
+      )}
 
-        {/* ── Newsletter ── */}
-        <div
-          style={{
-            background: COLORS.cardBg,
-            border: `1px solid ${COLORS.cardBorder}`,
-            borderRadius: 24,
-            padding: isMobile ? "28px 16px" : "48px 40px",
-            textAlign: "center",
-            marginBottom: isMobile ? 40 : 60,
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: "'Sora', sans-serif",
-              fontSize: 28,
-              fontWeight: 800,
-              color: COLORS.text,
-              margin: "0 0 8px",
-            }}
-          >
-            Stay Updated With Offers &amp; Latest Deals
+      {/* ── Newsletter ───────────────────────────── */}
+      {section(
+        <div style={{
+          background: COLORS.cardBg,
+          border: `1px solid ${COLORS.cardBorder}`,
+          borderRadius: 28,
+          padding: isMobile ? "32px 18px" : "60px 48px",
+          textAlign: "center",
+          backgroundImage: "radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 60%), radial-gradient(ellipse at 50% 100%, rgba(56,189,248,0.06) 0%, transparent 60%)",
+        }}>
+          <h3 style={{
+            fontFamily: "'Sora', sans-serif",
+            fontSize: "clamp(22px,3.5vw,38px)", fontWeight: 800,
+            color: COLORS.text, margin: "0 0 10px", letterSpacing: "-0.02em",
+          }}>
+            Stay Ahead of the Deals
           </h3>
-          <p style={{ color: COLORS.muted, margin: "0 0 28px" }}>
-            Get exclusive offers, new arrivals, and tech news directly to your inbox
+          <p style={{ color: COLORS.muted, margin: "0 0 32px", fontSize: 15, lineHeight: 1.6 }}>
+            Exclusive offers, new arrivals, and tech insights — straight to your inbox
           </p>
-          <div
-            style={{
-              display: "flex",
-              maxWidth: 480,
-              margin: "0 auto",
-              gap: 12,
-              flexDirection: isMobile ? "column" : "row",
-            }}
-          >
+          <div style={{
+            display: "flex", maxWidth: 500, margin: "0 auto",
+            gap: 10, flexDirection: isMobile ? "column" : "row",
+          }}>
             <input
               placeholder="Enter your email"
               style={{
-                flex: 1,
-                background: COLORS.background,
+                flex: 1, background: COLORS.background,
                 border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 10,
-                padding: "12px 16px",
-                color: COLORS.text,
-                fontSize: 14,
-                outline: "none",
+                borderRadius: 12, padding: "14px 18px",
+                color: COLORS.text, fontSize: 15, outline: "none",
+                boxSizing: "border-box",
               }}
+              onFocus={(e) => { e.target.style.borderColor = "rgba(56,189,248,0.38)"; }}
+              onBlur={(e) => { e.target.style.borderColor = COLORS.cardBorder; }}
             />
-            <button
-              style={{
-                background: COLORS.green,
-                color: COLORS.black,
-                border: "none",
-                borderRadius: 10,
-                padding: "12px 24px",
-                fontWeight: 700,
-                fontSize: 14,
-                cursor: "pointer",
-                width: isMobile ? "100%" : "auto",
-              }}
-            >
+            <button style={{
+              background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000",
+              border: "none", borderRadius: 12,
+              padding: "14px 28px", fontWeight: 800, fontSize: 15,
+              cursor: "pointer", fontFamily: "'Sora', sans-serif",
+              whiteSpace: "nowrap",
+              width: isMobile ? "100%" : "auto",
+              minHeight: 48,
+            }}>
               Subscribe
             </button>
           </div>
         </div>
-
-      </div>
+      )}
     </main>
   );
 }

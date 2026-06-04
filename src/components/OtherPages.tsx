@@ -102,7 +102,7 @@ export function BlogPage() {
             onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.green; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.cardBorder; (e.currentTarget as HTMLDivElement).style.transform = "none"; }}
           >
-            <div style={{ background: "linear-gradient(135deg, #16243B, #0B1220)", height: 140, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 60 }}>{post.icon}</div>
+            <div style={{ background: `linear-gradient(135deg, ${COLORS.cardBg}, ${COLORS.darkBg})`, height: 140, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 60 }}>{post.icon}</div>
             <div style={{ padding: 20 }}>
               <span style={{ background: COLORS.greenDark, color: "#fff", fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, textTransform: "uppercase" }}>{post.cat}</span>
               <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 16, lineHeight: 1.5, margin: "10px 0 12px" }}>{post.title}</h3>

@@ -1,88 +1,274 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ─── Reset ───────────────────────────────────────────────── */
-*,
-*::before,
-*::after {
+/* ─── Reset ─────────────────────────────────────────────── */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* ─── Base ────────────────────────────────────────────────── */
+/* ─── Design Tokens ──────────────────────────────────────── */
 :root {
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
-  --color-accent: #38bdf8;
-  --color-background: #0b1220;
-  --color-card-bg: #111a2b;
-  --color-card-border: #23324a;
-  --color-text: #e6eef8;
-  --color-muted: #93a4b8;
-  --color-badge: #ef4444;
-  --color-green: var(--color-primary);
-  --color-green-dark: var(--color-primary-hover);
-  --color-dark-bg: var(--color-background);
+  /* Backgrounds — deep navy, NOT pure black */
+  --bg:         #0d1117;
+  --bg-1:       #131a24;
+  --bg-2:       #1a2235;
+  --bg-3:       #243047;
+  --bg-footer:  #0a0f18;
+
+  /* Borders — blue-tinted */
+  --border:     rgba(56,150,240,0.10);
+  --border-hi:  rgba(56,189,248,0.22);
+
+  /* Text — soft warm white, not pure white */
+  --text:       #E8EDF5;
+  --text-2:     #8B9BBE;
+  --text-3:     #4A5568;
+
+  /* Accent colors */
+  --accent:     #38BDF8;
+  --accent-2:   #3B82F6;
+  --accent-3:   #22D3EE;
+  --accent-indigo: #6366F1;
+  --gold:       #F59E0B;
+  --red:        #F43F5E;
+
+  /* Radii */
+  --r-sm:       10px;
+  --r-md:       18px;
+  --r-lg:       24px;
+  --r-xl:       32px;
+
+  /* Shadows */
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.5);
+  --shadow-md:  0 8px 32px rgba(0,0,0,0.55);
+  --shadow-lg:  0 24px 64px rgba(0,0,0,0.65);
+  --shadow-glow: 0 0 40px rgba(56,189,248,0.18);
+  --shadow-indigo: 0 0 40px rgba(99,102,241,0.15);
+
+  /* Layout */
+  --nav-h:      52px;
+  --section-pad: 100px;
+  --section-pad-m: 60px;
+  --max-w:      1200px;
+  --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 
-html,
-body {
-  background: var(--color-dark-bg);
-  color: var(--color-text);
-  font-family: 'Sora', 'Inter', sans-serif;
-  min-height: 100vh;
-  max-width: 100%;
-  overflow-x: hidden;
+/* ─── Base ───────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
-/* ─── Scrollbar ───────────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-dark-bg);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-card-border);
-  border-radius: 3px;
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
 }
 
-/* ─── Details / FAQ ───────────────────────────────────────── */
-details summary::-webkit-details-marker {
-  display: none;
-}
-details[open] summary::after {
-  content: ' ▲';
-  font-size: 12px;
-}
-details summary::after {
-  content: ' ▼';
-  font-size: 12px;
-  color: var(--color-muted);
-  float: right;
+/* ─── Typography Scale ───────────────────────────────────── */
+.t-display {
+  font-family: 'Sora', system-ui, -apple-system, sans-serif;
+  font-size: clamp(40px, 8vw, 96px);
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--text);
 }
 
-/* ─── Inputs ──────────────────────────────────────────────── */
-input,
-select,
-textarea {
-  font-family: inherit;
+.t-headline {
+  font-family: 'Sora', system-ui, -apple-system, sans-serif;
+  font-size: clamp(28px, 5vw, 56px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
-/* ─── Button reset ────────────────────────────────────────── */
-button {
-  font-family: inherit;
+.t-title {
+  font-family: 'Sora', system-ui, -apple-system, sans-serif;
+  font-size: clamp(18px, 3vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
 
-/* ─── Animations ──────────────────────────────────────────── */
+.t-body {
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+.t-caption {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+/* ─── Layout ─────────────────────────────────────────────── */
+.section {
+  padding: var(--section-pad) 24px;
+}
+
+.section-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+
+/* ─── Buttons ────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Sora', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  border-radius: 100px;
+  padding: 14px 28px;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: #000;
+  box-shadow: 0 0 30px rgba(56,189,248,0.25);
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 50px rgba(56,189,248,0.4);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: rgba(56,150,240,0.07);
+  color: var(--text);
+  border: 1px solid var(--border-hi);
+}
+.btn-secondary:hover {
+  background: rgba(56,150,240,0.13);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid rgba(56,189,248,0.35);
+  border-radius: var(--r-sm);
+}
+.btn-ghost:hover {
+  background: rgba(56,189,248,0.1);
+  color: var(--accent);
+}
+
+/* ─── Cards ──────────────────────────────────── */
+.apple-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: var(--transition);
+}
+.apple-card:hover {
+  border-color: var(--border-hi);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md), var(--shadow-glow);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.18); border-radius: 3px; }
+
+/* ─── Selection ──────────────────────────────────────────── */
+::selection { background: rgba(56,189,248,0.3); }
+
+/* ─── Details / FAQ ──────────────────────────────────────── */
+details summary::-webkit-details-marker { display: none; }
+details[open] summary::after { content: ' ▲'; font-size: 11px; }
+details summary::after { content: ' ▼'; font-size: 11px; color: var(--text-2); float: right; }
+
+/* ─── Form elements ──────────────────────────────────────── */
+input, select, textarea, button { font-family: inherit; }
+input::placeholder { color: var(--text-3); }
+input:focus, textarea:focus, select:focus { outline: none; }
+
+/* ─── Input ──────────────────────────────────── */
+.apple-input {
+  width: 100%;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 13px 16px;
+  color: var(--text);
+  font-size: 15px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.apple-input:focus { border-color: var(--accent); }
+
+/* ─── Dividers ───────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+}
+
+/* ─── Animations ─────────────────────────────────────────── */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-16px); }
 }
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.08); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  33%       { transform: translate(15px, -20px); }
+  66%       { transform: translate(-10px, 12px); }
+}
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1);    opacity: 0.6; }
-  50%       { transform: scale(1.05); opacity: 1; }
+/* ─── Scrollbar accent ───────────────────────────────────── */
+* { scrollbar-width: thin; scrollbar-color: rgba(56,189,248,0.18) transparent; }
+
+/* ─── Responsive helpers ──────────────────────────────────── */
+@media (max-width: 768px) {
+  :root {
+    --section-pad: var(--section-pad-m);
+  }
+  .section {
+    padding: 60px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --section-pad-m: 44px;
+  }
+  .section {
+    padding: 44px 14px;
+  }
 }

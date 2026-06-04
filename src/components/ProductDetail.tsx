@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { COLORS, products, reviews } from "@/data/products";
+import {
+  Heart, ShoppingCart, Star, Shield, RefreshCw, Truck, BadgeCheck,
+  Share2, ChevronLeft, ChevronRight, Zap, Tag, Info, Award,
+} from "lucide-react";
+import { COLORS, products } from "@/data/products";
 import type { Product } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import { useIsMobile } from "@/lib/hooks";
 
-interface ProductDetailProps {
+interface Props {
   product: Product | null;
   onAddToCart: (p: Product) => void;
   onWishlist: (id: number) => void;
@@ -15,664 +19,377 @@ interface ProductDetailProps {
   onViewProduct: (p: Product) => void;
 }
 
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div style={{ display: "flex", gap: 2 }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span
-          key={i}
-          style={{
-            color: i <= Math.floor(rating) ? "#FBBF24" : "#374151",
-            fontSize: 12,
-          }}
-        >
-          ★
-        </span>
-      ))}
-    </div>
-  );
-}
+const specIcons: Record<string, string> = {
+  CPU: "⚡", RAM: "💾", Storage: "📦", Display: "🖥", GPU: "🎮",
+  OS: "🪟", Battery: "🔋", Weight: "⚖", Camera: "📷",
+};
 
-const faqData: [string, string][] = [
-  [
-    "What is a refurbished laptop?",
-    "A refurbished laptop is a pre-owned device that has been professionally inspected, repaired, and restored to working condition. At NewJaisa, every device undergoes a 72-point quality check.",
-  ],
-  [
-    "What does Grade A+ mean?",
-    "Grade A+ means the device is in near-perfect cosmetic and functional condition. Minor signs of use may exist but are barely noticeable.",
-  ],
-  [
-    "What warranty do you offer?",
-    "We offer a 1 Year comprehensive warranty on all refurbished devices, covering hardware defects and functional issues.",
-  ],
-  [
-    "Can I return if not satisfied?",
-    "Yes! We offer a 7-day no-questions-asked return policy on all products.",
-  ],
-];
-
-export default function ProductDetail({
-  product,
-  onAddToCart,
-  onWishlist,
-  wishlist,
-  setPage,
-  onViewProduct,
-}: ProductDetailProps) {
-  const [qty, setQty] = useState(1);
-  const [tab, setTab] = useState("specs");
-  const [pincode, setPincode] = useState("");
-  const [deliveryMsg, setDeliveryMsg] = useState("");
+export default function ProductDetail({ product, onAddToCart, onWishlist, wishlist, setPage, onViewProduct }: Props) {
+  const [tab, setTab]     = useState<"specs" | "why" | "reviews">("specs");
+  const [qty, setQty]     = useState(1);
+  const [added, setAdded] = useState(false);
   const isMobile = useIsMobile();
 
   if (!product) return null;
 
-  const isWished = wishlist.includes(product.id);
-  const related = products
-    .filter((p) => p.id !== product.id && p.category === product.category)
-    .slice(0, 4);
+  const isWished  = wishlist.includes(product.id);
+  const related   = products.filter((p) => p.id !== product.id).slice(0, 4);
 
-  const specRows: [string, string][] = [
-    ["Processor", product.processor],
+  const handleAdd = () => {
+    for (let i = 0; i < qty; i++) onAddToCart(product);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
+  };
+
+  const specs = [
+    ["CPU", product.processor],
     ["RAM", product.ram],
     ["Storage", product.storage],
-    ["Display", "14 inch Full HD (1920x1080)"],
-    ["OS", "Windows 11 Pro"],
-    ["Battery", "4-cell, 48Wh"],
-    ["Weight", "1.8 kg"],
-    ["Warranty", product.warranty],
-    ["Grade", `Grade ${product.grade}`],
+    ["Specs Detail", product.specs],
+  ].filter(([, v]) => v);
+
+  const trustBadges = [
+    { icon: <Shield size={14} color={COLORS.green} />, text: product.warranty ?? "1 Year Warranty" },
+    { icon: <RefreshCw size={14} color={COLORS.green} />, text: "7 Day Returns" },
+    { icon: <Truck size={14} color={COLORS.green} />, text: "Free Delivery" },
+    { icon: <BadgeCheck size={14} color={COLORS.green} />, text: "Grade " + product.grade },
   ];
 
   return (
-    <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "20px 14px" : "32px 20px" }}>
-
-      {/* Breadcrumb */}
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          alignItems: "center",
-          marginBottom: 24,
-          color: COLORS.muted,
-          fontSize: 14,
-        }}
-      >
-        <span
-          onClick={() => setPage("home")}
-          style={{ cursor: "pointer", color: COLORS.green }}
-        >
-          Home
-        </span>
-        <span>›</span>
-        <span
-          onClick={() => setPage("listing")}
-          style={{ cursor: "pointer", color: COLORS.green }}
-        >
-          Laptops
-        </span>
-        <span>›</span>
-        <span>{product.name}</span>
+    <main style={{ background: COLORS.darkBg, minHeight: "100vh" }}>
+      {/* ── Breadcrumb ─────────────────────────── */}
+      <div style={{
+        maxWidth: 1200, margin: "0 auto",
+        padding: isMobile ? "16px 20px" : "20px 24px",
+        display: "flex", gap: 6, alignItems: "center",
+      }}>
+        {[
+          { label: "Home", page: "home" },
+          { label: "Laptops", page: "listing" },
+          { label: product.name, page: null },
+        ].map((b, i) => (
+          <span key={b.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {i > 0 && <ChevronRight size={12} color="#333" />}
+            <span
+              onClick={b.page ? () => setPage(b.page!) : undefined}
+              style={{
+                color: b.page ? COLORS.muted : COLORS.text,
+                fontSize: 13, cursor: b.page ? "pointer" : "default",
+                fontWeight: b.page ? 400 : 600,
+                maxWidth: i === 2 ? 200 : "auto",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}
+            >{b.label}</span>
+          </span>
+        ))}
       </div>
 
-      {/* Main grid */}
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 24 : 48, marginBottom: 48 }}>
-        {/* Gallery */}
-        <div>
-          <div
-            style={{
-              background: COLORS.background,
-              borderRadius: 20,
-              marginBottom: 16,
-              border: `1px solid ${COLORS.cardBorder}`,
-              height: 320,
-              overflow: "hidden",
-            }}
-          >
+      {/* ── Main content ───────────────────────── */}
+      <div style={{
+        maxWidth: 1200, margin: "0 auto",
+        padding: isMobile ? "0 20px 48px" : "0 24px 80px",
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+        gap: isMobile ? 32 : 56,
+        alignItems: "start",
+      }}>
+
+        {/* Left: Image */}
+        <div style={{ position: "relative" }}>
+          <div style={{
+            borderRadius: 24,
+            overflow: "hidden",
+            background: COLORS.background,
+            border: `1px solid ${COLORS.cardBorder}`,
+            aspectRatio: "4/3",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            position: "relative",
+          }}>
             <img
-              src={product.img}
-              alt={product.name}
-              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=600&q=80&auto=format&fit=crop"; }}
+              src={product.img} alt={product.name}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src =
+                  "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80";
+              }}
             />
+            <span style={{
+              position: "absolute", top: 16, left: 16,
+              background: "#EF4444", color: "#fff",
+              fontSize: 11, fontWeight: 800, padding: "4px 12px",
+              borderRadius: 100,
+            }}>
+              {product.discount}% OFF
+            </span>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
-              gap: 8,
-            }}
-          >
-            {[0, 25, 50, 75].map((offset) => (
-              <div
-                key={offset}
-                style={{
-                  background: COLORS.background,
-                  border: `1px solid ${COLORS.cardBorder}`,
-                  borderRadius: 10,
-                  height: 72,
-                  overflow: "hidden",
-                  cursor: "pointer",
-                }}
-              >
-                <img
-                  src={`${product.img}&crop=entropy&_offset=${offset}`}
-                  alt={`${product.name} view`}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = product.img; }}
-                />
+
+          {/* Trust badges row */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 8, marginTop: 14,
+          }}>
+            {trustBadges.map((b) => (
+              <div key={b.text} style={{
+                background: COLORS.background,
+                border: `1px solid ${COLORS.cardBorder}`,
+                borderRadius: 12,
+                padding: "10px 8px", textAlign: "center",
+              }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 5 }}>{b.icon}</div>
+                <div style={{ color: COLORS.muted, fontSize: 10, fontWeight: 500 }}>{b.text}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Info */}
+        {/* Right: Details */}
         <div>
-          <h1
-            style={{
-              fontFamily: "'Sora', sans-serif",
-              fontSize: 28,
-              fontWeight: 800,
-              color: COLORS.text,
-              margin: "0 0 8px",
-            }}
-          >
-            {product.name}
-          </h1>
-          <p style={{ color: COLORS.muted, margin: "0 0 12px" }}>{product.specs}</p>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 16,
-            }}
-          >
-            <StarRating rating={product.rating} />
-            <span style={{ color: COLORS.muted, fontSize: 14 }}>
-              {product.rating} ({product.reviews} reviews)
+          {/* Badge */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            background: "rgba(56,189,248,0.08)",
+            border: "1px solid rgba(56,189,248,0.2)",
+            borderRadius: 100, padding: "4px 12px",
+            marginBottom: 14,
+          }}>
+            <Award size={11} color={COLORS.green} />
+            <span style={{ color: COLORS.green, fontSize: 11, fontWeight: 700 }}>
+              {product.badge}
             </span>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "baseline",
-              gap: 12,
-              marginBottom: 8,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 36,
-                fontWeight: 800,
-                color: COLORS.green,
+          <h1 style={{
+            fontFamily: "'Sora', sans-serif",
+            fontSize: "clamp(22px, 3vw, 36px)",
+            fontWeight: 800,
+            color: COLORS.text,
+            letterSpacing: "-0.025em",
+            lineHeight: 1.15,
+            margin: "0 0 8px",
+          }}>{product.name}</h1>
+
+          <p style={{ color: COLORS.muted, fontSize: 14, margin: "0 0 18px", lineHeight: 1.7 }}>
+            {product.specs}
+          </p>
+
+          {/* Stars */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+            <div style={{ display: "flex", gap: 2 }}>
+              {[1,2,3,4,5].map((s) => (
+                <Star key={s} size={14} fill={s <= Math.floor(product.rating) ? "#F59E0B" : "transparent"} color={s <= Math.floor(product.rating) ? "#F59E0B" : "rgba(255,255,255,0.15)"} />
+              ))}
+            </div>
+            <span style={{ color: COLORS.text, fontWeight: 700, fontSize: 14 }}>{product.rating}</span>
+            <span style={{ color: COLORS.muted, fontSize: 13 }}>({product.reviews} reviews)</span>
+          </div>
+
+          {/* Price */}
+          <div style={{
+            background: COLORS.cardBg,
+            border: `1px solid ${COLORS.cardBorder}`,
+            borderRadius: 18, padding: "22px 24px",
+            marginBottom: 22,
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 10, marginBottom: 8 }}>
+              <span style={{
                 fontFamily: "'Sora', sans-serif",
-              }}
-            >
-              ₹{product.price.toLocaleString('en-IN')}
-            </span>
-            <span
-              style={{
-                color: COLORS.muted,
-                textDecoration: "line-through",
-                fontSize: 18,
-              }}
-            >
-              ₹{product.mrp.toLocaleString('en-IN')}
-            </span>
-          </div>
-
-          <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-            <span
-              style={{
-                background: "#EF4444",
-                color: "#fff",
-                fontSize: 10,
-                fontWeight: 700,
-                padding: "3px 8px",
-                borderRadius: 20,
-              }}
-            >
-              {product.discount}% OFF
-            </span>
-            <span style={{ color: COLORS.muted, fontSize: 13 }}>
-              You save ₹{(product.mrp - product.price).toLocaleString('en-IN')}
-            </span>
-          </div>
-
-          <div style={{ color: COLORS.muted, fontSize: 13, marginBottom: 20 }}>
-            EMI from ₹{Math.floor(product.price / 12).toLocaleString('en-IN')}/month &bull; No
-            Cost EMI Available
-          </div>
-
-          {/* Battery */}
-          <div style={{ marginBottom: 20 }}>
-            <div
-              style={{
-                color: COLORS.text,
-                fontSize: 13,
-                fontWeight: 600,
-                marginBottom: 8,
-              }}
-            >
-              🔋 Battery Health: 88%
-            </div>
-            <div
-              style={{
-                background: COLORS.cardBorder,
-                borderRadius: 6,
-                height: 8,
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  width: "88%",
-                  height: "100%",
-                  background: `linear-gradient(90deg, ${COLORS.primary}, ${COLORS.accent})`,
-                  borderRadius: 6,
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Pincode */}
-          <div style={{ marginBottom: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <input
-              value={pincode}
-              onChange={(e) => setPincode(e.target.value)}
-              placeholder="Enter pincode"
-              maxLength={6}
-              style={{
-                background: COLORS.cardBg,
-                border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 8,
-                padding: "10px 14px",
-                color: COLORS.text,
-                fontSize: 13,
-                outline: "none",
-                width: 160,
-              }}
-            />
-            <button
-              onClick={() =>
-                setDeliveryMsg(
-                  pincode.length === 6
-                    ? "✅ Delivery by Tomorrow!"
-                    : "Enter valid pincode"
-                )
-              }
-              style={{
-                background: COLORS.green,
-                color: COLORS.black,
-                border: "none",
-                borderRadius: 8,
-                padding: "10px 16px",
-                fontWeight: 700,
-                fontSize: 13,
-                cursor: "pointer",
-              }}
-            >
-              Check
-            </button>
-            {deliveryMsg && (
-              <span
-                style={{
-                  color: deliveryMsg.includes("✅") ? COLORS.green : "#EF4444",
-                  fontSize: 13,
-                  alignSelf: "center",
-                }}
-              >
-                {deliveryMsg}
+                fontSize: 40, fontWeight: 800,
+                color: COLORS.text, letterSpacing: "-0.03em",
+              }}>
+                ₹{product.price.toLocaleString("en-IN")}
               </span>
-            )}
-          </div>
-
-          {/* Qty */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              marginBottom: 20,
-            }}
-          >
-            <span style={{ color: COLORS.muted, fontSize: 14 }}>Qty:</span>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 8,
-                overflow: "hidden",
-              }}
-            >
-              <button
-                onClick={() => setQty((q) => Math.max(1, q - 1))}
-                style={{
-                  background: COLORS.cardBg,
-                  color: COLORS.text,
-                  border: "none",
-                  padding: "8px 14px",
-                  cursor: "pointer",
-                  fontSize: 16,
-                }}
-              >
-                −
-              </button>
-              <span
-                style={{
-                  padding: "8px 16px",
-                  color: COLORS.text,
-                  background: COLORS.background,
-                }}
-              >
-                {qty}
+              <span style={{ color: COLORS.muted, fontSize: 16, textDecoration: "line-through", marginBottom: 6 }}>
+                ₹{product.mrp.toLocaleString("en-IN")}
               </span>
-              <button
-                onClick={() => setQty((q) => q + 1)}
-                style={{
-                  background: COLORS.cardBg,
-                  color: COLORS.text,
-                  border: "none",
-                  padding: "8px 14px",
-                  cursor: "pointer",
-                  fontSize: 16,
-                }}
-              >
-                +
-              </button>
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <span style={{
+                background: "rgba(16,185,129,0.12)", color: "#10B981",
+                fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 100,
+              }}>
+                You save ₹{(product.mrp - product.price).toLocaleString("en-IN")}
+              </span>
+              <span style={{ color: COLORS.muted, fontSize: 12 }}>
+                EMI from ₹{Math.round(product.price / 12).toLocaleString("en-IN")}/mo
+              </span>
             </div>
           </div>
 
-          {/* CTA */}
-          <div style={{ display: "flex", gap: 12, marginBottom: 20, flexDirection: isMobile ? "column" : "row" }}>
-            <button
-              onClick={() => onAddToCart(product)}
-              style={{
-                flex: 1,
-                background: COLORS.green,
-                color: COLORS.black,
-                border: "none",
-                borderRadius: 12,
-                padding: "16px 0",
-                fontWeight: 800,
-                fontSize: 16,
-                cursor: "pointer",
-                fontFamily: "'Sora', sans-serif",
-              }}
-            >
-              🛒 Add to Cart
+          {/* Quantity + Add */}
+          <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 0,
+              background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`,
+              borderRadius: 14, overflow: "hidden",
+            }}>
+              <button onClick={() => setQty(Math.max(1, qty - 1))} style={{
+                background: "transparent", border: "none", color: COLORS.text,
+                width: 44, height: 48, cursor: "pointer", fontSize: 20,
+              }}>−</button>
+              <span style={{ color: COLORS.text, fontWeight: 700, width: 32, textAlign: "center" }}>{qty}</span>
+              <button onClick={() => setQty(qty + 1)} style={{
+                background: "transparent", border: "none", color: COLORS.text,
+                width: 44, height: 48, cursor: "pointer", fontSize: 20,
+              }}>+</button>
+            </div>
+            <button onClick={handleAdd} style={{
+              flex: 1, minWidth: 180,
+              background: added ? "#10B981" : "linear-gradient(135deg, #3B82F6, #38BDF8)",
+              color: "#000", border: "none", borderRadius: 14,
+              height: 48, fontWeight: 800, fontSize: 15,
+              cursor: "pointer", fontFamily: "'Sora', sans-serif",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+              transition: "all 0.25s ease",
+              boxShadow: "0 0 40px rgba(56,189,248,0.22)",
+            }}>
+              {added ? <><span>✓</span> Added!</> : <><Zap size={15} /> Add to Cart</>}
             </button>
             <button
               onClick={() => onWishlist(product.id)}
               style={{
-                background: isWished ? "rgba(239,68,68,0.15)" : COLORS.cardBg,
-                color: isWished ? "#EF4444" : COLORS.muted,
-                border: `1px solid ${isWished ? "#EF4444" : COLORS.cardBorder}`,
-                borderRadius: 12,
-                padding: "16px 20px",
-                cursor: "pointer",
-                fontSize: 20,
-                width: isMobile ? "100%" : "auto",
+                background: isWished ? "rgba(239,68,68,0.12)" : COLORS.cardBg,
+                border: `1px solid ${isWished ? "rgba(239,68,68,0.3)" : COLORS.cardBorder}`,
+                borderRadius: 14, width: 48, height: 48,
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.2s",
               }}
             >
-              {isWished ? "❤️" : "🤍"}
+              <Heart size={18} fill={isWished ? "#EF4444" : "transparent"} color={isWished ? "#EF4444" : COLORS.muted} />
             </button>
           </div>
 
-          <div
-            style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 10 }}
+          <button onClick={() => setPage("checkout")} style={{
+            width: "100%", background: "transparent",
+            border: "1px solid rgba(255,255,255,0.12)",
+            color: COLORS.text, borderRadius: 14, height: 48,
+            fontWeight: 700, fontSize: 15, cursor: "pointer",
+            fontFamily: "'Sora', sans-serif",
+            transition: "border-color 0.2s",
+            marginBottom: 22,
+          }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.3)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; }}
           >
-            {["🛡️ 1 Yr Warranty", "🔄 7 Day Return", "✅ Quality Checked"].map((b) => (
-              <div
-                key={b}
-                style={{
-                  background: COLORS.cardBg,
-                  border: `1px solid ${COLORS.cardBorder}`,
-                  borderRadius: 10,
-                  padding: "10px 8px",
-                  textAlign: "center",
-                  color: COLORS.muted,
-                  fontSize: 12,
-                }}
-              >
-                {b}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div
-        style={{
-          borderBottom: `1px solid ${COLORS.cardBorder}`,
-          marginBottom: 32,
-          display: "flex",
-          overflowX: isMobile ? "auto" : "visible",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {["specs", "quality", "reviews", "faq"].map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              padding: "14px 24px",
-              background: "transparent",
-              border: "none",
-              borderBottom: `2px solid ${tab === t ? COLORS.green : "transparent"}`,
-              color: tab === t ? COLORS.green : COLORS.muted,
-              cursor: "pointer",
-              fontSize: 14,
-              fontWeight: tab === t ? 700 : 500,
-              textTransform: "capitalize",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t === "faq" ? "FAQ" : t.charAt(0).toUpperCase() + t.slice(1)}
+            Buy Now
           </button>
-        ))}
+
+          {/* Tabs */}
+          <div>
+            <div style={{
+              display: "flex", gap: 0,
+              borderBottom: `1px solid ${COLORS.cardBorder}`,
+              marginBottom: 20,
+            }}>
+              {(["specs", "why", "reviews"] as const).map((t) => (
+                <button key={t} onClick={() => setTab(t)} style={{
+                  background: "transparent", border: "none",
+                  borderBottom: `2px solid ${tab === t ? COLORS.green : "transparent"}`,
+                  color: tab === t ? COLORS.text : COLORS.muted,
+                  padding: "10px 18px", cursor: "pointer",
+                  fontSize: 13, fontWeight: 700,
+                  textTransform: "capitalize",
+                  transition: "all 0.2s",
+                }}>
+                  {t === "specs" ? "Specifications" : t === "why" ? "Why Buy?" : "Reviews"}
+                </button>
+              ))}
+            </div>
+
+            {/* Specs */}
+            {tab === "specs" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {specs.length > 0 ? specs.map(([key, val]) => (
+                  <div key={key} style={{
+                    display: "flex", justifyContent: "space-between",
+                    padding: "12px 0",
+                    borderBottom: `1px solid ${COLORS.cardBorder}`,
+                  }}>
+                    <span style={{ color: COLORS.muted, fontSize: 13, display: "flex", alignItems: "center", gap: 7 }}>
+                      {specIcons[key] ?? "·"} {key}
+                    </span>
+                    <span style={{ color: COLORS.text, fontSize: 13, fontWeight: 600, maxWidth: "55%", textAlign: "right" }}>
+                      {val as string}
+                    </span>
+                  </div>
+                )) : (
+                  <p style={{ color: COLORS.muted, fontSize: 13 }}>{product.specs}</p>
+                )}
+              </div>
+            )}
+
+            {/* Why Buy */}
+            {tab === "why" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {[
+                  "72-point quality inspection completed",
+                  "Original parts — no fake components",
+                  "Full operating system restored & verified",
+                  "Battery cycle count checked & disclosed",
+                  "1 Year warranty with nationwide service",
+                  "7-day return if not satisfied",
+                ].map((item) => (
+                  <div key={item} style={{
+                    display: "flex", gap: 10, alignItems: "flex-start",
+                  }}>
+                    <BadgeCheck size={16} color={COLORS.green} style={{ flexShrink: 0, marginTop: 1 }} />
+                    <span style={{ color: COLORS.muted, fontSize: 14, lineHeight: 1.5 }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Reviews */}
+            {tab === "reviews" && (
+              <div>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 16, marginBottom: 20,
+                  padding: "16px 20px", background: COLORS.background,
+                  borderRadius: 16, border: `1px solid ${COLORS.cardBorder}`,
+                }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 48, fontWeight: 800, color: COLORS.text, lineHeight: 1, fontFamily: "'Sora', sans-serif" }}>
+                      {product.rating}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 4 }}>
+                      {[1,2,3,4,5].map((s) => (
+                        <Star key={s} size={12} fill="#FBBF24" color="#FBBF24" />
+                      ))}
+                    </div>
+                    <div style={{ color: COLORS.muted, fontSize: 11, marginTop: 4 }}>{product.reviews} reviews</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Specs Tab */}
-      {tab === "specs" && (
-        <div
-          style={{
-            background: COLORS.cardBg,
-            border: `1px solid ${COLORS.cardBorder}`,
-            borderRadius: 16,
-            overflow: "hidden",
-            marginBottom: 48,
-            overflowX: "auto",
-          }}
-        >
-          <table style={{ width: "100%", minWidth: isMobile ? 520 : "100%", borderCollapse: "collapse" }}>
-            <tbody>
-              {specRows.map(([key, val], i) => (
-                <tr
-                  key={key}
-                  style={{
-                    borderBottom: `1px solid ${COLORS.cardBorder}`,
-                    background:
-                      i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)",
-                  }}
-                >
-                  <td
-                    style={{
-                      padding: "14px 20px",
-                      color: COLORS.muted,
-                      fontSize: 14,
-                      width: "40%",
-                    }}
-                  >
-                    {key}
-                  </td>
-                  <td
-                    style={{
-                      padding: "14px 20px",
-                      color: COLORS.text,
-                      fontSize: 14,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {val}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Quality Tab */}
-      {tab === "quality" && (
-        <div
-          style={{
+      {/* ── Related products ──────────────────── */}
+      <div style={{
+        background: COLORS.background,
+        borderTop: `1px solid ${COLORS.cardBorder}`,
+        padding: isMobile ? "48px 18px" : "80px 24px",
+      }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <h2 style={{
+            fontFamily: "'Sora', sans-serif",
+            fontSize: "clamp(22px, 3vw, 36px)",
+            fontWeight: 800, color: COLORS.text,
+            letterSpacing: "-0.025em",
+            margin: "0 0 32px",
+          }}>You Might Also Like</h2>
+          <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: 16,
-            marginBottom: 48,
-          }}
-        >
-          {[
-            "Keyboard ✅",
-            "Display ✅",
-            "Ports ✅",
-            "Camera ✅",
-            "Battery ✅",
-            "Touchpad ✅",
-            "Speaker ✅",
-            "WiFi ✅",
-            "Charging ✅",
-          ].map((c) => (
-            <div
-              key={c}
-              style={{
-                background: COLORS.cardBg,
-                border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 12,
-                padding: "14px 16px",
-                color: COLORS.text,
-                fontSize: 14,
-              }}
-            >
-              {c}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Reviews Tab */}
-      {tab === "reviews" && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: 20,
-            marginBottom: 48,
-          }}
-        >
-          {reviews.map((r) => (
-            <div
-              key={r.name}
-              style={{
-                background: COLORS.cardBg,
-                border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 16,
-                padding: 20,
-              }}
-            >
-              <StarRating rating={r.rating} />
-              <p style={{ color: COLORS.text, fontSize: 14, margin: "10px 0 14px" }}>
-                &ldquo;{r.text}&rdquo;
-              </p>
-              <div style={{ color: COLORS.muted, fontSize: 13 }}>
-                {r.name} &bull; {r.city}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* FAQ Tab */}
-      {tab === "faq" && (
-        <div style={{ marginBottom: 48 }}>
-          {faqData.map(([q, a]) => (
-            <details
-              key={q}
-              style={{
-                background: COLORS.cardBg,
-                border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 12,
-                marginBottom: 12,
-                padding: "16px 20px",
-                cursor: "pointer",
-              }}
-            >
-              <summary
-                style={{
-                  color: COLORS.text,
-                  fontWeight: 600,
-                  fontSize: 15,
-                  listStyle: "none",
-                }}
-              >
-                {q}
-              </summary>
-              <p
-                style={{
-                  color: COLORS.muted,
-                  fontSize: 14,
-                  marginTop: 12,
-                  lineHeight: 1.7,
-                }}
-              >
-                {a}
-              </p>
-            </details>
-          ))}
-        </div>
-      )}
-
-      {/* Related Products */}
-      {related.length > 0 && (
-        <>
-          <h2
-            style={{
-              fontFamily: "'Sora', sans-serif",
-              fontSize: 30,
-              fontWeight: 800,
-              color: COLORS.text,
-              margin: "0 0 24px",
-            }}
-          >
-            Similar Products
-          </h2>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-              gap: 20,
-            }}
-          >
+            gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)",
+            gap: 18,
+          }}>
             {related.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                onView={onViewProduct}
-                onAddToCart={onAddToCart}
-                onWishlist={onWishlist}
-                wishlist={wishlist}
-              />
+              <ProductCard key={p.id} product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
             ))}
           </div>
-        </>
-      )}
-    </div>
+        </div>
+      </div>
+    </main>
   );
 }

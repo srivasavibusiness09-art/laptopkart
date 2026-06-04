@@ -1,106 +1,296 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ArrowRight } from "lucide-react";
 import { COLORS } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
 
-interface HeroProps { setPage: (page: string) => void }
+interface HeroProps { setPage: (p: string) => void }
+
+const stats = [
+  { value: "50K+", label: "Devices Sold" },
+  { value: "1 Year", label: "Warranty" },
+  { value: "72+", label: "QC Checks" },
+  { value: "4.8★", label: "Rating" },
+];
 
 export default function Hero({ setPage }: HeroProps) {
   const [count, setCount] = useState(0);
-  const isMobile          = useIsMobile();
+  const [visible, setVisible] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    const timer = setInterval(() => setCount((c) => (c < 50000 ? c + 1234 : 50000)), 30);
-    return () => clearInterval(timer);
+    const t = setTimeout(() => setVisible(true), 80);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => setCount((c) => (c < 50000 ? c + 1618 : 50000)), 28);
+    return () => clearInterval(t);
   }, []);
 
   return (
     <section style={{
-      background: "linear-gradient(135deg,#0B1220 0%,#111A2B 55%,#0F1E36 100%)",
-      minHeight: isMobile ? "auto" : 520,
-      display: "flex", alignItems: "center", position: "relative", overflow: "hidden",
+      minHeight: isMobile ? "auto" : "100vh",
+      background: `linear-gradient(160deg, #0d1117 0%, #111827 50%, #0d1525 100%)`,
+      display: "flex", alignItems: "center",
+      position: "relative", overflow: "hidden",
+      padding: isMobile ? "80px 18px 60px" : "0 40px",
     }}>
-      {/* Glow */}
-      <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 20% 50%,rgba(59,130,246,0.14) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(56,189,248,0.12) 0%,transparent 40%)" }} />
+      {/* Ambient background orbs */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {/* Blue orb — right */}
+        <div style={{
+          position: "absolute", top: "15%", left: "55%",
+          width: "55vw", height: "55vw",
+          background: "radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 65%)",
+          borderRadius: "50%", filter: "blur(50px)",
+          animation: "pulse-glow 5s ease-in-out infinite",
+        }} />
+        {/* Indigo orb — left */}
+        <div style={{
+          position: "absolute", top: "40%", left: "-10%",
+          width: "45vw", height: "45vw",
+          background: "radial-gradient(circle, rgba(99,102,241,0.10) 0%, transparent 65%)",
+          borderRadius: "50%", filter: "blur(50px)",
+          animation: "pulse-glow 7s ease-in-out infinite 1.5s",
+        }} />
+        {/* Cyan accent — bottom */}
+        <div style={{
+          position: "absolute", bottom: "5%", left: "35%",
+          width: "30vw", height: "30vw",
+          background: "radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 70%)",
+          borderRadius: "50%", filter: "blur(40px)",
+          animation: "pulse-glow 9s ease-in-out infinite 3s",
+        }} />
+        {/* Grid pattern overlay */}
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: "linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+          maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%)",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%)",
+        }} />
+      </div>
 
       <div style={{
-        maxWidth: 1280, margin: "0 auto", padding: isMobile ? "36px 16px" : "60px 20px",
+        maxWidth: 1200, margin: "0 auto", width: "100%",
         display: "grid",
         gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-        gap: isMobile ? 32 : 60,
-        alignItems: "center", width: "100%",
+        gap: isMobile ? 40 : 80, alignItems: "center",
+        opacity: visible ? 1 : 0,
+        transition: "opacity 0.8s ease",
+        position: "relative", zIndex: 1,
       }}>
 
         {/* Left: Text */}
         <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(59,130,246,0.16)", border: "1px solid rgba(59,130,246,0.4)", borderRadius: 20, padding: "6px 14px", marginBottom: 20 }}>
-            <span style={{ color: COLORS.green, fontSize: 12, fontWeight: 700 }}>⚡ SAVE UP TO 70% OFF</span>
+          {/* Badge */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: "rgba(56,189,248,0.1)",
+            border: "1px solid rgba(56,189,248,0.25)",
+            borderRadius: 100, padding: "6px 16px",
+            marginBottom: 28,
+          }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.green, animation: "pulse-glow 2s ease-in-out infinite" }} />
+            <span style={{ color: COLORS.green, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+              Save Up To 70% Off
+            </span>
           </div>
 
-          <h1 style={{ fontFamily: "'Sora',sans-serif", fontSize: isMobile ? "clamp(28px,7vw,40px)" : "clamp(32px,4vw,54px)", fontWeight: 800, color: COLORS.text, lineHeight: 1.15, margin: "0 0 16px" }}>
-            Refurbished Tech<br />That Feels{" "}
-            <span style={{ color: COLORS.green }}>Brand New</span>
+          <h1 style={{
+            fontFamily: "'Sora', sans-serif",
+            fontSize: isMobile ? "clamp(32px,9vw,48px)" : "clamp(44px,5.5vw,76px)",
+            fontWeight: 800,
+            color: COLORS.text,
+            lineHeight: 1.05,
+            letterSpacing: "-0.035em",
+            margin: "0 0 24px",
+          }}>
+            Refurbished Tech
+            <br />
+            That Feels{" "}
+            <span style={{
+              color: "transparent",
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              backgroundImage: "linear-gradient(135deg, #38BDF8 0%, #6366F1 60%, #22D3EE 100%)",
+            }}>
+              Brand New
+            </span>
           </h1>
 
-          <p style={{ color: COLORS.muted, fontSize: isMobile ? 15 : 17, lineHeight: 1.7, margin: "0 0 28px", maxWidth: 480 }}>
-            Best Quality. Tested by Experts. Backed by Warranty. Every device undergoes a 72-point quality check before reaching you.
+          <p style={{
+            color: COLORS.muted, fontSize: isMobile ? 15 : 17,
+            lineHeight: 1.7, marginBottom: 36,
+            maxWidth: 460,
+          }}>
+            Every device undergoes a 72-point quality inspection.
+            Premium performance at a fraction of the cost.
           </p>
 
-          <div style={{ display: "flex", gap: 12, marginBottom: 36, flexWrap: "wrap" }}>
-            <button onClick={() => setPage("listing")} style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 12, padding: isMobile ? "13px 24px" : "14px 32px", fontSize: isMobile ? 15 : 16, fontWeight: 800, cursor: "pointer", fontFamily: "'Sora',sans-serif" }}>
-              Shop Laptops →
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 48 }}>
+            <button
+              onClick={() => setPage("listing")}
+              style={{
+                background: "linear-gradient(135deg, #3B82F6, #38BDF8)",
+                color: "#000",
+                border: "none",
+                borderRadius: 100,
+                padding: isMobile ? "13px 26px" : "16px 36px",
+                fontSize: isMobile ? 14 : 16, fontWeight: 800,
+                cursor: "pointer",
+                fontFamily: "'Sora', sans-serif",
+                display: "flex", alignItems: "center", gap: 8,
+                boxShadow: "0 0 40px rgba(56,189,248,0.30)",
+                transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
+              }}
+              onMouseEnter={(e) => {
+                const b = e.currentTarget as HTMLButtonElement;
+                b.style.transform = "translateY(-2px)";
+                b.style.boxShadow = "0 0 60px rgba(56,189,248,0.50)";
+              }}
+              onMouseLeave={(e) => {
+                const b = e.currentTarget as HTMLButtonElement;
+                b.style.transform = "translateY(0)";
+                b.style.boxShadow = "0 0 40px rgba(56,189,248,0.30)";
+              }}
+            >
+              Shop Laptops <ArrowRight size={16} />
             </button>
-            <button style={{ background: "transparent", color: COLORS.text, border: `1.5px solid ${COLORS.cardBorder}`, borderRadius: 12, padding: isMobile ? "13px 20px" : "14px 32px", fontSize: isMobile ? 15 : 16, fontWeight: 700, cursor: "pointer", fontFamily: "'Sora',sans-serif" }}>
+            <button
+              style={{
+                background: "rgba(56,189,248,0.07)",
+                color: COLORS.text,
+                border: "1px solid rgba(56,189,248,0.20)",
+                borderRadius: 100,
+                padding: isMobile ? "13px 22px" : "16px 32px",
+                fontSize: isMobile ? 14 : 16, fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "'Sora', sans-serif",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                const b = e.currentTarget as HTMLButtonElement;
+                b.style.borderColor = "rgba(56,189,248,0.40)";
+                b.style.background = "rgba(56,189,248,0.12)";
+              }}
+              onMouseLeave={(e) => {
+                const b = e.currentTarget as HTMLButtonElement;
+                b.style.borderColor = "rgba(56,189,248,0.20)";
+                b.style.background = "rgba(56,189,248,0.07)";
+              }}
+            >
               Why Refurbished?
             </button>
           </div>
 
           {/* Stats */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)",
-              gap: isMobile ? 8 : 16,
-            }}
-          >
-            {[
-              { value: `${Math.min(count, 50000).toLocaleString("en-IN")}+`, label: "Devices Sold" },
-              { value: "1 Year",  label: "Warranty" },
-              { value: "72+",     label: "QC Checks" },
-              { value: "4.8/5",   label: "Rating" },
-            ].map((stat) => (
-              <div key={stat.label} style={{ textAlign: "center", background: "rgba(255,255,255,0.04)", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 12, padding: isMobile ? "10px 4px" : "14px 8px" }}>
-                <div style={{ color: COLORS.green, fontSize: isMobile ? 14 : 20, fontWeight: 800, fontFamily: "'Sora',sans-serif" }}>{stat.value}</div>
-                <div style={{ color: COLORS.muted, fontSize: isMobile ? 9 : 11, marginTop: 3 }}>{stat.label}</div>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`,
+            gap: isMobile ? 10 : 14,
+          }}>
+            {stats.map((s, i) => (
+              <div key={s.label} style={{
+                background: "rgba(56,189,248,0.05)",
+                border: "1px solid rgba(56,189,248,0.12)",
+                borderRadius: 14,
+                padding: isMobile ? "12px 8px" : "16px 12px",
+                textAlign: "center",
+                animation: `fadeUp 0.6s ease ${i * 0.1}s both`,
+                backdropFilter: "blur(8px)",
+              }}>
+                <div style={{
+                  fontFamily: "'Sora', sans-serif",
+                  fontSize: isMobile ? 17 : 22, fontWeight: 800,
+                  color: COLORS.green, marginBottom: 3,
+                }}>
+                  {s.label === "Devices Sold" ? `${Math.min(count, 50000).toLocaleString("en-IN")}+` : s.value}
+                </div>
+                <div style={{ color: COLORS.muted, fontSize: isMobile ? 10 : 11, letterSpacing: "0.02em" }}>
+                  {s.label}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right: Laptop Image */}
+        {/* Right: Floating product image */}
         {!isMobile && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-            <div style={{ position: "absolute", width: 350, height: 350, background: "radial-gradient(circle,rgba(59,130,246,0.2) 0%,transparent 70%)", borderRadius: "50%", animation: "pulse 3s ease-in-out infinite" }} />
-            <div style={{ width: 340, height: 340, borderRadius: 24, overflow: "hidden", boxShadow: "0 24px 80px rgba(59,130,246,0.28),0 8px 32px rgba(0,0,0,0.6)", animation: "float 4s ease-in-out infinite", border: "1px solid rgba(59,130,246,0.3)" }}>
-              <img src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=700&q=85&auto=format&fit=crop" alt="Refurbished Laptop" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            </div>
-            {/* Badges */}
-            <div style={{ position: "absolute", top: "10%", right: "5%", background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 12, padding: "10px 14px" }}>
-              <div style={{ color: COLORS.green, fontSize: 13, fontWeight: 700 }}>✓ Quality Checked</div>
-              <div style={{ color: COLORS.muted, fontSize: 11 }}>72-point inspection</div>
-            </div>
-            <div style={{ position: "absolute", bottom: "15%", left: "0%", background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 12, padding: "10px 14px" }}>
-              <div style={{ color: "#FBBF24", fontSize: 13, fontWeight: 700 }}>★ 4.8/5 Rating</div>
-              <div style={{ color: COLORS.muted, fontSize: 11 }}>50,000+ Reviews</div>
+          <div style={{ display: "flex", justifyContent: "center", position: "relative" }}>
+            {/* Glow blob */}
+            <div style={{
+              position: "absolute",
+              width: "80%", height: "80%",
+              background: "radial-gradient(circle, rgba(59,130,246,0.20) 0%, rgba(99,102,241,0.10) 50%, transparent 70%)",
+              borderRadius: "50%",
+              filter: "blur(40px)",
+              animation: "pulse-glow 4s ease-in-out infinite",
+            }} />
+
+            {/* Product card */}
+            <div style={{
+              width: 380, height: 380,
+              borderRadius: 28,
+              overflow: "hidden",
+              border: "1px solid rgba(56,189,248,0.15)",
+              boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 60px rgba(59,130,246,0.18), 0 0 120px rgba(99,102,241,0.10)",
+              animation: "float 5s ease-in-out infinite",
+              position: "relative",
+              zIndex: 1,
+            }}>
+              <img
+                src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=85&auto=format&fit=crop"
+                alt="Premium refurbished laptop"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+              {/* Overlay badge top-right */}
+              <div style={{
+                position: "absolute", top: 16, right: 16,
+                background: "rgba(13,17,23,0.80)", backdropFilter: "blur(12px)",
+                borderRadius: 12, padding: "10px 14px",
+                border: "1px solid rgba(56,189,248,0.18)",
+              }}>
+                <div style={{ color: COLORS.green, fontSize: 12, fontWeight: 700 }}>✓ Quality Checked</div>
+                <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>72-point inspection</div>
+              </div>
+              {/* Bottom badge */}
+              <div style={{
+                position: "absolute", bottom: 16, left: 16,
+                background: "rgba(13,17,23,0.80)", backdropFilter: "blur(12px)",
+                borderRadius: 12, padding: "10px 14px",
+                border: "1px solid rgba(245,158,11,0.25)",
+              }}>
+                <div style={{ color: "#F59E0B", fontSize: 12, fontWeight: 700 }}>★ 4.8 / 5 Rating</div>
+                <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>50,000+ Reviews</div>
+              </div>
             </div>
           </div>
         )}
       </div>
 
+      {/* Scroll indicator (desktop) */}
+      {!isMobile && (
+        <div style={{
+          position: "absolute", bottom: 36, left: "50%",
+          transform: "translateX(-50%)",
+          textAlign: "center", opacity: 0.5,
+          animation: "floatHint 2.5s ease-in-out infinite",
+        }}>
+          <div style={{ color: COLORS.muted, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
+            Scroll
+          </div>
+          <div style={{ width: 1, height: 32, background: "linear-gradient(to bottom, rgba(56,189,248,0.5), transparent)", margin: "0 auto" }} />
+        </div>
+      )}
+
       <style>{`
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
-        @keyframes pulse { 0%,100%{transform:scale(1);opacity:0.6} 50%{transform:scale(1.05);opacity:1} }
+        @keyframes floatHint {
+          0%,100%{ transform:translateX(-50%) translateY(0); }
+          50%    { transform:translateX(-50%) translateY(8px); }
+        }
       `}</style>
     </section>
   );

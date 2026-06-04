@@ -1,162 +1,265 @@
-export interface Product {
+export const COLORS = {
+  darkBg: "#0d1117",
+  background: "#131a24",
+  cardBg: "#1a2235",
+  cardBorder: "rgba(56,150,240,0.12)",
+  text: "#E8EDF5",
+  muted: "#8B9BBE",
+  green: "#38BDF8",
+  greenDark: "#0EA5E9",
+  cyan: "#22D3EE",
+  indigo: "#6366F1",
+  primary: "#3B82F6",
+  accent: "#F59E0B",
+  badge: "#3B82F6",
+  black: "#0d1117",
+} as const;
+
+export type Product = {
   id: number;
   name: string;
-  specs: string;
+  brand: string;
+  category: string;
   price: number;
   mrp: number;
   discount: number;
   rating: number;
   reviews: number;
+  grade: "A+" | "A" | "B+";
   warranty: string;
-  badge: string;
-  grade: string;
-  img: string;        // URL to product image
-  category: string;
-  brand: string;
-  ram: string;
-  storage: string;
+  specs: string;
+  img: string;
   processor: string;
-}
-
-export interface Category {
-  name: string;
-  icon: string;       // URL to category image
-  count: string;
-  color: string;
-}
-
-export interface Review {
-  name: string;
-  rating: number;
-  text: string;
-  avatar: string;
-  city: string;
-}
-
-/* ── Product Images (Unsplash CDN — no API key required) ── */
-const IMG = {
-  dellLatitude:  "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400&q=80&auto=format&fit=crop",
-  hpEliteBook:   "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&q=80&auto=format&fit=crop",
-  thinkPad:      "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=400&q=80&auto=format&fit=crop",
-  dellXps:       "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400&q=80&auto=format&fit=crop",
-  macbook:       "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80&auto=format&fit=crop",
-  gaming:        "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=400&q=80&auto=format&fit=crop",
-  desktop:       "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&q=80&auto=format&fit=crop",
-  hpPavilion:    "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400&q=80&auto=format&fit=crop",
-};
-
-/* ── Category Images ── */
-const CAT_IMG = {
-  laptops:    "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=200&q=80&auto=format&fit=crop",
-  gaming:     "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=200&q=80&auto=format&fit=crop",
-  desktops:   "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=200&q=80&auto=format&fit=crop",
-  macbooks:   "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200&q=80&auto=format&fit=crop",
-  monitors:   "https://images.unsplash.com/photo-1527443224154-c4a573d5f5a0?w=200&q=80&auto=format&fit=crop",
-  accessories:"https://images.unsplash.com/photo-1527814050087-3793815479db?w=200&q=80&auto=format&fit=crop",
+  ram: "8GB" | "16GB" | "32GB";
+  storage: string;
+  badge: "Best Seller" | "Gaming" | "Value Deal" | "Top Rated";
 };
 
 export const products: Product[] = [
   {
-    id: 1, name: "Dell Latitude 5400", specs: "Intel i5 | 8GB | 256GB SSD",
-    price: 18999, mrp: 32999, discount: 42, rating: 4.7, reviews: 324,
-    warranty: "1 Year", badge: "Best Seller", grade: "A",
-    img: IMG.dellLatitude, category: "laptops", brand: "Dell",
-    ram: "8GB", storage: "256GB SSD", processor: "Intel i5",
+    id: 1,
+    name: "Dell Latitude 5400",
+    brand: "Dell",
+    category: "Business",
+    price: 27999,
+    mrp: 54999,
+    discount: 49,
+    rating: 4.6,
+    reviews: 842,
+    grade: "A+",
+    warranty: "1 Year",
+    specs: "Intel i5 8th Gen • 8GB RAM • 256GB SSD",
+    img: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80&auto=format&fit=crop",
+    processor: "Intel Core i5 8265U",
+    ram: "8GB",
+    storage: "256GB SSD",
+    badge: "Best Seller",
   },
   {
-    id: 2, name: "HP EliteBook 840 G5", specs: "Intel i5 | 8GB | 256GB SSD",
-    price: 21999, mrp: 38999, discount: 44, rating: 4.6, reviews: 286,
-    warranty: "1 Year", badge: "Premium", grade: "A+",
-    img: IMG.hpEliteBook, category: "laptops", brand: "HP",
-    ram: "8GB", storage: "256GB SSD", processor: "Intel i5",
+    id: 2,
+    name: "HP EliteBook 840 G5",
+    brand: "HP",
+    category: "Business",
+    price: 29999,
+    mrp: 59999,
+    discount: 50,
+    rating: 4.5,
+    reviews: 610,
+    grade: "A",
+    warranty: "1 Year",
+    specs: "Intel i5 8th Gen • 16GB RAM • 512GB SSD",
+    img: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&q=80&auto=format&fit=crop",
+    processor: "Intel Core i5 8250U",
+    ram: "16GB",
+    storage: "512GB SSD",
+    badge: "Top Rated",
   },
   {
-    id: 3, name: "Lenovo ThinkPad T480", specs: "Intel i5 | 8GB | 256GB SSD",
-    price: 18499, mrp: 34999, discount: 47, rating: 4.8, reviews: 410,
-    warranty: "1 Year", badge: "Best Battery", grade: "A",
-    img: IMG.thinkPad, category: "laptops", brand: "Lenovo",
-    ram: "8GB", storage: "256GB SSD", processor: "Intel i5",
+    id: 3,
+    name: "Lenovo ThinkPad T480",
+    brand: "Lenovo",
+    category: "Business",
+    price: 26999,
+    mrp: 52999,
+    discount: 49,
+    rating: 4.7,
+    reviews: 934,
+    grade: "A+",
+    warranty: "1 Year",
+    specs: "Intel i5 8th Gen • 8GB RAM • 256GB SSD",
+    img: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=800&q=80&auto=format&fit=crop",
+    processor: "Intel Core i5 8350U",
+    ram: "8GB",
+    storage: "256GB SSD",
+    badge: "Best Seller",
   },
   {
-    id: 4, name: "Dell XPS 13", specs: "Intel i5 | 8GB | 256GB SSD",
-    price: 41999, mrp: 75999, discount: 45, rating: 4.9, reviews: 190,
-    warranty: "1 Year", badge: "Premium", grade: "A+",
-    img: IMG.dellXps, category: "laptops", brand: "Dell",
-    ram: "8GB", storage: "256GB SSD", processor: "Intel i5",
+    id: 4,
+    name: "Asus TUF Gaming FX505",
+    brand: "Asus",
+    category: "Gaming",
+    price: 45999,
+    mrp: 89999,
+    discount: 49,
+    rating: 4.4,
+    reviews: 412,
+    grade: "A",
+    warranty: "1 Year",
+    specs: "Ryzen 5 • 16GB RAM • 512GB SSD • GTX 1650",
+    img: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&q=80&auto=format&fit=crop",
+    processor: "AMD Ryzen 5 3550H",
+    ram: "16GB",
+    storage: "512GB SSD",
+    badge: "Gaming",
   },
   {
-    id: 5, name: "MacBook Pro 2019", specs: "Core i7 | 16GB | 512GB SSD",
-    price: 54999, mrp: 99999, discount: 45, rating: 4.9, reviews: 521,
-    warranty: "1 Year", badge: "Top Rated", grade: "A+",
-    img: IMG.macbook, category: "macbooks", brand: "Apple",
-    ram: "16GB", storage: "512GB SSD", processor: "Core i7",
+    id: 5,
+    name: "Apple MacBook Air 2018",
+    brand: "Apple",
+    category: "MacBook",
+    price: 54999,
+    mrp: 99999,
+    discount: 45,
+    rating: 4.8,
+    reviews: 520,
+    grade: "A+",
+    warranty: "1 Year",
+    specs: "Intel i5 • 8GB RAM • 128GB SSD",
+    img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80&auto=format&fit=crop",
+    processor: "Intel Core i5",
+    ram: "8GB",
+    storage: "128GB SSD",
+    badge: "Top Rated",
   },
   {
-    id: 6, name: "Asus ROG Strix G15", specs: "Ryzen 7 | 16GB | 512GB SSD",
-    price: 62999, mrp: 110000, discount: 43, rating: 4.7, reviews: 198,
-    warranty: "1 Year", badge: "Gaming", grade: "A",
-    img: IMG.gaming, category: "gaming", brand: "Asus",
-    ram: "16GB", storage: "512GB SSD", processor: "Ryzen 7",
+    id: 6,
+    name: "Dell G5 15 Gaming",
+    brand: "Dell",
+    category: "Gaming",
+    price: 52999,
+    mrp: 99999,
+    discount: 47,
+    rating: 4.3,
+    reviews: 288,
+    grade: "B+",
+    warranty: "1 Year",
+    specs: "Intel i7 • 16GB RAM • 512GB SSD • GTX 1660Ti",
+    img: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800&q=80&auto=format&fit=crop",
+    processor: "Intel Core i7 8750H",
+    ram: "16GB",
+    storage: "512GB SSD",
+    badge: "Gaming",
   },
   {
-    id: 7, name: "Dell OptiPlex 7060", specs: "Intel i7 | 16GB | 512GB SSD",
-    price: 24999, mrp: 45000, discount: 44, rating: 4.6, reviews: 156,
-    warranty: "1 Year", badge: "Office Pick", grade: "A",
-    img: IMG.desktop, category: "desktops", brand: "Dell",
-    ram: "16GB", storage: "512GB SSD", processor: "Intel i7",
+    id: 7,
+    name: "HP ProBook 440 G6",
+    brand: "HP",
+    category: "Business",
+    price: 24999,
+    mrp: 47999,
+    discount: 48,
+    rating: 4.2,
+    reviews: 365,
+    grade: "A",
+    warranty: "1 Year",
+    specs: "Intel i5 8th Gen • 8GB RAM • 256GB SSD",
+    img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80&auto=format&fit=crop",
+    processor: "Intel Core i5 8265U",
+    ram: "8GB",
+    storage: "256GB SSD",
+    badge: "Value Deal",
   },
   {
-    id: 8, name: "HP Pavilion 15", specs: "Intel i3 | 8GB | 256GB SSD",
-    price: 14999, mrp: 27000, discount: 44, rating: 4.4, reviews: 89,
-    warranty: "1 Year", badge: "Budget Pick", grade: "B+",
-    img: IMG.hpPavilion, category: "laptops", brand: "HP",
-    ram: "8GB", storage: "256GB SSD", processor: "Intel i3",
+    id: 8,
+    name: "Lenovo IdeaPad S540",
+    brand: "Lenovo",
+    category: "Ultrabook",
+    price: 32999,
+    mrp: 64999,
+    discount: 49,
+    rating: 4.4,
+    reviews: 214,
+    grade: "A+",
+    warranty: "1 Year",
+    specs: "Intel i5 10th Gen • 16GB RAM • 512GB SSD",
+    img: "https://images.unsplash.com/photo-1516387938699-a93567ec168e?w=800&q=80&auto=format&fit=crop",
+    processor: "Intel Core i5 10210U",
+    ram: "16GB",
+    storage: "512GB SSD",
+    badge: "Top Rated",
   },
 ];
 
-export const categories: Category[] = [
-  { name: "Laptops",         icon: CAT_IMG.laptops,     count: "500+ Products",  color: "#1E3A5F" },
-  { name: "Gaming Laptops",  icon: CAT_IMG.gaming,      count: "120+ Products",  color: "#2D1B4E" },
-  { name: "Desktops",        icon: CAT_IMG.desktops,    count: "200+ Products",  color: "#1A3A2A" },
-  { name: "MacBooks",        icon: CAT_IMG.macbooks,    count: "80+ Products",   color: "#3A1A1A" },
-  { name: "Monitors",        icon: CAT_IMG.monitors,    count: "150+ Products",  color: "#1A2A3A" },
-  { name: "Accessories",     icon: CAT_IMG.accessories, count: "300+ Products",  color: "#2A2A1A" },
-];
+export const categories = [
+  {
+    name: "Business Laptops",
+    icon: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=200&q=80&auto=format&fit=crop",
+    count: "120+ items",
+  },
+  {
+    name: "Gaming Laptops",
+    icon: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=200&q=80&auto=format&fit=crop",
+    count: "60+ items",
+  },
+  {
+    name: "MacBooks",
+    icon: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=200&q=80&auto=format&fit=crop",
+    count: "40+ items",
+  },
+  {
+    name: "Ultrabooks",
+    icon: "https://images.unsplash.com/photo-1516387938699-a93567ec168e?w=200&q=80&auto=format&fit=crop",
+    count: "55+ items",
+  },
+  {
+    name: "Workstations",
+    icon: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&q=80&auto=format&fit=crop",
+    count: "35+ items",
+  },
+  {
+    name: "Accessories",
+    icon: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200&q=80&auto=format&fit=crop",
+    count: "80+ items",
+  },
+] as const;
 
-export const reviews: Review[] = [
-  { name: "Rohit Sharma", rating: 5, text: "Excellent quality laptop. Feels like new. Battery backup is awesome!", avatar: "RS", city: "Mumbai" },
-  { name: "Priya Mehta",  rating: 5, text: "Best experience buying refurbished. Highly recommended to friends!",  avatar: "PM", city: "Delhi" },
-  { name: "Amit Verma",   rating: 4, text: "Superb packaging and fast delivery. Genuine product, very happy.",    avatar: "AV", city: "Bangalore" },
-  { name: "Sneha Iyer",   rating: 5, text: "Very happy with performance and warranty support. Great team!",       avatar: "SI", city: "Chennai" },
-];
+export const reviews = [
+  {
+    name: "Amit Verma",
+    city: "Delhi",
+    rating: 5,
+    text: "Laptop arrived in great condition and performs like new. Fast shipping and excellent support.",
+    avatar: "AV",
+  },
+  {
+    name: "Sneha Rao",
+    city: "Bengaluru",
+    rating: 5,
+    text: "Amazing value for money. Battery life is solid and the device looks almost new.",
+    avatar: "SR",
+  },
+  {
+    name: "Ravi Kumar",
+    city: "Hyderabad",
+    rating: 4,
+    text: "Great experience overall. Packaging was secure and delivery was on time.",
+    avatar: "RK",
+  },
+  {
+    name: "Neha Singh",
+    city: "Pune",
+    rating: 5,
+    text: "Best refurbished purchase I have made. Smooth performance and clean build.",
+    avatar: "NS",
+  },
+] as const;
 
-export const navLinks = ["Laptops", "Desktops", "Accessories", "Offers", "Resell Laptop", "Blog", "About"];
-
-export const COLOR_TOKENS = {
-  primary: "#3B82F6",
-  primaryHover: "#2563EB",
-  accent: "#38BDF8",
-  background: "#0B1220",
-  cardBackground: "#111A2B",
-  border: "#23324A",
-  mainText: "#E6EEF8",
-  mutedText: "#93A4B8",
-} as const;
-
-export const COLORS = {
-  ...COLOR_TOKENS,
-  // Legacy aliases retained for existing components.
-  green: COLOR_TOKENS.primary,
-  greenDark: COLOR_TOKENS.primaryHover,
-  greenLight: "#DBEAFE",
-  greenAccent: COLOR_TOKENS.accent,
-  black: COLOR_TOKENS.mainText,
-  darkBg: COLOR_TOKENS.background,
-  cardBg: COLOR_TOKENS.cardBackground,
-  cardBorder: COLOR_TOKENS.border,
-  text: COLOR_TOKENS.mainText,
-  muted: COLOR_TOKENS.mutedText,
-  white: "#FFFFFF",
-  badge: "#EF4444",
-  badgeBlue: COLOR_TOKENS.accent,
-};
+export const navLinks = [
+  "Offers",
+  "Laptops",
+  "Desktops",
+  "Accessories",
+  "Resell Laptop",
+  "Blog",
+  "About",
+] as const;

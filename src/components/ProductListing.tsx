@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, Search, ChevronDown } from "lucide-react";
 import { COLORS, products } from "@/data/products";
 import type { Product } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
@@ -21,280 +21,333 @@ const filterConfig = [
 ] as const;
 
 type FilterKey = "brand" | "ram" | "grade";
+interface Filters { brand: string; ram: string; grade: string; priceMax: number; }
 
-interface Filters {
-  brand: string;
-  ram: string;
-  grade: string;
-  priceMax: number;
-}
+const sortOptions = [
+  { label: "Most Popular",  value: "popular"   },
+  { label: "Price: Low–High", value: "asc"    },
+  { label: "Price: High–Low", value: "desc"   },
+  { label: "Top Rated",     value: "rating"    },
+  { label: "Biggest Discount", value: "discount" },
+];
 
-export default function ProductListing({
-  onViewProduct,
-  onAddToCart,
-  onWishlist,
-  wishlist,
-}: ProductListingProps) {
+export default function ProductListing({ onViewProduct, onAddToCart, onWishlist, wishlist }: ProductListingProps) {
   const [filters, setFilters] = useState<Filters>({ brand: "", ram: "", grade: "", priceMax: 100000 });
   const [sort, setSort]       = useState("popular");
   const [search, setSearch]   = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const isMobile              = useIsMobile();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const isMobile = useIsMobile();
+
+  const setFilter = (k: FilterKey, v: string) =>
+    setFilters((f) => ({ ...f, [k]: f[k] === v ? "" : v }));
 
   const filtered = products
-    .filter((p) => !filters.brand || p.brand === filters.brand)
-    .filter((p) => !filters.ram   || p.ram   === filters.ram)
-    .filter((p) => !filters.grade || p.grade  === filters.grade)
-    .filter((p) => p.price <= filters.priceMax)
-    .filter(
-      (p) =>
-        !search || p.name.toLowerCase().includes(search.toLowerCase())
+    .filter((p) =>
+      (!filters.brand || p.brand === filters.brand) &&
+      (!filters.ram   || p.ram   === filters.ram)   &&
+      (!filters.grade || p.grade === filters.grade)  &&
+      p.price <= filters.priceMax &&
+      (!search || p.name.toLowerCase().includes(search.toLowerCase()) || p.specs.toLowerCase().includes(search.toLowerCase()))
     )
-    .sort((a, b) =>
-      sort === "low"    ? a.price  - b.price  :
-      sort === "high"   ? b.price  - a.price  :
-      sort === "rating" ? b.rating - a.rating :
-      b.reviews - a.reviews
-    );
+    .sort((a, b) => {
+      if (sort === "asc")      return a.price - b.price;
+      if (sort === "desc")     return b.price - a.price;
+      if (sort === "rating")   return b.rating - a.rating;
+      if (sort === "discount") return b.discount - a.discount;
+      return 0;
+    });
 
-  const setFilter = (key: FilterKey, value: string) =>
-    setFilters((f) => ({ ...f, [key]: value }));
+  const activeCount = [filters.brand, filters.ram, filters.grade].filter(Boolean).length;
+  const clearAll    = () => setFilters({ brand: "", ram: "", grade: "", priceMax: 100000 });
 
-  return (
-    <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "16px 14px" : "32px 20px" }}>
-
-      {/* Breadcrumb */}
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          alignItems: "center",
-          marginBottom: 24,
-          color: COLORS.muted,
-          fontSize: 14,
-        }}
-      >
-        <span style={{ cursor: "pointer", color: COLORS.green }}>Home</span>
-        <span>›</span>
-        <span>All Laptops</span>
-      </div>
-
-      {/* Mobile Filter Toggle */}
-      {isMobile && (
-        <div style={{ marginBottom: 16 }}>
-          <button
-            onClick={() => setShowFilters((v) => !v)}
-            style={{ display: "flex", alignItems: "center", gap: 8, background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "10px 16px", color: COLORS.text, cursor: "pointer", fontWeight: 600, fontSize: 14 }}
-          >
-            {showFilters ? <X size={16} /> : <SlidersHorizontal size={16} />}
-            {showFilters ? "Hide Filters" : "Show Filters"}
-          </button>
-        </div>
-      )}
-
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "260px 1fr", gap: 24 }}>
-
-        {/* ── Sidebar ── */}
-        {(!isMobile || showFilters) && (
-        <aside>
-          <div
-            style={{
-              background: COLORS.cardBg,
-              border: `1px solid ${COLORS.cardBorder}`,
-              borderRadius: 16,
-              padding: isMobile ? 16 : 24,
-              position: isMobile ? "static" : "sticky",
-              top: isMobile ? 0 : 120,
-            }}
-          >
-            <h3
-              style={{
-                color: COLORS.text,
-                fontFamily: "'Sora', sans-serif",
-                fontWeight: 700,
-                fontSize: 18,
-                margin: "0 0 20px",
-              }}
-            >
-              Filters
-            </h3>
-
-            {filterConfig.map((filter) => (
-              <div key={filter.key} style={{ marginBottom: 24 }}>
-                <div
+  const FilterPanel = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+      {filterConfig.map((f) => (
+        <div key={f.key}>
+          <div style={{
+            color: COLORS.text, fontSize: 12, fontWeight: 700,
+            letterSpacing: "0.06em", textTransform: "uppercase",
+            marginBottom: 12, fontFamily: "'Sora', sans-serif",
+          }}>{f.label}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {f.options.map((opt) => {
+              const active = filters[f.key] === opt;
+              return (
+                <button
+                  key={opt}
+                  onClick={() => setFilter(f.key, opt)}
                   style={{
-                    color: COLORS.text,
-                    fontWeight: 600,
-                    fontSize: 14,
-                    marginBottom: 10,
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    background: active ? "rgba(56,189,248,0.12)" : "transparent",
+                    border: `1px solid ${active ? "rgba(56,189,248,0.35)" : "rgba(255,255,255,0.07)"}`,
+                    borderRadius: 10, padding: "9px 14px",
+                    cursor: "pointer", color: active ? COLORS.green : COLORS.muted,
+                    fontSize: 13, fontWeight: active ? 700 : 400,
+                    transition: "all 0.2s", textAlign: "left",
                   }}
                 >
-                  {filter.label}
-                </div>
-                {filter.options.map((opt) => (
-                  <label
-                    key={opt}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      marginBottom: 6,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters[filter.key] === opt}
-                      onChange={(e) =>
-                        setFilter(filter.key, e.target.checked ? opt : "")
-                      }
-                      style={{ accentColor: COLORS.green }}
-                    />
-                    <span style={{ color: COLORS.muted, fontSize: 13 }}>{opt}</span>
-                  </label>
-                ))}
-              </div>
-            ))}
-
-            {/* Price range */}
-            <div style={{ marginBottom: 20 }}>
-              <div
-                style={{
-                  color: COLORS.text,
-                  fontWeight: 600,
-                  fontSize: 14,
-                  marginBottom: 8,
-                }}
-              >
-                Max Price: ₹{filters.priceMax.toLocaleString('en-IN')}
-              </div>
-              <input
-                type="range"
-                min={10000}
-                max={100000}
-                step={5000}
-                value={filters.priceMax}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, priceMax: parseInt(e.target.value) }))
-                }
-                style={{ width: "100%", accentColor: COLORS.green }}
-              />
-            </div>
-
-            <button
-              onClick={() =>
-                setFilters({ brand: "", ram: "", grade: "", priceMax: 100000 })
-              }
-              style={{
-                width: "100%",
-                background: "transparent",
-                color: COLORS.muted,
-                border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 8,
-                padding: "8px",
-                cursor: "pointer",
-                fontSize: 13,
-              }}
-            >
-              Clear All Filters
-            </button>
+                  {opt}
+                  {active && <span style={{ fontSize: 14 }}>✓</span>}
+                </button>
+              );
+            })}
           </div>
-        </aside>
-        )}
+        </div>
+      ))}
 
-        {/* ── Product Grid ── */}
-        <div>
-          {/* Toolbar */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              justifyContent: "space-between",
-              alignItems: isMobile ? "stretch" : "center",
-              marginBottom: 20,
-              flexWrap: "wrap",
-              gap: 12,
-            }}
-          >
-            <div style={{ color: COLORS.muted, fontSize: 14 }}>
-              {filtered.length} products found
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: 12,
-                alignItems: "center",
-                width: isMobile ? "100%" : "auto",
-                flexDirection: isMobile ? "column" : "row",
-              }}
-            >
+      {/* Price slider */}
+      <div>
+        <div style={{
+          color: COLORS.text, fontSize: 12, fontWeight: 700,
+          letterSpacing: "0.06em", textTransform: "uppercase",
+          marginBottom: 6, fontFamily: "'Sora', sans-serif",
+        }}>Max Price</div>
+        <div style={{ color: COLORS.green, fontSize: 20, fontWeight: 800, fontFamily: "'Sora', sans-serif", marginBottom: 10 }}>
+          ₹{filters.priceMax.toLocaleString("en-IN")}
+        </div>
+        <input
+          type="range" min={10000} max={100000} step={5000}
+          value={filters.priceMax}
+          onChange={(e) => setFilters((f) => ({ ...f, priceMax: Number(e.target.value) }))}
+          style={{ width: "100%", accentColor: COLORS.green }}
+        />
+        <div style={{ display: "flex", justifyContent: "space-between", color: COLORS.muted, fontSize: 11, marginTop: 4 }}>
+          <span>₹10K</span><span>₹1L</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <main style={{ background: COLORS.darkBg, minHeight: "100vh" }}>
+      {/* Page header */}
+      <div style={{
+        background: COLORS.background,
+        borderBottom: "1px solid rgba(56,150,240,0.08)",
+        padding: isMobile ? "28px 18px 20px" : "40px 24px 28px",
+      }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6 }}>
+            Shop / All Laptops
+          </div>
+          <h1 style={{
+            fontFamily: "'Sora', sans-serif",
+            fontSize: "clamp(28px, 4vw, 48px)", fontWeight: 800,
+            color: COLORS.text, letterSpacing: "-0.03em",
+            margin: "0 0 20px",
+          }}>
+            All Laptops
+            <span style={{ color: COLORS.muted, fontWeight: 400, fontSize: "0.5em", marginLeft: 12 }}>
+              {filtered.length} products
+            </span>
+          </h1>
+
+          {/* Search + Sort bar */}
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
+              <Search size={14} style={{
+                position: "absolute", left: 13, top: "50%",
+                transform: "translateY(-50%)", color: COLORS.muted,
+              }} />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search products..."
+                placeholder="Search laptops, specs…"
                 style={{
-                  background: COLORS.cardBg,
+                  width: "100%", background: COLORS.cardBg,
                   border: `1px solid ${COLORS.cardBorder}`,
-                  borderRadius: 8,
-                  padding: "8px 14px",
-                  color: COLORS.text,
-                  fontSize: 13,
-                  outline: "none",
-                  width: isMobile ? "100%" : "auto",
+                  borderRadius: 12, padding: "11px 14px 11px 38px",
+                  color: COLORS.text, fontSize: 14, outline: "none",
+                  boxSizing: "border-box", transition: "border-color 0.2s",
                 }}
+                onFocus={(e) => { e.target.style.borderColor = "rgba(56,189,248,0.4)"; }}
+                onBlur={(e) => { e.target.style.borderColor = COLORS.cardBorder; }}
               />
+            </div>
+
+            <div style={{ position: "relative" }}>
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
                 style={{
                   background: COLORS.cardBg,
                   border: `1px solid ${COLORS.cardBorder}`,
-                  borderRadius: 8,
-                  padding: "8px 14px",
-                  color: COLORS.text,
-                  fontSize: 13,
-                  outline: "none",
-                  width: isMobile ? "100%" : "auto",
+                  borderRadius: 12, padding: "11px 40px 11px 14px",
+                  color: COLORS.text, fontSize: 14, outline: "none",
+                  cursor: "pointer", appearance: "none",
                 }}
               >
-                <option value="popular">Most Popular</option>
-                <option value="low">Price: Low to High</option>
-                <option value="high">Price: High to Low</option>
-                <option value="rating">Best Rated</option>
+                {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
+              <ChevronDown size={14} style={{
+                position: "absolute", right: 12, top: "50%",
+                transform: "translateY(-50%)", color: COLORS.muted,
+                pointerEvents: "none",
+              }} />
             </div>
-          </div>
 
-          {/* Cards */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))",
-              gap: 20,
-            }}
-          >
-            {filtered.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                onView={onViewProduct}
-                onAddToCart={onAddToCart}
-                onWishlist={onWishlist}
-                wishlist={wishlist}
-              />
-            ))}
-          </div>
+            {/* Filter toggle (mobile) */}
+            {isMobile && (
+              <button
+                onClick={() => setDrawerOpen(true)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 7,
+                  background: activeCount > 0 ? "rgba(56,189,248,0.10)" : COLORS.cardBg,
+                  border: `1px solid ${activeCount > 0 ? "rgba(56,189,248,0.32)" : COLORS.cardBorder}`,
+                  borderRadius: 12, padding: "11px 16px",
+                  color: activeCount > 0 ? COLORS.green : COLORS.muted,
+                  cursor: "pointer", fontSize: 14, fontWeight: 600,
+                }}
+              >
+                <SlidersHorizontal size={14} />
+                Filters{activeCount > 0 ? ` (${activeCount})` : ""}
+              </button>
+            )}
 
-          {filtered.length === 0 && (
-            <div
-              style={{ textAlign: "center", padding: "60px 0", color: COLORS.muted }}
-            >
-              <div style={{ fontSize: 48 }}>🔍</div>
-              <p>No products match your filters. Try adjusting them.</p>
-            </div>
-          )}
+            {activeCount > 0 && (
+              <button
+                onClick={clearAll}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  background: "transparent", border: "1px solid rgba(239,68,68,0.2)",
+                  borderRadius: 12, padding: "11px 14px",
+                  color: "#EF4444", cursor: "pointer", fontSize: 13,
+                }}
+              >
+                <X size={13} />Clear All
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "24px 20px 60px" : "32px 24px 80px" }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "220px 1fr",
+          gap: 28, alignItems: "start",
+        }}>
+          {/* Desktop sidebar filters */}
+          {!isMobile && (
+            <div style={{
+              background: COLORS.cardBg,
+              border: `1px solid ${COLORS.cardBorder}`,
+              borderRadius: 20, padding: 24,
+              position: "sticky", top: 72,
+            }}>
+              <div style={{
+                display: "flex", justifyContent: "space-between",
+                alignItems: "center", marginBottom: 24,
+              }}>
+                <div style={{
+                  color: COLORS.text, fontWeight: 800, fontSize: 15,
+                  fontFamily: "'Sora', sans-serif",
+                  display: "flex", alignItems: "center", gap: 7,
+                }}>
+                  <SlidersHorizontal size={15} color={COLORS.green} />
+                  Filters
+                </div>
+                {activeCount > 0 && (
+                  <button onClick={clearAll} style={{
+                    background: "transparent", border: "none",
+                    color: "#EF4444", cursor: "pointer", fontSize: 12,
+                    display: "flex", alignItems: "center", gap: 4,
+                  }}>
+                    <X size={11} />Clear
+                  </button>
+                )}
+              </div>
+              <FilterPanel />
+            </div>
+          )}
+
+          {/* Product grid */}
+          <div>
+            {filtered.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "80px 24px" }}>
+                <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
+                <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 700 }}>
+                  No products found
+                </h3>
+                <p style={{ color: COLORS.muted, marginTop: 8, marginBottom: 20 }}>
+                  Try adjusting your filters or search term
+                </p>
+                <button onClick={clearAll} style={{
+                  background: COLORS.green, color: "#000",
+                  border: "none", borderRadius: 100,
+                  padding: "12px 28px", fontWeight: 700, cursor: "pointer",
+                }}>
+                  Clear Filters
+                </button>
+              </div>
+            ) : (
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: isMobile
+                  ? "repeat(2, 1fr)"
+                  : "repeat(auto-fill, minmax(240px, 1fr))",
+                gap: isMobile ? 12 : 18,
+              }}>
+                {filtered.map((p, i) => (
+                  <div key={p.id} style={{ animation: `fadeUp 0.4s ease ${i * 0.04}s both` }}>
+                    <ProductCard product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile filter drawer */}
+      {isMobile && drawerOpen && (
+        <>
+          <div
+            onClick={() => setDrawerOpen(false)}
+            style={{
+              position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)",
+              backdropFilter: "blur(6px)", zIndex: 99,
+            }}
+          />
+          <div style={{
+            position: "fixed", bottom: 0, left: 0, right: 0,
+            background: COLORS.cardBg, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+            border: `1px solid ${COLORS.cardBorder}`, zIndex: 100,
+            padding: "24px 18px 40px",
+            maxHeight: "85vh", overflowY: "auto",
+          }}>
+            <div style={{
+              display: "flex", justifyContent: "space-between",
+              alignItems: "center", marginBottom: 24,
+            }}>
+              <div style={{ color: COLORS.text, fontWeight: 800, fontSize: 18, fontFamily: "'Sora', sans-serif" }}>
+                Filters
+              </div>
+              <button onClick={() => setDrawerOpen(false)} style={{
+                background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`,
+                borderRadius: 10, width: 36, height: 36,
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                color: COLORS.muted,
+              }}>
+                <X size={16} />
+              </button>
+            </div>
+            <FilterPanel />
+            <button
+              onClick={() => setDrawerOpen(false)}
+              style={{
+                width: "100%", marginTop: 28,
+                background: COLORS.green, color: "#000",
+                border: "none", borderRadius: 14,
+                padding: "16px", fontWeight: 800, fontSize: 16,
+                cursor: "pointer", fontFamily: "'Sora', sans-serif",
+              }}
+            >
+              Show {filtered.length} Results
+            </button>
+          </div>
+        </>
+      )}
+    </main>
   );
 }
