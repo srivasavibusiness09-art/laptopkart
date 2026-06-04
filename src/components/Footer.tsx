@@ -78,7 +78,7 @@ export default function Footer({ setPage }: FooterProps) {
                 backgroundClip: "text",
                 WebkitBackgroundClip: "text",
                 backgroundImage: "linear-gradient(135deg, #38BDF8, #6366F1)",
-              }}>Kart</span>
+              }}>Lux</span>
             </div>
             <p style={{ color: COLORS.muted, fontSize: 13, lineHeight: 1.7, maxWidth: 260, marginBottom: 20 }}>
               India's most trusted refurbished laptop store. Best prices, best quality, backed by warranty.
@@ -87,7 +87,7 @@ export default function Footer({ setPage }: FooterProps) {
             <div style={{ marginBottom: 20 }}>
               {[
                 { icon: <Phone size={12} color={COLORS.green} />, text: "+91 99999 99999" },
-                { icon: <Mail size={12} color={COLORS.green} />, text: "support@laptopkart.in" },
+                { icon: <Mail size={12} color={COLORS.green} />, text: "support@laptoplux.in" },
                 { icon: <Clock size={12} color={COLORS.green} />, text: "Mon–Sat: 10AM – 7PM" },
               ].map(({ icon, text }) => (
                 <div key={text} style={{
@@ -189,7 +189,7 @@ export default function Footer({ setPage }: FooterProps) {
           flexWrap: "wrap", gap: 12,
         }}>
           <div style={{ color: COLORS.muted, fontSize: 12 }}>
-            © 2024 LaptopKart. All Rights Reserved.
+            © 2024 LaptopLux. All Rights Reserved.
           </div>
           {!isMobile && (
             <div style={{ display: "flex", gap: 20 }}>

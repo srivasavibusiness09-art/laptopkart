@@ -84,7 +84,7 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
                 backgroundClip: "text",
                 WebkitBackgroundClip: "text",
                 backgroundImage: "linear-gradient(135deg, #38BDF8, #6366F1)",
-              }}>Kart</span>
+              }}>Lux</span>
             </span>
           </div>
 

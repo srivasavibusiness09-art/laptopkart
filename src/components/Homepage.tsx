@@ -398,10 +398,10 @@ export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishli
         </div>
       )}
 
-      {/* ── Why LaptopKart ──────────────────────── */}
+      {/* ── Why LaptopLux ──────────────────────── */}
       {section(
         <>
-          <SectionHeader eyebrow="Why Us" title="The LaptopKart Promise" subtitle="We make refurbished trustworthy and reliable" />
+          <SectionHeader eyebrow="Why Us" title="The LaptopLux Promise" subtitle="We make refurbished trustworthy and reliable" />
           <div style={{
             display: "grid",
             gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(5,1fr)",
