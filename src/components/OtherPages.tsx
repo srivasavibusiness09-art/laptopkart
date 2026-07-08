@@ -180,7 +180,7 @@ export function LoginPage({ setPage }: { setPage: (p: string) => void }) {
       <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 24, padding: isMobile ? 24 : 40 }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: isMobile ? 24 : 28 }}>
-            <span style={{ color: COLORS.text }}>TECHSTORE</span><span style={{ color: COLORS.green }}>PRO</span>
+            <span style={{ color: COLORS.text }}>LAPTOPKART</span><span style={{ color: COLORS.green }}>PRO</span>
           </div>
           <div style={{ color: COLORS.muted, marginTop: 8 }}>{mode === "login" ? "Welcome back!" : "Create your account"}</div>
         </div>

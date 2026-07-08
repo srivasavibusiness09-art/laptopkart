@@ -1,6 +1,6 @@
-# Techstore Pro 💻
+# Laptopkart 💻
 
-Techstore Pro is a modern, responsive, and high-performance e-commerce web application built specifically for buying certified refurbished laptops, desktops, and tech accessories. 
+Laptopkart is a modern, responsive, and high-performance e-commerce web application built specifically for buying certified refurbished laptops, desktops, and tech accessories. 
 
 The application offers a seamless shopping experience from browsing products to checkout, complete with dynamic product filtering, a shopping cart, a wishlist, and side-by-side product comparisons.
 

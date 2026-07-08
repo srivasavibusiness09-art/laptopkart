@@ -8,7 +8,7 @@ import { useIsMobile } from "@/lib/hooks";
 
 interface FooterProps { setPage: (p: string) => void }
 
-const shopLinks   = ["Laptops", "Desktops", "MacBooks", "Gaming", "Accessories", "Offers"];
+const shopLinks = ["Laptops", "Desktops", "MacBooks", "Gaming", "Accessories", "Offers"];
 const companyLinks = ["About Us", "Blog", "Careers", "Press", "Partners"];
 const supportLinks = ["Warranty", "Returns", "Contact", "FAQs", "Shipping", "Track Order"];
 
@@ -72,7 +72,7 @@ export default function Footer({ setPage }: FooterProps) {
               fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 22,
               letterSpacing: "-0.02em",
             }}>
-              <span style={{ color: COLORS.text }}>Techstore</span>
+              <span style={{ color: COLORS.text }}>Laptopkart</span>
               <span style={{
                 color: "transparent",
                 backgroundClip: "text",
@@ -87,7 +87,7 @@ export default function Footer({ setPage }: FooterProps) {
             <div style={{ marginBottom: 20 }}>
               {[
                 { icon: <Phone size={12} color={COLORS.green} />, text: "+91 99999 99999" },
-                { icon: <Mail size={12} color={COLORS.green} />, text: "support@techstorepro.com" },
+                { icon: <Mail size={12} color={COLORS.green} />, text: "support@laptopkartpro.com" },
                 { icon: <Clock size={12} color={COLORS.green} />, text: "Mon–Sat: 10AM – 7PM" },
               ].map(({ icon, text }) => (
                 <div key={text} style={{
@@ -189,7 +189,7 @@ export default function Footer({ setPage }: FooterProps) {
           flexWrap: "wrap", gap: 12,
         }}>
           <div style={{ color: COLORS.muted, fontSize: 12 }}>
-            © 2024 Techstore Pro. All Rights Reserved.
+            © 2024 Laptopkart. All Rights Reserved.
           </div>
           {!isMobile && (
             <div style={{ display: "flex", gap: 20 }}>

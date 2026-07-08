@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "Techstore Pro — Refurbished Laptops at Best Prices | 1 Year Warranty",
+  title: "Laptopkart — Refurbished Laptops at Best Prices | 1 Year Warranty",
   description:
     "Buy certified refurbished laptops, MacBooks, and desktops at up to 70% off. Every device passes a 72-point quality check. 1 Year Warranty | 7-Day Returns | EMI Available.",
   keywords:
-    "refurbished laptops, used laptops, second hand laptops, techstore pro, buy laptop online India",
+    "refurbished laptops, used laptops, second hand laptops, Laptopkart, buy laptop online India",
   openGraph: {
-    title: "Techstore Pro — Refurbished Laptops at Best Prices",
+    title: "Laptopkart — Refurbished Laptops at Best Prices",
     description:
       "Buy certified refurbished laptops at up to 70% off. 1 Year Warranty & 7-Day Returns.",
     type: "website",

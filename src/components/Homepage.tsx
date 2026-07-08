@@ -75,18 +75,18 @@ function SectionHeader({ eyebrow, title, subtitle }: { eyebrow?: string; title: 
 
 /* ── Smart finder ─────────────────────────────────────── */
 const finderQ = [
-  { q: "What's your budget?",  opts: ["Under ₹20,000", "₹20K–₹40K", "₹40K–₹70K", "₹70K+"] },
-  { q: "Primary usage?",       opts: ["Student / Office", "Gaming", "Creative Work", "Business"] },
-  { q: "RAM preference?",      opts: ["8GB", "16GB", "32GB", "Any"] },
-  { q: "Brand preference?",    opts: ["Dell", "HP", "Lenovo", "Apple", "Any"] },
+  { q: "What's your budget?", opts: ["Under ₹20,000", "₹20K–₹40K", "₹40K–₹70K", "₹70K+"] },
+  { q: "Primary usage?", opts: ["Student / Office", "Gaming", "Creative Work", "Business"] },
+  { q: "RAM preference?", opts: ["8GB", "16GB", "32GB", "Any"] },
+  { q: "Brand preference?", opts: ["Dell", "HP", "Lenovo", "Apple", "Any"] },
 ];
 
 const whyItems = [
-  { icon: <Microscope size={28} color={COLORS.green} />, t: "Quality Tested",      d: "72+ point checks" },
-  { icon: <CheckCircle2 size={28} color={COLORS.green} />, t: "100% Original",     d: "Genuine parts" },
-  { icon: <Shield size={28} color={COLORS.green} />,       t: "1 Year Warranty",   d: "Hassle free" },
-  { icon: <RefreshCw size={28} color={COLORS.green} />,    t: "7-Day Returns",     d: "No questions asked" },
-  { icon: <BadgeDollarSign size={28} color={COLORS.green} />, t: "Best Price",     d: "Save up to 70%" },
+  { icon: <Microscope size={28} color={COLORS.green} />, t: "Quality Tested", d: "72+ point checks" },
+  { icon: <CheckCircle2 size={28} color={COLORS.green} />, t: "100% Original", d: "Genuine parts" },
+  { icon: <Shield size={28} color={COLORS.green} />, t: "1 Year Warranty", d: "Hassle free" },
+  { icon: <RefreshCw size={28} color={COLORS.green} />, t: "7-Day Returns", d: "No questions asked" },
+  { icon: <BadgeDollarSign size={28} color={COLORS.green} />, t: "Best Price", d: "Save up to 70%" },
 ];
 
 /* ── Homepage ─────────────────────────────────────────── */
@@ -100,9 +100,9 @@ interface HomepageProps {
 
 export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishlist, wishlist }: HomepageProps) {
   const isMobile = useIsMobile();
-  const [step, setStep]       = useState(0);
+  const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [result, setResult]   = useState<Product[] | null>(null);
+  const [result, setResult] = useState<Product[] | null>(null);
 
   const answer = (a: string) => {
     const na = { ...answers, [step]: a };
@@ -398,10 +398,10 @@ export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishli
         </div>
       )}
 
-      {/* ── Why Techstore Pro ──────────────────────── */}
+      {/* ── Why Laptopkart ──────────────────────── */}
       {section(
         <>
-          <SectionHeader eyebrow="Why Us" title="The Techstore Pro Promise" subtitle="We make refurbished trustworthy and reliable" />
+          <SectionHeader eyebrow="Why Us" title="The Laptopkart Promise" subtitle="We make refurbished trustworthy and reliable" />
           <div style={{
             display: "grid",
             gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(5,1fr)",
@@ -465,7 +465,7 @@ export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishli
                 onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.cardBorder; }}
               >
                 <div style={{ display: "flex", gap: 2, marginBottom: 12 }}>
-                  {[1,2,3,4,5].map((s) => (
+                  {[1, 2, 3, 4, 5].map((s) => (
                     <Star key={s} size={13}
                       fill={s <= r.rating ? "#F59E0B" : "transparent"}
                       color={s <= r.rating ? "#F59E0B" : "rgba(255,255,255,0.15)"} />

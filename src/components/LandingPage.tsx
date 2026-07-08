@@ -5,20 +5,20 @@ import { Menu, X } from "lucide-react";
 import { useIsMobile } from "@/lib/hooks";
 
 /* ── Config ──────────────────────────────────────────────── */
-const FRICTION      = 0.88;   // velocity decay per frame (lower = more damping)
-const LERP_FACTOR   = 0.095;  // display catches up to target (lower = smoother / more lag)
-const SENSITIVITY   = 0.022;  // wheel delta → frame units
-const TOUCH_SENS    = 0.045;  // touch delta → frame units
+const FRICTION = 0.88;   // velocity decay per frame (lower = more damping)
+const LERP_FACTOR = 0.095;  // display catches up to target (lower = smoother / more lag)
+const SENSITIVITY = 0.022;  // wheel delta → frame units
+const TOUCH_SENS = 0.045;  // touch delta → frame units
 
 /* ── Scene text definitions ─────────────────────────────── */
 const scenes = [
-  { from: 1,  to: 8,  h: "Techstore Pro",           s: "Premium Refurbished Technology",    b: "Built for performance.\nTested for reliability." },
-  { from: 9,  to: 16, h: "Performance Restored",     s: "Every core re-engineered",          b: "" },
-  { from: 17, to: 24, h: "Memory Upgraded",           s: "Max RAM. Maximum possibilities.",   b: "" },
-  { from: 25, to: 32, h: "Lightning Fast Storage",    s: "NVMe SSD. Zero wait time.",         b: "" },
-  { from: 33, to: 39, h: "Thermally Tested",          s: "Runs cool under any load.",         b: "" },
-  { from: 40, to: 46, h: "72 Point Quality Check",    s: "Display. Keyboard. Ports. Verified.",b: "" },
-  { from: 47, to: 52, h: "Feels Brand New",           s: "Certified. Warranted. Delivered.",  b: "" },
+  { from: 1, to: 8, h: "Laptopkart", s: "Premium Refurbished Technology", b: "Built for performance.\nTested for reliability." },
+  { from: 9, to: 16, h: "Performance Restored", s: "Every core re-engineered", b: "" },
+  { from: 17, to: 24, h: "Memory Upgraded", s: "Max RAM. Maximum possibilities.", b: "" },
+  { from: 25, to: 32, h: "Lightning Fast Storage", s: "NVMe SSD. Zero wait time.", b: "" },
+  { from: 33, to: 39, h: "Thermally Tested", s: "Runs cool under any load.", b: "" },
+  { from: 40, to: 46, h: "72 Point Quality Check", s: "Display. Keyboard. Ports. Verified.", b: "" },
+  { from: 47, to: 52, h: "Feels Brand New", s: "Certified. Warranted. Delivered.", b: "" },
 ];
 
 function getScene(f: number) {
@@ -35,22 +35,29 @@ export default function LandingPage({ onEnterStore }: Props) {
   const isMobile = useIsMobile();
   const totalFrames = isMobile ? 50 : 52;
 
-  /* ── Refs for physics (no re-renders from these) ──── */
-  const targetRef  = useRef(0);    // where we want to be (0 → totalFrames-1)
-  const displayRef = useRef(0);    // smoothly lerped
-  const velRef     = useRef(0);    // momentum
-  const lastFrame  = useRef(0);    // last frame drawn
-  const doneRef    = useRef(false);
-  const touchY     = useRef<number | null>(null);
-  const rafRef     = useRef<number>(0);
-
   /* ── React state for UI only ──────────────────────── */
-  const [frameNum, setFrameNum]   = useState(1);
-  const [menuOpen, setMenuOpen]   = useState(false);
+  const [frameNum, setFrameNum] = useState(1);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [loadedCount, setLoadedCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  /* ── Refs for physics (no re-renders from these) ──── */
+  const targetRef = useRef(0);    // where we want to be (0 → totalFrames-1)
+  const displayRef = useRef(0);    // smoothly lerped
+  const velRef = useRef(0);    // momentum
+  const lastFrame = useRef(0);    // last frame drawn
+  const doneRef = useRef(false);
+  const touchY = useRef<number | null>(null);
+  const rafRef = useRef<number>(0);
+  const isLoadingRef = useRef(true);
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
 
   /* ── Canvas / image refs ─────────────────────────── */
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imgs      = useRef<HTMLImageElement[]>([]);
+  const imgs = useRef<HTMLImageElement[]>([]);
 
   /* ── Cover draw ───────────────────────────────────── */
   const drawFrame = useCallback((n: number) => {
@@ -64,13 +71,13 @@ export default function LandingPage({ onEnterStore }: Props) {
       if (!ctx || !img.naturalWidth) return;
       const cw = canvas.width, ch = canvas.height;
       const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
-      const w = img.naturalWidth  * scale;
+      const w = img.naturalWidth * scale;
       const h = img.naturalHeight * scale;
       ctx.clearRect(0, 0, cw, ch);
       ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
     };
 
-    img.complete && img.naturalWidth ? paint() : (img.onload = paint);
+    img.complete && img.naturalWidth ? paint() : img.addEventListener("load", paint, { once: true });
   }, []);
 
   /* ── Preload all frames ───────────────────────────── */
@@ -82,24 +89,43 @@ export default function LandingPage({ onEnterStore }: Props) {
         : `/frames/ezgif-frame-${String(n).padStart(3, "0")}.png`;
     };
 
-    let loadedCount = 0;
-    const onImgLoad = () => {
-      loadedCount++;
-      const currentIntFrame = clamp(Math.round(displayRef.current) + 1, 1, totalFrames);
-      drawFrame(currentIntFrame);
+    let count = 0;
+    setLoadedCount(0);
+    setIsLoading(true);
+    const loadedSet = new Set<number>();
+
+    const onImgLoad = (index: number) => {
+      if (loadedSet.has(index)) return;
+      loadedSet.add(index);
+      count++;
+      setLoadedCount(count);
+
+      if (count === totalFrames) {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
+      }
+
+      if (index === 0) {
+        drawFrame(1);
+      }
     };
 
     for (let i = 1; i <= totalFrames; i++) {
       const img = new Image();
       img.src = getSrc(i);
-      img.onload = onImgLoad;
+      img.onload = () => onImgLoad(i - 1);
+      img.onerror = () => onImgLoad(i - 1);
+      if (img.complete && img.naturalWidth) {
+        onImgLoad(i - 1);
+      }
       arr.push(img);
     }
     imgs.current = arr;
 
     // Reset/clamp current frame if bounds changed, and draw
-    targetRef.current = clamp(targetRef.current, 0, totalFrames - 1);
-    displayRef.current = clamp(displayRef.current, 0, totalFrames - 1);
+    targetRef.current = 0;
+    displayRef.current = 0;
     const currentIntFrame = clamp(Math.round(displayRef.current) + 1, 1, totalFrames);
     drawFrame(currentIntFrame);
   }, [isMobile, totalFrames, drawFrame]);
@@ -110,7 +136,7 @@ export default function LandingPage({ onEnterStore }: Props) {
       const c = canvasRef.current;
       if (!c) return;
       const dpr = devicePixelRatio || 1;
-      c.width  = innerWidth  * dpr;
+      c.width = innerWidth * dpr;
       c.height = innerHeight * dpr;
       drawFrame(clamp(Math.round(displayRef.current) + 1, 1, totalFrames));
     };
@@ -176,6 +202,7 @@ export default function LandingPage({ onEnterStore }: Props) {
   /* ── Wheel (mouse + trackpad) ─────────────────────── */
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
+      if (isLoadingRef.current) return;
       e.preventDefault();
       // Normalize: trackpads emit pixel mode (0), mice emit line (1)
       const raw = e.deltaMode === 1 ? e.deltaY * 20 : e.deltaY;
@@ -187,8 +214,12 @@ export default function LandingPage({ onEnterStore }: Props) {
 
   /* ── Touch ────────────────────────────────────────── */
   useEffect(() => {
-    const onStart = (e: TouchEvent) => { touchY.current = e.touches[0].clientY; };
-    const onMove  = (e: TouchEvent) => {
+    const onStart = (e: TouchEvent) => {
+      if (isLoadingRef.current) return;
+      touchY.current = e.touches[0].clientY;
+    };
+    const onMove = (e: TouchEvent) => {
+      if (isLoadingRef.current) return;
       e.preventDefault();
       if (touchY.current === null) return;
       const dy = touchY.current - e.touches[0].clientY;
@@ -196,7 +227,7 @@ export default function LandingPage({ onEnterStore }: Props) {
       velRef.current += dy * TOUCH_SENS;
     };
     addEventListener("touchstart", onStart, { passive: true });
-    addEventListener("touchmove",  onMove,  { passive: false });
+    addEventListener("touchmove", onMove, { passive: false });
     return () => {
       removeEventListener("touchstart", onStart);
       removeEventListener("touchmove", onMove);
@@ -206,10 +237,11 @@ export default function LandingPage({ onEnterStore }: Props) {
   /* ── Keyboard ─────────────────────────────────────── */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (isLoadingRef.current) return;
       const DOWN = ["ArrowDown", "ArrowRight", " ", "PageDown"];
-      const UP   = ["ArrowUp", "ArrowLeft", "PageUp"];
+      const UP = ["ArrowUp", "ArrowLeft", "PageUp"];
       if (DOWN.includes(e.key)) { e.preventDefault(); velRef.current += 2; }
-      if (UP.includes(e.key))   { e.preventDefault(); velRef.current -= 2; }
+      if (UP.includes(e.key)) { e.preventDefault(); velRef.current -= 2; }
     };
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);
@@ -224,16 +256,16 @@ export default function LandingPage({ onEnterStore }: Props) {
 
   /* ── Derived UI ───────────────────────────────────── */
   const progress = (frameNum - 1) / (totalFrames - 1);
-  const scene    = getScene(frameNum);
-  const showCTA  = frameNum >= (isMobile ? 45 : 47);
+  const scene = getScene(frameNum);
+  const showCTA = frameNum >= (isMobile ? 45 : 47);
   const showHint = frameNum <= 3;
 
   /* Per-scene text opacity */
-  const span       = scene.to - scene.from;
+  const span = scene.to - scene.from;
   const localRatio = span > 0 ? (frameNum - scene.from) / span : 1;
   const textOpacity =
     localRatio < 0.18 ? localRatio / 0.18 :
-    localRatio > 0.82 ? (1 - localRatio) / 0.18 : 1;
+      localRatio > 0.82 ? (1 - localRatio) / 0.18 : 1;
 
   return (
     <div
@@ -245,6 +277,90 @@ export default function LandingPage({ onEnterStore }: Props) {
         userSelect: "none",
       }}
     >
+      {/* ── Loader overlay ────────────────────────── */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "#000",
+        zIndex: 200,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "'Sora', sans-serif",
+        color: "#fff",
+        opacity: isLoading ? 1 : 0,
+        pointerEvents: isLoading ? "auto" : "none",
+        transition: "opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+      }}>
+        {/* Ambient Glow */}
+        <div style={{
+          position: "absolute",
+          width: "300px",
+          height: "300px",
+          background: "radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 70%)",
+          borderRadius: "50%",
+          filter: "blur(40px)",
+          animation: "pulse-glow 3s ease-in-out infinite",
+        }} />
+
+        {/* Progress content */}
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+          <div style={{
+            fontWeight: 800,
+            fontSize: 24,
+            letterSpacing: "-0.02em",
+            marginBottom: 8,
+          }}>
+            <span>Laptopkart</span>
+            <span style={{
+              color: "transparent",
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              backgroundImage: "linear-gradient(135deg, #38BDF8, #6366F1)",
+            }}> Pro</span>
+          </div>
+
+          <div style={{
+            color: "#38BDF8",
+            fontSize: 12,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.15em",
+            marginBottom: 24,
+          }}>
+            Loading Experience
+          </div>
+
+          {/* Spinner/Progress Bar */}
+          <div style={{
+            width: 240,
+            height: 4,
+            background: "rgba(255,255,255,0.08)",
+            borderRadius: 2,
+            overflow: "hidden",
+            margin: "0 auto 12px",
+          }}>
+            <div style={{
+              height: "100%",
+              width: `${Math.round((loadedCount / totalFrames) * 100)}%`,
+              background: "linear-gradient(90deg, #3B82F6, #38BDF8)",
+              boxShadow: "0 0 10px rgba(56,189,248,0.6)",
+              transition: "width 0.1s ease",
+            }} />
+          </div>
+
+          {/* Percentage Text */}
+          <div style={{
+            color: "rgba(255,255,255,0.4)",
+            fontSize: 13,
+            fontWeight: 600,
+          }}>
+            {Math.round((loadedCount / totalFrames) * 100)}%
+          </div>
+        </div>
+      </div>
+
       {/* ── Full-screen canvas ─────────────────────── */}
       <canvas
         ref={canvasRef}
@@ -301,7 +417,7 @@ export default function LandingPage({ onEnterStore }: Props) {
           fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 20,
           letterSpacing: "-0.02em",
         }}>
-          <span style={{ color: "#fff" }}>Techstore</span>
+          <span style={{ color: "#fff" }}>Laptopkart</span>
           <span style={{ color: "#38BDF8" }}> Pro</span>
         </div>
 
@@ -506,7 +622,7 @@ export default function LandingPage({ onEnterStore }: Props) {
       }}>
         {scenes.map((s, i) => {
           const active = frameNum >= s.from && frameNum <= s.to;
-          const past   = frameNum > s.to;
+          const past = frameNum > s.to;
           return (
             <div key={i} style={{
               width: active ? 6 : 4,

@@ -78,7 +78,7 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
               fontWeight: 800, fontSize: isMobile ? 16 : 18,
               letterSpacing: "-0.02em",
             }}>
-              <span style={{ color: COLORS.text }}>Techstore</span>
+              <span style={{ color: COLORS.text }}>Laptopkart</span>
               <span style={{
                 color: "transparent",
                 backgroundClip: "text",
