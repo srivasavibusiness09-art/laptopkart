@@ -312,13 +312,12 @@ export default function LandingPage({ onEnterStore }: Props) {
             letterSpacing: "-0.02em",
             marginBottom: 8,
           }}>
-            <span>Laptopkart</span>
             <span style={{
               color: "transparent",
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
               backgroundImage: "linear-gradient(135deg, #38BDF8, #6366F1)",
-            }}> Pro</span>
+            }}>Laptopkart</span>
           </div>
 
           <div style={{
@@ -396,7 +395,7 @@ export default function LandingPage({ onEnterStore }: Props) {
       <nav style={{
         position: "absolute", top: 0, left: 0, right: 0, zIndex: 100,
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 32px", height: 64,
+        padding: isMobile ? "0 12px" : "0 32px", height: 64,
       }}>
         <button
           onClick={() => setMenuOpen((o) => !o)}
@@ -408,17 +407,21 @@ export default function LandingPage({ onEnterStore }: Props) {
           onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.85)"; }}
         >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          {menuOpen ? <X size={isMobile ? 18 : 22} /> : <Menu size={isMobile ? 18 : 22} />}
         </button>
 
         {/* Logo */}
         <div style={{
           position: "absolute", left: "50%", transform: "translateX(-50%)",
-          fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 20,
+          fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: isMobile ? 16 : 20,
           letterSpacing: "-0.02em",
         }}>
-          <span style={{ color: "#fff" }}>Laptopkart</span>
-          <span style={{ color: "#38BDF8" }}> Pro</span>
+          <span style={{
+            color: "transparent",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            backgroundImage: "linear-gradient(135deg, #38BDF8, #6366F1)",
+          }}>Laptopkart</span>
         </div>
 
         {/* Home skip button */}
@@ -428,9 +431,9 @@ export default function LandingPage({ onEnterStore }: Props) {
             background: "rgba(56,189,248,0.12)",
             color: "#38BDF8",
             border: "1px solid rgba(56,189,248,0.3)",
-            borderRadius: 10,
-            padding: "9px 20px",
-            fontSize: 13, fontWeight: 700,
+            borderRadius: isMobile ? 8 : 10,
+            padding: isMobile ? "6px 12px" : "9px 20px",
+            fontSize: isMobile ? 12 : 13, fontWeight: 700,
             cursor: "pointer",
             fontFamily: "'Sora', sans-serif",
             backdropFilter: "blur(8px)",
