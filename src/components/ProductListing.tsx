@@ -265,7 +265,15 @@ export default function ProductListing({ onViewProduct, onAddToCart, onWishlist,
           <div>
             {filtered.length === 0 ? (
               <div style={{ textAlign: "center", padding: "80px 24px" }}>
-                <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
+                <div style={{
+                  display: "flex", justifyContent: "center", alignItems: "center",
+                  width: 96, height: 96, borderRadius: "50%",
+                  background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,150,240,0.12)",
+                  margin: "0 auto 24px",
+                  boxShadow: "0 0 30px rgba(56,189,248,0.05)",
+                }}>
+                  <Search size={36} color={COLORS.green} />
+                </div>
                 <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 700 }}>
                   No products found
                 </h3>

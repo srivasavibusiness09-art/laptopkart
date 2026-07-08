@@ -12,6 +12,7 @@ interface NavbarProps {
   setPage: (page: string) => void;
   cart: { id: number }[];
   wishlist: number[];
+  user: any;
 }
 
 const linkIcons: Record<string, React.ReactNode> = {
@@ -29,7 +30,7 @@ const getTarget = (link: string) => ({
   About: "about", Blog: "blog", Offers: "listing", "Resell Laptop": "contact",
 } as Record<string, string>)[link] ?? "home";
 
-export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
+export default function Navbar({ setPage, cart, wishlist, user }: NavbarProps) {
   const [search, setSearch]     = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -90,13 +91,13 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
           {/* Desktop center links */}
           {!isMobile && (
             <div style={{
-              flex: 1,
               display: "flex",
-              justifyContent: "center",
+              justifyContent: "flex-start",
               gap: 4,
               overflow: "hidden",
               minWidth: 0,
-              margin: "0 16px",
+              marginLeft: 28,
+              marginRight: "auto",
             }}>
               {navLinks.map((link) => (
                 <button
@@ -178,8 +179,8 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
                 <IconBtn onClick={() => go("compare")} label="Compare">
                   <Scale size={14} color={COLORS.muted} />
                 </IconBtn>
-                <IconBtn onClick={() => go("login")} label="Login">
-                  <User size={14} color={COLORS.muted} />
+                <IconBtn onClick={() => go(user ? "profile" : "login")} label={user ? "Profile" : "Login"}>
+                  <User size={14} color={user ? COLORS.green : COLORS.muted} />
                 </IconBtn>
               </>
             )}
@@ -234,7 +235,7 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
               </button>
             ))}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "12px 20px" }}>
-              {[{l:"Compare",t:"compare",icon:<Scale size={14}/>},{l:"Login",t:"login",icon:<User size={14}/>}].map((b) => (
+              {[{l:"Compare",t:"compare",icon:<Scale size={14}/>},{l:user ? "Profile" : "Login",t:user ? "profile" : "login",icon:<User size={14} color={user ? COLORS.green : undefined}/>}].map((b) => (
                 <button key={b.l} onClick={() => go(b.t)} style={{
                   display: "flex", alignItems: "center", justifyContent: "center",
                   gap: 6, background: "rgba(56,150,240,0.07)",

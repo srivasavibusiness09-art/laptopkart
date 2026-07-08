@@ -39,7 +39,7 @@ export default function LandingPage({ onEnterStore }: Props) {
   const [frameNum, setFrameNum] = useState(1);
   const [menuOpen, setMenuOpen] = useState(false);
   const [loadedCount, setLoadedCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   /* ── Refs for physics (no re-renders from these) ──── */
   const targetRef = useRef(0);    // where we want to be (0 → totalFrames-1)

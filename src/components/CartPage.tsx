@@ -32,7 +32,15 @@ export default function CartPage({ cart, setCart, setPage }: Props) {
     return (
       <main style={{ background: COLORS.darkBg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
         <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease" }}>
-          <div style={{ fontSize: 72, marginBottom: 20 }}>🛒</div>
+          <div style={{
+            display: "flex", justifyContent: "center", alignItems: "center",
+            width: 120, height: 120, borderRadius: "50%",
+            background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,150,240,0.12)",
+            margin: "0 auto 28px",
+            boxShadow: "0 0 40px rgba(56,189,248,0.06)",
+          }}>
+            <ShoppingCart size={48} color={COLORS.green} />
+          </div>
           <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 32, fontWeight: 800, color: COLORS.text, marginBottom: 10 }}>
             Your cart is empty
           </h2>

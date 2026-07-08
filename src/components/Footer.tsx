@@ -127,10 +127,15 @@ export default function Footer({ setPage }: FooterProps) {
 
           {/* Link columns */}
           {isMobile ? (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-              {col("Shop", shopLinks)}
-              {col("Company", companyLinks)}
-              {col("Support", supportLinks)}
+            <div style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "24px 32px",
+              width: "100%",
+            }}>
+              <div style={{ flex: "1 1 120px" }}>{col("Shop", shopLinks)}</div>
+              <div style={{ flex: "1 1 120px" }}>{col("Company", companyLinks)}</div>
+              <div style={{ flex: "1 1 120px" }}>{col("Support", supportLinks)}</div>
             </div>
           ) : (
             <>

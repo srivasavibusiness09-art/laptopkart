@@ -5,6 +5,7 @@ import { Heart, ShoppingCart, Star, BadgeCheck, Tag, Zap } from "lucide-react";
 import { COLORS } from "@/data/products";
 import { getBadgeColor } from "@/lib/utils";
 import type { Product } from "@/data/products";
+import { useIsMobile } from "@/lib/hooks";
 
 interface Props {
   product: Product;
@@ -30,6 +31,7 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
   const [hovered, setHovered] = useState(false);
   const [adding, setAdding]   = useState(false);
   const isWished = wishlist.includes(product.id);
+  const isMobile = useIsMobile();
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -52,11 +54,11 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
       style={{
         background: COLORS.cardBg,
         border: `1px solid ${hovered ? "rgba(99,102,241,0.30)" : COLORS.cardBorder}`,
-        borderRadius: 20,
+        borderRadius: isMobile ? 16 : 20,
         overflow: "hidden",
         cursor: "pointer",
         transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
-        transform: hovered ? "translateY(-6px)" : "none",
+        transform: hovered && !isMobile ? "translateY(-6px)" : "none",
         boxShadow: hovered
           ? "0 24px 60px rgba(0,0,0,0.5), 0 0 30px rgba(99,102,241,0.08)"
           : "0 2px 8px rgba(0,0,0,0.3)",
@@ -64,15 +66,15 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
       }}
     >
       {/* Badge top-left */}
-      <div style={{ position: "absolute", top: 12, left: 12, zIndex: 2 }}>
+      <div style={{ position: "absolute", top: isMobile ? 8 : 12, left: isMobile ? 8 : 12, zIndex: 2 }}>
         <span style={{
           background: badgeColors[product.badge] ?? COLORS.primary,
-          color: "#fff", fontSize: 9, fontWeight: 700,
-          padding: "3px 9px", borderRadius: 100,
+          color: "#fff", fontSize: isMobile ? 8 : 9, fontWeight: 700,
+          padding: isMobile ? "2px 6px" : "3px 9px", borderRadius: 100,
           letterSpacing: "0.04em", textTransform: "uppercase",
           display: "inline-flex", alignItems: "center", gap: 3,
         }}>
-          <Tag size={7} />{product.badge}
+          <Tag size={isMobile ? 6 : 7} />{product.badge}
         </span>
       </div>
 
@@ -80,17 +82,17 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
       <button
         onClick={(e) => { e.stopPropagation(); onWishlist(product.id); }}
         style={{
-          position: "absolute", top: 12, right: 12, zIndex: 2,
+          position: "absolute", top: isMobile ? 8 : 12, right: isMobile ? 8 : 12, zIndex: 2,
           background: isWished ? "rgba(239,68,68,0.15)" : "rgba(13,17,23,0.60)",
           backdropFilter: "blur(8px)",
           border: `1px solid ${isWished ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.08)"}`,
           cursor: "pointer", borderRadius: "50%",
-          width: 34, height: 34,
+          width: isMobile ? 28 : 34, height: isMobile ? 28 : 34,
           display: "flex", alignItems: "center", justifyContent: "center",
           transition: "all 0.2s",
         }}
       >
-        <Heart size={15}
+        <Heart size={isMobile ? 12 : 15}
           fill={isWished ? "#EF4444" : "transparent"}
           color={isWished ? "#EF4444" : "rgba(255,255,255,0.5)"} />
       </button>
@@ -99,7 +101,7 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
       <div
         onClick={() => onView(product)}
         style={{
-          height: 190, overflow: "hidden", position: "relative",
+          height: isMobile ? 110 : 190, overflow: "hidden", position: "relative",
           background: `linear-gradient(135deg, ${COLORS.background} 0%, ${COLORS.darkBg} 100%)`,
         }}
       >
@@ -125,49 +127,54 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
       </div>
 
       {/* Info */}
-      <div style={{ padding: "16px 16px 18px" }}>
+      <div style={{ padding: isMobile ? "12px 12px 14px" : "16px 16px 18px" }}>
         {/* Grade + warranty chips */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 8, marginBottom: isMobile ? 6 : 9 }}>
           <span style={{
             background: "rgba(56,189,248,0.10)", color: COLORS.green,
-            fontSize: 10, fontWeight: 700, padding: "3px 9px",
+            fontSize: isMobile ? 9 : 10, fontWeight: 700, padding: isMobile ? "2px 6px" : "3px 9px",
             borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 3,
             letterSpacing: "0.03em",
           }}>
-            <BadgeCheck size={9} />Grade {product.grade}
+            <BadgeCheck size={isMobile ? 8 : 9} />Grade {product.grade}
           </span>
-          <span style={{ color: COLORS.muted, fontSize: 11 }}>{product.warranty}</span>
+          <span style={{ color: COLORS.muted, fontSize: isMobile ? 10 : 11 }}>{product.warranty}</span>
         </div>
 
         <h3 style={{
           color: COLORS.text, fontFamily: "'Sora', sans-serif",
-          fontSize: 14, fontWeight: 700, margin: "0 0 5px",
+          fontSize: isMobile ? 12 : 14, fontWeight: 700, margin: "0 0 5px",
           letterSpacing: "-0.01em",
+          lineHeight: 1.3,
+          overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
         }}>
           {product.name}
         </h3>
-        <p style={{ color: COLORS.muted, fontSize: 11, margin: "0 0 10px", lineHeight: 1.5 }}>
+        <p style={{
+          color: COLORS.muted, fontSize: isMobile ? 10 : 11, margin: "0 0 8px", lineHeight: 1.4,
+          overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+        }}>
           {product.specs}
         </p>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: isMobile ? 8 : 12 }}>
           <StarRating rating={product.rating} />
-          <span style={{ color: COLORS.muted, fontSize: 11 }}>({product.reviews})</span>
+          <span style={{ color: COLORS.muted, fontSize: isMobile ? 10 : 11 }}>({product.reviews})</span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 8, flexWrap: "wrap", marginBottom: isMobile ? 10 : 14 }}>
           <span style={{
-            color: COLORS.text, fontSize: 22, fontWeight: 800,
+            color: COLORS.text, fontSize: isMobile ? 16 : 22, fontWeight: 800,
             fontFamily: "'Sora', sans-serif", letterSpacing: "-0.02em",
           }}>
             ₹{product.price.toLocaleString("en-IN")}
           </span>
-          <span style={{ color: COLORS.muted, fontSize: 12, textDecoration: "line-through" }}>
+          <span style={{ color: COLORS.muted, fontSize: isMobile ? 10 : 12, textDecoration: "line-through" }}>
             ₹{product.mrp.toLocaleString("en-IN")}
           </span>
           <span style={{
             background: "#EF4444", color: "#fff",
-            fontSize: 9, fontWeight: 700, padding: "2px 7px",
+            fontSize: isMobile ? 8 : 9, fontWeight: 700, padding: "2px 6px",
             borderRadius: 100,
           }}>
             {product.discount}% OFF
@@ -184,12 +191,14 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
             color: hovered ? "#000" : COLORS.green,
             border: `1.5px solid ${hovered ? "transparent" : "rgba(56,189,248,0.18)"}`,
             borderRadius: 12,
-            padding: "11px 0", fontWeight: 700, fontSize: 13,
+            padding: isMobile ? "8px 0" : "11px 0",
+            fontWeight: 700,
+            fontSize: isMobile ? 11 : 13,
             cursor: "pointer",
             transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
             fontFamily: "'Sora', sans-serif",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-            minHeight: 44,
+            minHeight: isMobile ? 36 : 44,
           }}
         >
           {adding ? (

@@ -35,7 +35,7 @@ export default function Hero({ setPage }: HeroProps) {
       background: `linear-gradient(160deg, #0d1117 0%, #111827 50%, #0d1525 100%)`,
       display: "flex", alignItems: "center",
       position: "relative", overflow: "hidden",
-      padding: isMobile ? "80px 18px 60px" : "0 40px",
+      padding: isMobile ? "58px 18px 48px" : "60px 40px 48px",
     }}>
       {/* Ambient background orbs */}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
@@ -160,6 +160,7 @@ export default function Hero({ setPage }: HeroProps) {
               Shop Laptops <ArrowRight size={16} />
             </button>
             <button
+              onClick={() => setPage("why-refurbished")}
               style={{
                 background: "rgba(56,189,248,0.07)",
                 color: COLORS.text,
@@ -187,34 +188,36 @@ export default function Hero({ setPage }: HeroProps) {
           </div>
 
           {/* Stats */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`,
-            gap: isMobile ? 10 : 14,
-          }}>
-            {stats.map((s, i) => (
-              <div key={s.label} style={{
-                background: "rgba(56,189,248,0.05)",
-                border: "1px solid rgba(56,189,248,0.12)",
-                borderRadius: 14,
-                padding: isMobile ? "12px 8px" : "16px 12px",
-                textAlign: "center",
-                animation: `fadeUp 0.6s ease ${i * 0.1}s both`,
-                backdropFilter: "blur(8px)",
-              }}>
-                <div style={{
-                  fontFamily: "'Sora', sans-serif",
-                  fontSize: isMobile ? 17 : 22, fontWeight: 800,
-                  color: COLORS.green, marginBottom: 3,
+          {!isMobile && (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: 14,
+            }}>
+              {stats.map((s, i) => (
+                <div key={s.label} style={{
+                  background: "rgba(56,189,248,0.05)",
+                  border: "1px solid rgba(56,189,248,0.12)",
+                  borderRadius: 14,
+                  padding: "16px 12px",
+                  textAlign: "center",
+                  animation: `fadeUp 0.6s ease ${i * 0.1}s both`,
+                  backdropFilter: "blur(8px)",
                 }}>
-                  {s.label === "Devices Sold" ? `${Math.min(count, 50000).toLocaleString("en-IN")}+` : s.value}
+                  <div style={{
+                    fontFamily: "'Sora', sans-serif",
+                    fontSize: 22, fontWeight: 800,
+                    color: COLORS.green, marginBottom: 3,
+                  }}>
+                    {s.label === "Devices Sold" ? `${Math.min(count, 50000).toLocaleString("en-IN")}+` : s.value}
+                  </div>
+                  <div style={{ color: COLORS.muted, fontSize: 11, letterSpacing: "0.02em" }}>
+                    {s.label}
+                  </div>
                 </div>
-                <div style={{ color: COLORS.muted, fontSize: isMobile ? 10 : 11, letterSpacing: "0.02em" }}>
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right: Floating product image */}

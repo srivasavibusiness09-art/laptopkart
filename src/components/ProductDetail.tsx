@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Heart, ShoppingCart, Star, Shield, RefreshCw, Truck, BadgeCheck,
   Share2, ChevronLeft, ChevronRight, Zap, Tag, Info, Award,
@@ -30,6 +30,47 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   const [added, setAdded] = useState(false);
   const isMobile = useIsMobile();
 
+  const getAboutText = (name: string, brand: string, cat: string) => {
+    return `The certified refurbished ${name} is a high-performance ${cat.toLowerCase()} machine engineered by ${brand} for reliability, speed, and comfort. Backed by our rigorous 72-point inspection, this device delivers commercial-grade utility, robust chassis durability, and smooth multitasking performance at a fraction of the cost of new hardware.`;
+  };
+
+  // Carousel & zoom states
+  const [activeImgIdx, setActiveImgIdx] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({
+    transform: "scale(1)",
+    transformOrigin: "center",
+  });
+
+  const productImages = [
+    product?.img || "",
+    "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=800&q=80&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&q=80&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&q=80&auto=format&fit=crop",
+  ];
+
+  // Reset page state and scroll to top when user views a related product
+  useEffect(() => {
+    setQty(1);
+    setTab("specs");
+    setAdded(false);
+    setActiveImgIdx(0);
+    setIsHovered(false);
+    setZoomStyle({ transform: "scale(1)", transformOrigin: "center" });
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
+  }, [product?.id]);
+
+  // Auto-switch images every 4 seconds when user is not hovering
+  useEffect(() => {
+    if (isHovered) return;
+    const interval = setInterval(() => {
+      setActiveImgIdx((prev) => (prev + 1) % productImages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isHovered, productImages.length]);
+
   if (!product) return null;
 
   const isWished  = wishlist.includes(product.id);
@@ -41,11 +82,44 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
     setTimeout(() => setAdded(false), 1800);
   };
 
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveImgIdx((prev) => (prev + 1) % productImages.length);
+  };
+
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveImgIdx((prev) => (prev - 1 + productImages.length) % productImages.length);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomStyle({
+      transform: "scale(1.8)",
+      transformOrigin: `${x}% ${y}%`,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setZoomStyle({
+      transform: "scale(1)",
+      transformOrigin: "center",
+    });
+  };
+
   const specs = [
     ["CPU", product.processor],
     ["RAM", product.ram],
     ["Storage", product.storage],
     ["Specs Detail", product.specs],
+    ["Cosmetic Quality", `Grade ${product.grade} (Certified Refurbished)`],
+    ["Warranty Period", `${product.warranty} Hardware Coverage`],
+    ["Battery Health", "80%+ Guaranteed Capacity (Diagnostic Certified)"],
+    ["In the Box", "Laptop, Original Compatible Power Adapter, Certificate"],
+    ["System Software", "Pre-installed Operating System configured"],
   ].filter(([, v]) => v);
 
   const trustBadges = [
@@ -85,6 +159,13 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
       </div>
 
       {/* ── Main content ───────────────────────── */}
+      <style>{`
+        @keyframes ping {
+          75%, 100% { transform: scale(2.2); opacity: 0; }
+        }
+      `}</style>
+
+      {/* ── Main content ───────────────────────── */}
       <div style={{
         maxWidth: 1200, margin: "0 auto",
         padding: isMobile ? "0 20px 48px" : "0 24px 80px",
@@ -94,20 +175,34 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
         alignItems: "start",
       }}>
 
-        {/* Left: Image */}
+        {/* Left: Image Gallery & Zoom */}
         <div style={{ position: "relative" }}>
-          <div style={{
-            borderRadius: 24,
-            overflow: "hidden",
-            background: COLORS.background,
-            border: `1px solid ${COLORS.cardBorder}`,
-            aspectRatio: "4/3",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            position: "relative",
-          }}>
+          {/* Main Zoom Display Box */}
+          <div
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={handleMouseLeave}
+            onMouseMove={handleMouseMove}
+            style={{
+              borderRadius: 24,
+              overflow: "hidden",
+              background: COLORS.background,
+              border: `1px solid ${COLORS.cardBorder}`,
+              aspectRatio: "4/3",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              position: "relative",
+              cursor: "zoom-in",
+            }}
+          >
             <img
-              src={product.img} alt={product.name}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              src={productImages[activeImgIdx]}
+              alt={product.name}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                transition: "transform 0.1s ease-out",
+                ...zoomStyle,
+              }}
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).src =
                   "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80";
@@ -118,16 +213,103 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
               background: "#EF4444", color: "#fff",
               fontSize: 11, fontWeight: 800, padding: "4px 12px",
               borderRadius: 100,
+              zIndex: 3,
+              pointerEvents: "none",
             }}>
               {product.discount}% OFF
             </span>
+
+            {/* Hover chevrons controls */}
+            <div style={{
+              position: "absolute",
+              inset: "0 16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              opacity: isHovered ? 1 : 0,
+              transition: "opacity 0.25s ease",
+              pointerEvents: isHovered ? "auto" : "none",
+              zIndex: 3,
+            }}>
+              <button
+                onClick={handlePrevImage}
+                style={{
+                  width: 38, height: 38, borderRadius: "50%",
+                  background: "rgba(13,17,23,0.75)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", transition: "all 0.2s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(13,17,23,0.95)"}
+                onMouseLeave={e => e.currentTarget.style.background = "rgba(13,17,23,0.75)"}
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                onClick={handleNextImage}
+                style={{
+                  width: 38, height: 38, borderRadius: "50%",
+                  background: "rgba(13,17,23,0.75)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", transition: "all 0.2s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(13,17,23,0.95)"}
+                onMouseLeave={e => e.currentTarget.style.background = "rgba(13,17,23,0.75)"}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+
+            {/* Active image indicator dots */}
+            <div style={{
+              position: "absolute", bottom: 16,
+              left: "50%", transform: "translateX(-50%)",
+              display: "flex", gap: 6, zIndex: 3,
+              pointerEvents: "none",
+            }}>
+              {productImages.map((_, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    width: activeImgIdx === idx ? 18 : 6,
+                    height: 6,
+                    borderRadius: 100,
+                    background: activeImgIdx === idx ? COLORS.green : "rgba(255,255,255,0.4)",
+                    transition: "all 0.25s",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Thumbnails selector row */}
+          <div style={{
+            display: "flex",
+            gap: 10, marginTop: 14,
+            justifyContent: "center",
+          }}>
+            {productImages.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveImgIdx(idx)}
+                style={{
+                  width: 64, height: 48, borderRadius: 10,
+                  overflow: "hidden", border: `2px solid ${activeImgIdx === idx ? COLORS.green : "transparent"}`,
+                  padding: 0, background: COLORS.background, cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                <img src={img} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </button>
+            ))}
           </div>
 
           {/* Trust badges row */}
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 8, marginTop: 14,
+            gap: 8, marginTop: 16,
           }}>
             {trustBadges.map((b) => (
               <div key={b.text} style={{
@@ -141,22 +323,72 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
               </div>
             ))}
           </div>
+
+          {/* About this Laptop Card (left side to fill empty space) */}
+          <div style={{
+            marginTop: 24,
+            background: "rgba(255,255,255,0.01)",
+            border: `1px solid ${COLORS.cardBorder}`,
+            borderRadius: 20,
+            padding: 24,
+          }}>
+            <h3 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: 15, fontWeight: 700, margin: "0 0 10px" }}>
+              About this Laptop
+            </h3>
+            <p style={{ color: COLORS.muted, fontSize: 13, lineHeight: 1.65, margin: "0 0 16px" }}>
+              {getAboutText(product.name, product.brand, product.category)}
+            </p>
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 14 }}>
+              <div style={{ color: COLORS.text, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Certified Box Contents:</div>
+              <div style={{ display: "grid", gap: 6 }}>
+                {[
+                  "Refurbished Grade A+ Laptop",
+                  "OEM-Compatible Power Adapter & Cord",
+                  "Laptopkart Certification & Warranty Card",
+                  "Eco-Friendly Protective Packaging Box",
+                ].map((item, idx) => (
+                  <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: COLORS.muted }}>
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: COLORS.green }} />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right: Details */}
         <div>
-          {/* Badge */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            background: "rgba(56,189,248,0.08)",
-            border: "1px solid rgba(56,189,248,0.2)",
-            borderRadius: 100, padding: "4px 12px",
-            marginBottom: 14,
-          }}>
-            <Award size={11} color={COLORS.green} />
-            <span style={{ color: COLORS.green, fontSize: 11, fontWeight: 700 }}>
-              {product.badge}
-            </span>
+          {/* Badge & Live Shop Status */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "rgba(56,189,248,0.08)",
+              border: "1px solid rgba(56,189,248,0.2)",
+              borderRadius: 100, padding: "4px 12px",
+            }}>
+              <Award size={11} color={COLORS.green} />
+              <span style={{ color: COLORS.green, fontSize: 11, fontWeight: 700 }}>
+                {product.badge}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ position: "relative", display: "flex", width: 8, height: 8 }}>
+                <span style={{
+                  position: "absolute", width: "100%", height: "100%",
+                  borderRadius: "50%", background: "#10B981", opacity: 0.75,
+                  animation: "ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite",
+                }} />
+                <span style={{
+                  position: "relative", borderRadius: "50%", width: 8, height: 8,
+                  background: "#10B981",
+                }} />
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#10B981", letterSpacing: "0.02em" }}>
+                Live Shop Certified
+              </span>
+            </div>
           </div>
 
           <h1 style={{
@@ -274,8 +506,8 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             Buy Now
           </button>
 
-          {/* Tabs */}
-          <div>
+          {/* Tabs restored to the right side */}
+          <div style={{ marginTop: 24 }}>
             <div style={{
               display: "flex", gap: 0,
               borderBottom: `1px solid ${COLORS.cardBorder}`,
@@ -362,8 +594,8 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
               </div>
             )}
           </div>
-        </div>
       </div>
+    </div>
 
       {/* ── Related products ──────────────────── */}
       <div style={{
