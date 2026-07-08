@@ -90,15 +90,20 @@ export default function Navbar({ setPage, cart, wishlist }: NavbarProps) {
           {/* Desktop center links */}
           {!isMobile && (
             <div style={{
-              flex: 1, display: "flex", justifyContent: "center",
-              gap: 0, overflow: "hidden",
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              gap: 4,
+              overflow: "hidden",
+              minWidth: 0,
+              margin: "0 16px",
             }}>
               {navLinks.map((link) => (
                 <button
                   key={link}
                   onClick={() => go(getTarget(link))}
                   style={{
-                    padding: "6px 14px", background: "transparent",
+                    padding: "6px 10px", background: "transparent",
                     border: "none",
                     color: link === "Offers" ? "#F59E0B" : COLORS.muted,
                     cursor: "pointer", fontSize: 13, fontWeight: 500,
