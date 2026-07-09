@@ -6,7 +6,7 @@ import {
   Laptop,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { COLORS, products, categories, reviews } from "@/data/products";
+import { COLORS, categories, reviews } from "@/data/products";
 import type { Product } from "@/data/products";
 import Hero from "@/components/Hero";
 import ProductCard from "@/components/ProductCard";
@@ -93,6 +93,8 @@ const whyItems = [
 
 /* ── Homepage ─────────────────────────────────────────── */
 interface HomepageProps {
+  products: Product[];
+  banners: any[];
   setPage: (p: string) => void;
   onViewProduct: (p: Product) => void;
   onAddToCart: (p: Product) => void;
@@ -100,7 +102,7 @@ interface HomepageProps {
   wishlist: number[];
 }
 
-export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishlist, wishlist }: HomepageProps) {
+export default function Homepage({ products, banners, setPage, onViewProduct, onAddToCart, onWishlist, wishlist }: HomepageProps) {
   const isMobile = useIsMobile();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -108,36 +110,15 @@ export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishli
 
   // Offer & Contest states
   const [activeSlideIdx, setActiveSlideIdx] = useState(0);
-  const contestBanners = [
-    {
-      src: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80&auto=format&fit=crop",
-      badge: "Blog Contest",
-      title: "Write a Tech Blog, Get Selected",
-      desc: "Share your guides or review articles on our Tech Blog. Win rewards!",
-      target: "blog",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&q=80&auto=format&fit=crop",
-      badge: "Exclusive Offers",
-      title: "Exclusive Offers if You Win!",
-      desc: "Earn high-value cashback discount coupons to redeem on top brand laptops.",
-      target: "blog",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=1200&q=80&auto=format&fit=crop",
-      badge: "Direct Savings",
-      title: "Weekly Direct Deals: Flat 10% Off",
-      desc: "Use coupon LAPTOP10 to get 10% instant discount on business series laptops. Shop directly!",
-      target: "listing",
-    }
-  ];
+
 
   useEffect(() => {
+    if (!banners || banners.length === 0) return;
     const timer = setInterval(() => {
-      setActiveSlideIdx((prev) => (prev + 1) % contestBanners.length);
+      setActiveSlideIdx((prev) => (prev + 1) % banners.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [contestBanners.length]);
+  }, [banners?.length]);
 
   const answer = (a: string) => {
     const na = { ...answers, [step]: a };
@@ -169,7 +150,11 @@ export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishli
             <SectionHeader eyebrow="Contests &amp; Rewards" title="Offers &amp; Contests" subtitle="Join our community writing challenge and unlock exclusive savings" />
             
             <div
-              onClick={() => setPage(contestBanners[activeSlideIdx].target)}
+              onClick={() => {
+                if (banners && banners[activeSlideIdx]) {
+                  setPage(banners[activeSlideIdx].target);
+                }
+              }}
               style={{
                 position: "relative",
                 borderRadius: 24,
@@ -197,7 +182,7 @@ export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishli
                 transform: `translateX(-${activeSlideIdx * 100}%)`,
                 transition: "transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)",
               }}>
-                {contestBanners.map((img, i) => (
+                {(banners || []).map((img, i) => (
                   <div key={i} style={{ flexShrink: 0, width: "100%", height: "100%", position: "relative" }}>
                     <img src={img.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     <div style={{
@@ -241,7 +226,7 @@ export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishli
                 position: "absolute", bottom: 20, right: 30,
                 display: "flex", gap: 6, zIndex: 3,
               }}>
-                {contestBanners.map((_, i) => (
+                {(banners || []).map((_, i) => (
                   <div
                     key={i}
                     style={{
@@ -271,7 +256,7 @@ export default function Homepage({ setPage, onViewProduct, onAddToCart, onWishli
             {categories.map((cat, i) => (
               <div
                 key={cat.name}
-                onClick={() => setPage("listing")}
+                onClick={() => setPage(cat.name === "Accessories" ? "accessories" : "listing")}
                 style={{
                   background: COLORS.cardBg,
                   border: `1px solid ${COLORS.cardBorder}`,

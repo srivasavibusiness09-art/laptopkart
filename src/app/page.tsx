@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { COLORS } from "@/data/products";
+import { COLORS, products, accessoriesList, initialBanners } from "@/data/products";
 import type { Product } from "@/data/products";
 
 import LandingPage from "@/components/LandingPage";
@@ -22,6 +22,7 @@ import {
   LoginPage,
   WhyRefurbishedPage,
   WriteBlogPage,
+  AccessoriesPage,
 } from "@/components/OtherPages";
 
 interface CartItem extends Product {
@@ -35,6 +36,37 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<number[]>([]);
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
+
+  /* Dynamic Admin Data States (hydrated from localStorage) */
+  const [productsList, setProductsList] = useState<Product[]>(products);
+  const [accessories, setAccessories] = useState<any[]>(accessoriesList);
+  const [banners, setBanners] = useState<any[]>(initialBanners);
+
+  // Sync state with local storage on client mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedProducts = localStorage.getItem("laptopkart_products");
+      if (storedProducts) {
+        try { setProductsList(JSON.parse(storedProducts)); } catch (e) {}
+      } else {
+        localStorage.setItem("laptopkart_products", JSON.stringify(products));
+      }
+
+      const storedAccessories = localStorage.getItem("laptopkart_accessories");
+      if (storedAccessories) {
+        try { setAccessories(JSON.parse(storedAccessories)); } catch (e) {}
+      } else {
+        localStorage.setItem("laptopkart_accessories", JSON.stringify(accessoriesList));
+      }
+
+      const storedBanners = localStorage.getItem("laptopkart_banners");
+      if (storedBanners) {
+        try { setBanners(JSON.parse(storedBanners)); } catch (e) {}
+      } else {
+        localStorage.setItem("laptopkart_banners", JSON.stringify(initialBanners));
+      }
+    }
+  }, [page]);
 
   /* Global authentication states */
   const [user, setUser] = useState<any>(null);
@@ -137,6 +169,8 @@ export default function App() {
 
       {page === "home" && (
         <Homepage
+          products={productsList}
+          banners={banners}
           setPage={setPage}
           onViewProduct={handleViewProduct}
           onAddToCart={handleAddToCart}
@@ -146,6 +180,7 @@ export default function App() {
       )}
       {page === "listing" && (
         <ProductListing
+          products={productsList}
           onViewProduct={handleViewProduct}
           onAddToCart={handleAddToCart}
           onWishlist={handleWishlist}
@@ -203,6 +238,15 @@ export default function App() {
             return null;
           })()
         )
+      )}
+      {page === "accessories" && (
+        <AccessoriesPage
+          accessories={accessories}
+          setPage={setPage}
+          onAddToCart={handleAddToCart}
+          onWishlist={handleWishlist}
+          wishlist={wishlist}
+        />
       )}
 
       <Footer setPage={setPage} />

@@ -30,7 +30,10 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   const [added, setAdded] = useState(false);
   const isMobile = useIsMobile();
 
-  const getAboutText = (name: string, brand: string, cat: string) => {
+  const getAboutText = (name: string, brand: string, cat: string, isBrandNew?: boolean) => {
+    if (isBrandNew) {
+      return `The brand new ${name} is a high-performance ${cat.toLowerCase()} machine engineered by ${brand} for cutting-edge speed, reliability, and modern efficiency. Factory sealed in its original packaging, this device comes with a full direct manufacturer warranty, ensuring pristine condition, peak battery runtime, and absolute peace of mind.`;
+    }
     return `The certified refurbished ${name} is a high-performance ${cat.toLowerCase()} machine engineered by ${brand} for reliability, speed, and comfort. Backed by our rigorous 72-point inspection, this device delivers commercial-grade utility, robust chassis durability, and smooth multitasking performance at a fraction of the cost of new hardware.`;
   };
 
@@ -42,12 +45,14 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
     transformOrigin: "center",
   });
 
-  const productImages = [
-    product?.img || "",
-    "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=800&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&q=80&auto=format&fit=crop",
-  ];
+  const productImages = product?.images && product.images.length > 0
+    ? product.images.slice(0, 5)
+    : [
+        product?.img || "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=800&q=80&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&q=80&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&q=80&auto=format&fit=crop",
+      ];
 
   // Reset page state and scroll to top when user views a related product
   useEffect(() => {
@@ -115,10 +120,16 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
     ["RAM", product.ram],
     ["Storage", product.storage],
     ["Specs Detail", product.specs],
-    ["Cosmetic Quality", `Grade ${product.grade} (Certified Refurbished)`],
-    ["Warranty Period", `${product.warranty} Hardware Coverage`],
-    ["Battery Health", "80%+ Guaranteed Capacity (Diagnostic Certified)"],
-    ["In the Box", "Laptop, Original Compatible Power Adapter, Certificate"],
+    product.condition === "Brand New"
+      ? ["Condition", "100% Brand New (Original Sealed Box)"]
+      : ["Cosmetic Quality", `Grade ${product.grade} (Certified Refurbished)`],
+    ["Warranty Period", product.condition === "Brand New" ? product.warranty : `${product.warranty} Hardware Coverage`],
+    product.condition === "Brand New"
+      ? ["Battery Health", "100% Capacity (Brand New Sealed)"]
+      : ["Battery Health", "80%+ Guaranteed Capacity (Diagnostic Certified)"],
+    product.condition === "Brand New"
+      ? ["In the Box", "Laptop, OEM Power Adapter & Charging Cord, User Manuals"]
+      : ["In the Box", "Laptop, Original Compatible Power Adapter, Certificate"],
     ["System Software", "Pre-installed Operating System configured"],
   ].filter(([, v]) => v);
 
@@ -126,7 +137,9 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
     { icon: <Shield size={14} color={COLORS.green} />, text: product.warranty ?? "1 Year Warranty" },
     { icon: <RefreshCw size={14} color={COLORS.green} />, text: "7 Day Returns" },
     { icon: <Truck size={14} color={COLORS.green} />, text: "Free Delivery" },
-    { icon: <BadgeCheck size={14} color={COLORS.green} />, text: "Grade " + product.grade },
+    product.condition === "Brand New"
+      ? { icon: <Zap size={14} color={COLORS.green} />, text: "Brand New" }
+      : { icon: <BadgeCheck size={14} color={COLORS.green} />, text: "Grade " + product.grade },
   ];
 
   return (
@@ -336,17 +349,27 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
               About this Laptop
             </h3>
             <p style={{ color: COLORS.muted, fontSize: 13, lineHeight: 1.65, margin: "0 0 16px" }}>
-              {getAboutText(product.name, product.brand, product.category)}
+              {product.description || getAboutText(product.name, product.brand, product.category, product.condition === "Brand New")}
             </p>
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 14 }}>
-              <div style={{ color: COLORS.text, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Certified Box Contents:</div>
+              <div style={{ color: COLORS.text, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
+                {product.condition === "Brand New" ? "Sealed Box Contents:" : "Certified Box Contents:"}
+              </div>
               <div style={{ display: "grid", gap: 6 }}>
-                {[
-                  "Refurbished Grade A+ Laptop",
-                  "OEM-Compatible Power Adapter & Cord",
-                  "Laptopkart Certification & Warranty Card",
-                  "Eco-Friendly Protective Packaging Box",
-                ].map((item, idx) => (
+                {(product.boxContents
+                  ? product.boxContents.split(",").map((s) => s.trim())
+                  : (product.condition === "Brand New" ? [
+                      "Original Sealed Brand New Laptop",
+                      "Official OEM Power Adapter & Charging Cable",
+                      "Manufacturer Warranty Guide & Manuals",
+                      "Original Retail Branding Box",
+                    ] : [
+                      "Refurbished Grade A+ Laptop",
+                      "OEM-Compatible Power Adapter & Cord",
+                      "Laptopkart Certification & Warranty Card",
+                      "Eco-Friendly Protective Packaging Box",
+                    ])
+                ).map((item, idx) => (
                   <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: COLORS.muted }}>
                     <div style={{ width: 4, height: 4, borderRadius: "50%", background: COLORS.green }} />
                     {item}
@@ -553,14 +576,21 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             {/* Why Buy */}
             {tab === "why" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {[
+                {(product.condition === "Brand New" ? [
+                  "100% Brand New, Sealed Box Packaging",
+                  "Full Manufacturer Warranty (Brand Direct)",
+                  "Factory Sealed Accessories & Charger included",
+                  "Genuine Windows/macOS operating system licensed",
+                  "Unused keyboard, screen, and battery cells",
+                  "Zero defects — 100% pristine condition",
+                ] : [
                   "72-point quality inspection completed",
                   "Original parts — no fake components",
                   "Full operating system restored & verified",
                   "Battery cycle count checked & disclosed",
                   "1 Year warranty with nationwide service",
                   "7-day return if not satisfied",
-                ].map((item) => (
+                ]).map((item) => (
                   <div key={item} style={{
                     display: "flex", gap: 10, alignItems: "flex-start",
                   }}>

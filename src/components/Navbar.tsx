@@ -26,7 +26,7 @@ const linkIcons: Record<string, React.ReactNode> = {
 };
 
 const getTarget = (link: string) => ({
-  Laptops: "listing", Desktops: "listing", Accessories: "listing",
+  Laptops: "listing", Desktops: "listing", Accessories: "accessories",
   About: "about", Blog: "blog", Offers: "listing", "Resell Laptop": "contact",
 } as Record<string, string>)[link] ?? "home";
 

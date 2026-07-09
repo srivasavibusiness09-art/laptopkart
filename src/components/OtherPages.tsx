@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { COLORS, products } from "@/data/products";
+import { COLORS, products, accessoriesList } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
 import {
   BookOpen, Scale, GraduationCap, Gamepad2, Battery,
   Phone, Mail, MessageSquare, MapPin, CheckCircle2,
-  Lock, User, Laptop, ShieldCheck, Leaf, Coins, ChevronRight,
+  Lock, User, Laptop, ShieldCheck, Leaf, Coins, ChevronRight, Star, ShoppingCart, Heart
 } from "lucide-react";
 import { FaApple, FaGoogle } from "react-icons/fa6";
 
@@ -753,6 +753,188 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
             </div>
           </form>
         )}
+      </div>
+    </div>
+  );
+}
+
+export function AccessoriesPage({
+  accessories,
+  setPage,
+  onAddToCart,
+  onWishlist,
+  wishlist,
+}: {
+  accessories: any[];
+  setPage: (p: string) => void;
+  onAddToCart: (p: any) => void;
+  onWishlist: (id: number) => void;
+  wishlist: number[];
+}) {
+  const isMobile = useIsMobile();
+  const [filter, setFilter] = useState<string>("All");
+  const categoriesList = ["All", "Monitors", "Docking Stations", "Mice & Keyboards", "Chargers & Power", "Bags & Sleeves"];
+
+  const filteredItems = filter === "All"
+    ? accessories
+    : accessories.filter(item => item.category === filter);
+
+  return (
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "24px 14px" : "48px 20px" }}>
+      {/* Header */}
+      <div style={{ marginBottom: 32, textAlign: "center" }}>
+        <span style={{
+          display: "inline-block",
+          color: COLORS.green, fontSize: 12, fontWeight: 700,
+          letterSpacing: "0.08em", textTransform: "uppercase",
+          marginBottom: 10,
+          background: "rgba(56,189,248,0.08)",
+          padding: "4px 14px", borderRadius: 100,
+          border: "1px solid rgba(56,189,248,0.15)",
+        }}>
+          Enhance Your Setup
+        </span>
+        <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 28 : 36, fontWeight: 800, color: COLORS.text, margin: "0 0 10px" }}>
+          Premium Accessories
+        </h2>
+        <p style={{ color: COLORS.muted, fontSize: 15, maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>
+          Certified refurbished monitors, docking stations, keyboards, and chargers to complete your workspace.
+        </p>
+      </div>
+
+      {/* Filter Tabs */}
+      <div style={{
+        display: "flex", gap: 8, overflowX: "auto", paddingBottom: 16,
+        marginBottom: 32, scrollbarWidth: "none", borderBottom: `1px solid ${COLORS.cardBorder}`,
+      }}>
+        {categoriesList.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setFilter(cat)}
+            style={{
+              background: filter === cat ? "linear-gradient(135deg, #3B82F6, #38BDF8)" : COLORS.cardBg,
+              color: filter === cat ? "#000" : COLORS.muted,
+              border: `1px solid ${filter === cat ? "transparent" : COLORS.cardBorder}`,
+              borderRadius: 100, padding: "8px 18px", fontSize: 13, fontWeight: 600,
+              cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s",
+            }}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Grid */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+        gap: 24,
+      }}>
+        {filteredItems.map(item => {
+          const isWished = wishlist.includes(item.id);
+          const saving = item.mrp - item.price;
+          return (
+            <div
+              key={item.id}
+              style={{
+                background: COLORS.cardBg,
+                border: `1px solid ${COLORS.cardBorder}`,
+                borderRadius: 20, overflow: "hidden",
+                display: "flex", flexDirection: "column",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = "translateY(-6px)";
+                e.currentTarget.style.borderColor = "rgba(56,189,248,0.28)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = "none";
+                e.currentTarget.style.borderColor = COLORS.cardBorder;
+              }}
+            >
+              {/* Image Box */}
+              <div style={{ height: 180, overflow: "hidden", background: "#0d1117", position: "relative" }}>
+                <img src={item.img} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                
+                {/* Save Badge */}
+                <span style={{
+                  position: "absolute", top: 12, left: 12,
+                  background: "rgba(16,185,129,0.92)", color: "#fff",
+                  fontSize: 10, fontWeight: 800, padding: "4px 8px", borderRadius: 6,
+                }}>
+                  SAVE ₹{saving.toLocaleString("en-IN")}
+                </span>
+
+                {/* Wishlist Button */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); onWishlist(item.id); }}
+                  style={{
+                    position: "absolute", top: 12, right: 12,
+                    background: "rgba(13,17,23,0.65)", backdropFilter: "blur(8px)",
+                    border: "none", borderRadius: "50%", width: 34, height: 34,
+                    display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+                  }}
+                >
+                  <Heart size={15} fill={isWished ? "#EF4444" : "transparent"} color={isWished ? "#EF4444" : "#fff"} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div style={{ padding: 20, display: "flex", flexDirection: "column", flex: 1 }}>
+                <span style={{ color: COLORS.green, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
+                  {item.brand} • {item.category}
+                </span>
+                
+                <h3 style={{
+                  fontFamily: "'Sora', sans-serif", fontSize: 15, fontWeight: 700,
+                  color: COLORS.text, margin: "0 0 6px", lineHeight: 1.4,
+                  height: 42, overflow: "hidden", textOverflow: "ellipsis",
+                }}>
+                  {item.name}
+                </h3>
+
+                <p style={{ color: COLORS.muted, fontSize: 12, margin: "0 0 16px", height: 18, overflow: "hidden" }}>
+                  {item.specs}
+                </p>
+
+                {/* Rating */}
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 18 }}>
+                  <div style={{ display: "flex", gap: 2 }}>
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <Star key={s} size={11} fill={s <= Math.floor(item.rating) ? "#FBBF24" : "transparent"} color={s <= Math.floor(item.rating) ? "#FBBF24" : "rgba(255,255,255,0.15)"} />
+                    ))}
+                  </div>
+                  <span style={{ color: COLORS.text, fontWeight: 700, fontSize: 12 }}>{item.rating}</span>
+                </div>
+
+                {/* Price & Add to Cart */}
+                <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: COLORS.text }}>
+                      ₹{item.price.toLocaleString("en-IN")}
+                    </div>
+                    <div style={{ fontSize: 12, color: COLORS.muted, textDecoration: "line-through" }}>
+                      ₹{item.mrp.toLocaleString("en-IN")}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => onAddToCart({ ...item, specs: item.specs, warranty: "6 Months" })}
+                    style={{
+                      background: "linear-gradient(135deg, #3B82F6, #38BDF8)",
+                      color: "#000", border: "none", borderRadius: 10,
+                      padding: "8px 16px", fontSize: 12, fontWeight: 800,
+                      cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
+                      fontFamily: "'Sora', sans-serif",
+                    }}
+                  >
+                    <ShoppingCart size={12} /> Add
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

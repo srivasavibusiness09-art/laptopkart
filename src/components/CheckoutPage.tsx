@@ -65,7 +65,26 @@ export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPagePro
   const isMobile = useIsMobile();
 
   const handleNext = () => {
-    if (step === 2) setCart([]);
+    if (step === 2) {
+      const newOrder = {
+        orderId,
+        date: new Date().toLocaleString(),
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          qty: item.qty || 1,
+          img: item.img
+        })),
+        total,
+        address
+      };
+      
+      const existingOrders = JSON.parse(localStorage.getItem("laptopkart_orders") || "[]");
+      localStorage.setItem("laptopkart_orders", JSON.stringify([newOrder, ...existingOrders]));
+      
+      setCart([]);
+    }
     setStep((s) => Math.min(STEPS.length - 1, s + 1));
   };
 

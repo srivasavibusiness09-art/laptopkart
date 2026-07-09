@@ -25,10 +25,14 @@ export type Product = {
   discount: number;
   rating: number;
   reviews: number;
-  grade: "A+" | "A" | "B+";
+  grade?: "A+" | "A" | "B+";
+  condition?: "Refurbished" | "Brand New";
   warranty: string;
   specs: string;
   img: string;
+  images?: string[];
+  description?: string;
+  boxContents?: string;
   processor: string;
   ram: "8GB" | "16GB" | "32GB";
   storage: string;
@@ -36,6 +40,44 @@ export type Product = {
 };
 
 export const products: Product[] = [
+  {
+    id: 11,
+    name: "Apple MacBook Air M3 (Brand New)",
+    brand: "Apple",
+    category: "Ultrabooks",
+    price: 104900,
+    mrp: 114900,
+    discount: 9,
+    rating: 4.8,
+    reviews: 125,
+    condition: "Brand New",
+    warranty: "1 Year Apple Warranty",
+    specs: "Apple M3 Chip • 8GB RAM • 256GB SSD",
+    img: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80&auto=format&fit=crop",
+    processor: "Apple M3 8-Core CPU",
+    ram: "8GB",
+    storage: "256GB SSD",
+    badge: "Top Rated",
+  },
+  {
+    id: 12,
+    name: "Dell XPS 13 9315 (Brand New)",
+    brand: "Dell",
+    category: "Ultrabooks",
+    price: 114999,
+    mrp: 129999,
+    discount: 11,
+    rating: 4.7,
+    reviews: 92,
+    condition: "Brand New",
+    warranty: "1 Year Dell Onsite Warranty",
+    specs: "Intel i7 12th Gen • 16GB RAM • 512GB SSD",
+    img: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=800&q=80&auto=format&fit=crop",
+    processor: "Intel Core i7 1250U",
+    ram: "16GB",
+    storage: "512GB SSD",
+    badge: "Top Rated",
+  },
   {
     id: 1,
     name: "Dell Latitude 5400",
@@ -263,3 +305,123 @@ export const navLinks = [
   "Blog",
   "About",
 ] as const;
+
+export interface AccessoryProduct {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  mrp: number;
+  rating: number;
+  reviews: number;
+  img: string;
+  brand: string;
+  specs: string;
+}
+
+export const accessoriesList: AccessoryProduct[] = [
+  {
+    id: 101,
+    name: "Dell UltraSharp U2419H 24\" Monitor",
+    category: "Monitors",
+    price: 9999,
+    mrp: 18999,
+    rating: 4.6,
+    reviews: 142,
+    img: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&q=80&auto=format&fit=crop",
+    brand: "Dell",
+    specs: "Full HD 1080p • IPS Panel • Ultra-Thin Bezel",
+  },
+  {
+    id: 102,
+    name: "Lenovo ThinkPad USB-C Dock Gen 2",
+    category: "Docking Stations",
+    price: 4999,
+    mrp: 14999,
+    rating: 4.5,
+    reviews: 88,
+    img: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=500&q=80&auto=format&fit=crop",
+    brand: "Lenovo",
+    specs: "4K Display Output • 90W Power Delivery • USB-C",
+  },
+  {
+    id: 103,
+    name: "Logitech MX Master 3S Wireless Mouse",
+    category: "Mice & Keyboards",
+    price: 3799,
+    mrp: 8999,
+    rating: 4.8,
+    reviews: 230,
+    img: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=500&q=80&auto=format&fit=crop",
+    brand: "Logitech",
+    specs: "8K DPI • Quiet Clicks • MagSpeed Scroll Wheel",
+  },
+  {
+    id: 104,
+    name: "HP Wireless Keyboard & Mouse Combo CS10",
+    category: "Mice & Keyboards",
+    price: 1299,
+    mrp: 2999,
+    rating: 4.2,
+    reviews: 310,
+    img: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&q=80&auto=format&fit=crop",
+    brand: "HP",
+    specs: "Ergonomic Layout • 2.4GHz Wireless • Long Battery Life",
+  },
+  {
+    id: 105,
+    name: "Dell 65W USB-C Power Adapter Charger",
+    category: "Chargers & Power",
+    price: 1899,
+    mrp: 3999,
+    rating: 4.4,
+    reviews: 175,
+    img: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=500&q=80&auto=format&fit=crop",
+    brand: "Dell",
+    specs: "65W Output • Type-C Port • Fast Charging Enabled",
+  },
+  {
+    id: 106,
+    name: "Lenovo ThinkPad Professional 15.6\" Backpack",
+    category: "Bags & Sleeves",
+    price: 1499,
+    mrp: 3499,
+    rating: 4.7,
+    reviews: 95,
+    img: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80&auto=format&fit=crop",
+    brand: "Lenovo",
+    specs: "Water Resistant • Padded Laptop Compartment • Ergonomic Straps",
+  }
+];
+
+export interface Banner {
+  src: string;
+  badge: string;
+  title: string;
+  desc: string;
+  target: string;
+}
+
+export const initialBanners: Banner[] = [
+  {
+    src: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80&auto=format&fit=crop",
+    badge: "Blog Contest",
+    title: "Write a Tech Blog, Get Selected",
+    desc: "Share your guides or review articles on our Tech Blog. Win rewards!",
+    target: "blog",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&q=80&auto=format&fit=crop",
+    badge: "Exclusive Offers",
+    title: "Exclusive Offers if You Win!",
+    desc: "Earn high-value cashback discount coupons to redeem on top brand laptops.",
+    target: "blog",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=1200&q=80&auto=format&fit=crop",
+    badge: "Direct Savings",
+    title: "Weekly Direct Deals: Flat 10% Off",
+    desc: "Use coupon LAPTOP10 at checkout to get instant 10% discount on business series laptops.",
+    target: "listing",
+  },
+];

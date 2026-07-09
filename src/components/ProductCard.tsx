@@ -130,14 +130,26 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
       <div style={{ padding: isMobile ? "12px 12px 14px" : "16px 16px 18px" }}>
         {/* Grade + warranty chips */}
         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 8, marginBottom: isMobile ? 6 : 9 }}>
-          <span style={{
-            background: "rgba(56,189,248,0.10)", color: COLORS.green,
-            fontSize: isMobile ? 9 : 10, fontWeight: 700, padding: isMobile ? "2px 6px" : "3px 9px",
-            borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 3,
-            letterSpacing: "0.03em",
-          }}>
-            <BadgeCheck size={isMobile ? 8 : 9} />Grade {product.grade}
-          </span>
+          {product.condition === "Brand New" ? (
+            <span style={{
+              background: "rgba(99,102,241,0.12)", color: "#8B5CF6",
+              fontSize: isMobile ? 9 : 10, fontWeight: 800, padding: isMobile ? "2px 6px" : "3px 9px",
+              borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 3,
+              letterSpacing: "0.03em",
+              border: "1px solid rgba(99,102,241,0.2)",
+            }}>
+              <Zap size={isMobile ? 8 : 9} />Brand New
+            </span>
+          ) : (
+            <span style={{
+              background: "rgba(56,189,248,0.10)", color: COLORS.green,
+              fontSize: isMobile ? 9 : 10, fontWeight: 700, padding: isMobile ? "2px 6px" : "3px 9px",
+              borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 3,
+              letterSpacing: "0.03em",
+            }}>
+              <BadgeCheck size={isMobile ? 8 : 9} />Grade {product.grade}
+            </span>
+          )}
           <span style={{ color: COLORS.muted, fontSize: isMobile ? 10 : 11 }}>{product.warranty}</span>
         </div>
 

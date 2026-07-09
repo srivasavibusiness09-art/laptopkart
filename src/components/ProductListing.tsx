@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { SlidersHorizontal, X, Search, ChevronDown } from "lucide-react";
-import { COLORS, products } from "@/data/products";
+import { COLORS } from "@/data/products";
 import type { Product } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import { useIsMobile } from "@/lib/hooks";
 
 interface ProductListingProps {
+  products: Product[];
   onViewProduct: (p: Product) => void;
   onAddToCart: (p: Product) => void;
   onWishlist: (id: number) => void;
@@ -15,13 +16,14 @@ interface ProductListingProps {
 }
 
 const filterConfig = [
+  { label: "Condition", key: "condition", options: ["Refurbished", "Brand New"] },
   { label: "Brand", key: "brand", options: ["Dell", "HP", "Lenovo", "Apple", "Asus"] },
   { label: "RAM",   key: "ram",   options: ["8GB", "16GB", "32GB"] },
   { label: "Grade", key: "grade", options: ["A+", "A", "B+"] },
 ] as const;
 
-type FilterKey = "brand" | "ram" | "grade";
-interface Filters { brand: string; ram: string; grade: string; priceMax: number; }
+type FilterKey = "brand" | "ram" | "grade" | "condition";
+interface Filters { brand: string; ram: string; grade: string; condition: string; priceMax: number; }
 
 const sortOptions = [
   { label: "Most Popular",  value: "popular"   },
@@ -31,8 +33,8 @@ const sortOptions = [
   { label: "Biggest Discount", value: "discount" },
 ];
 
-export default function ProductListing({ onViewProduct, onAddToCart, onWishlist, wishlist }: ProductListingProps) {
-  const [filters, setFilters] = useState<Filters>({ brand: "", ram: "", grade: "", priceMax: 100000 });
+export default function ProductListing({ products, onViewProduct, onAddToCart, onWishlist, wishlist }: ProductListingProps) {
+  const [filters, setFilters] = useState<Filters>({ brand: "", ram: "", grade: "", condition: "", priceMax: 200000 });
   const [sort, setSort]       = useState("popular");
   const [search, setSearch]   = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -46,6 +48,7 @@ export default function ProductListing({ onViewProduct, onAddToCart, onWishlist,
       (!filters.brand || p.brand === filters.brand) &&
       (!filters.ram   || p.ram   === filters.ram)   &&
       (!filters.grade || p.grade === filters.grade)  &&
+      (!filters.condition || (p.condition ?? "Refurbished") === filters.condition) &&
       p.price <= filters.priceMax &&
       (!search || p.name.toLowerCase().includes(search.toLowerCase()) || p.specs.toLowerCase().includes(search.toLowerCase()))
     )
@@ -57,43 +60,48 @@ export default function ProductListing({ onViewProduct, onAddToCart, onWishlist,
       return 0;
     });
 
-  const activeCount = [filters.brand, filters.ram, filters.grade].filter(Boolean).length;
-  const clearAll    = () => setFilters({ brand: "", ram: "", grade: "", priceMax: 100000 });
+  const activeCount = [filters.brand, filters.ram, filters.grade, filters.condition].filter(Boolean).length;
+  const clearAll    = () => setFilters({ brand: "", ram: "", grade: "", condition: "", priceMax: 200000 });
 
   const FilterPanel = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-      {filterConfig.map((f) => (
-        <div key={f.key}>
-          <div style={{
-            color: COLORS.text, fontSize: 12, fontWeight: 700,
-            letterSpacing: "0.06em", textTransform: "uppercase",
-            marginBottom: 12, fontFamily: "'Sora', sans-serif",
-          }}>{f.label}</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {f.options.map((opt) => {
-              const active = filters[f.key] === opt;
-              return (
-                <button
-                  key={opt}
-                  onClick={() => setFilter(f.key, opt)}
-                  style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    background: active ? "rgba(56,189,248,0.12)" : "transparent",
-                    border: `1px solid ${active ? "rgba(56,189,248,0.35)" : "rgba(255,255,255,0.07)"}`,
-                    borderRadius: 10, padding: "9px 14px",
-                    cursor: "pointer", color: active ? COLORS.green : COLORS.muted,
-                    fontSize: 13, fontWeight: active ? 700 : 400,
-                    transition: "all 0.2s", textAlign: "left",
-                  }}
-                >
-                  {opt}
-                  {active && <span style={{ fontSize: 14 }}>✓</span>}
-                </button>
-              );
-            })}
+      {filterConfig.map((f) => {
+        // Hide Grade filter if "Brand New" condition is selected
+        if (f.key === "grade" && filters.condition === "Brand New") return null;
+
+        return (
+          <div key={f.key}>
+            <div style={{
+              color: COLORS.text, fontSize: 12, fontWeight: 700,
+              letterSpacing: "0.06em", textTransform: "uppercase",
+              marginBottom: 12, fontFamily: "'Sora', sans-serif",
+            }}>{f.label}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {f.options.map((opt) => {
+                const active = filters[f.key] === opt;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => setFilter(f.key, opt)}
+                    style={{
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      background: active ? "rgba(56,189,248,0.12)" : "transparent",
+                      border: `1px solid ${active ? "rgba(56,189,248,0.35)" : "rgba(255,255,255,0.07)"}`,
+                      borderRadius: 10, padding: "9px 14px",
+                      cursor: "pointer", color: active ? COLORS.green : COLORS.muted,
+                      fontSize: 13, fontWeight: active ? 700 : 400,
+                      transition: "all 0.2s", textAlign: "left",
+                    }}
+                  >
+                    {opt}
+                    {active && <span style={{ fontSize: 14 }}>✓</span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* Price slider */}
       <div>
@@ -106,13 +114,13 @@ export default function ProductListing({ onViewProduct, onAddToCart, onWishlist,
           ₹{filters.priceMax.toLocaleString("en-IN")}
         </div>
         <input
-          type="range" min={10000} max={100000} step={5000}
+          type="range" min={10000} max={200000} step={5000}
           value={filters.priceMax}
           onChange={(e) => setFilters((f) => ({ ...f, priceMax: Number(e.target.value) }))}
           style={{ width: "100%", accentColor: COLORS.green }}
         />
         <div style={{ display: "flex", justifyContent: "space-between", color: COLORS.muted, fontSize: 11, marginTop: 4 }}>
-          <span>₹10K</span><span>₹1L</span>
+          <span>₹10K</span><span>₹2L</span>
         </div>
       </div>
     </div>
