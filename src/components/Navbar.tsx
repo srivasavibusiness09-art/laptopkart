@@ -44,6 +44,21 @@ export default function Navbar({ setPage, cart, wishlist, user }: NavbarProps) {
 
   const go = (p: string) => { setPage(p); setMenuOpen(false); };
 
+  const handleNavClick = (link: string) => {
+    if (link === "Offers") {
+      setPage("home");
+      setMenuOpen(false);
+      setTimeout(() => {
+        const el = document.getElementById("offers-section");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    } else {
+      go(getTarget(link));
+    }
+  };
+
   const navBg = scrolled
     ? "rgba(13,17,23,0.92)"
     : "rgba(13,17,23,0.65)";
@@ -102,7 +117,7 @@ export default function Navbar({ setPage, cart, wishlist, user }: NavbarProps) {
               {navLinks.map((link) => (
                 <button
                   key={link}
-                  onClick={() => go(getTarget(link))}
+                  onClick={() => handleNavClick(link)}
                   style={{
                     padding: "6px 10px", background: "transparent",
                     border: "none",
@@ -219,7 +234,7 @@ export default function Navbar({ setPage, cart, wishlist, user }: NavbarProps) {
             {navLinks.map((link) => (
               <button
                 key={link}
-                onClick={() => go(getTarget(link))}
+                onClick={() => handleNavClick(link)}
                 style={{
                   display: "flex", alignItems: "center", gap: 12,
                   width: "100%", textAlign: "left",

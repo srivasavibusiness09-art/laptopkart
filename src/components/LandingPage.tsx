@@ -85,8 +85,8 @@ export default function LandingPage({ onEnterStore }: Props) {
     const arr: HTMLImageElement[] = [];
     const getSrc = (n: number) => {
       return isMobile
-        ? `/phone-frames/ezgif-frame-${String(n).padStart(3, "0")}.png`
-        : `/frames/ezgif-frame-${String(n).padStart(3, "0")}.png`;
+        ? `/phone-frames/ezgif-frame-${String(n).padStart(3, "0")}.webp`
+        : `/frames/ezgif-frame-${String(n).padStart(3, "0")}.webp`;
     };
 
     let count = 0;
