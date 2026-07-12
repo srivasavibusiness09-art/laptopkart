@@ -23,7 +23,19 @@ const social = [
 export default function Footer({ setPage }: FooterProps) {
   const isMobile = useIsMobile();
 
-  const col = (title: string, links: string[], target = "home") => (
+  const getFooterLinkTarget = (link: string): string => {
+    const l = link.toLowerCase().trim();
+    if (l === "laptops" || l === "desktops" || l === "macbooks" || l === "gaming") return "listing";
+    if (l === "accessories") return "accessories";
+    if (l === "about us" || l === "careers" || l === "press" || l === "partners") return "about";
+    if (l === "blog") return "blog";
+    if (l === "contact") return "contact";
+    if (l === "track order") return "profile";
+    if (l === "warranty" || l === "returns" || l === "faqs" || l === "shipping") return "why-refurbished";
+    return "home";
+  };
+
+  const col = (title: string, links: string[]) => (
     <div>
       <div style={{
         color: COLORS.text, fontWeight: 700, fontSize: 13,
@@ -33,7 +45,7 @@ export default function Footer({ setPage }: FooterProps) {
       {links.map((link) => (
         <div
           key={link}
-          onClick={() => setPage(target)}
+          onClick={() => setPage(getFooterLinkTarget(link))}
           style={{
             color: COLORS.muted, fontSize: 13, marginBottom: 10,
             cursor: "pointer", transition: "color 0.15s",

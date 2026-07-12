@@ -209,7 +209,7 @@ export default function Hero({ setPage }: HeroProps) {
                     fontSize: 22, fontWeight: 800,
                     color: COLORS.green, marginBottom: 3,
                   }}>
-                    {s.label === "Devices Sold" ? `${Math.min(count, 50000).toLocaleString("en-IN")}+` : s.value}
+                    {s.label === "Devices Sold" ? `${Math.min(count, 1000).toLocaleString("en-IN")}+` : s.value}
                   </div>
                   <div style={{ color: COLORS.muted, fontSize: 11, letterSpacing: "0.02em" }}>
                     {s.label}

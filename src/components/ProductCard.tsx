@@ -33,8 +33,12 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
   const isWished = wishlist.includes(product.id);
   const isMobile = useIsMobile();
 
+  const limit = product.stock !== undefined ? product.stock : 5;
+  const isOutOfStock = limit <= 0;
+
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isOutOfStock) return;
     setAdding(true);
     onAddToCart(product);
     setTimeout(() => setAdding(false), 600);
@@ -112,6 +116,7 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
             objectPosition: "center",
             transition: "transform 0.5s cubic-bezier(0.4,0,0.2,1)",
             transform: hovered ? "scale(1.07)" : "scale(1)",
+            opacity: isOutOfStock ? 0.4 : 1,
           }}
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).src =
@@ -124,6 +129,14 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
           background: hovered ? "rgba(99,102,241,0.05)" : "transparent",
           transition: "background 0.3s",
         }} />
+        {isOutOfStock && (
+          <div style={{
+            position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(13,17,23,0.6)", color: "#EF4444", fontWeight: 800, fontSize: 13, textTransform: "uppercase"
+          }}>
+            Out of Stock
+          </div>
+        )}
       </div>
 
       {/* Info */}
@@ -195,25 +208,32 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
 
         <button
           onClick={handleAdd}
+          disabled={isOutOfStock}
           style={{
             width: "100%",
-            background: hovered
-              ? (adding ? "#10B981" : "linear-gradient(135deg, #3B82F6, #38BDF8)")
-              : "rgba(56,189,248,0.08)",
-            color: hovered ? "#000" : COLORS.green,
-            border: `1.5px solid ${hovered ? "transparent" : "rgba(56,189,248,0.18)"}`,
+            background: isOutOfStock
+              ? "rgba(255,255,255,0.05)"
+              : hovered
+                ? (adding ? "#10B981" : "linear-gradient(135deg, #3B82F6, #38BDF8)")
+                : "rgba(56,189,248,0.08)",
+            color: isOutOfStock ? COLORS.muted : hovered ? "#000" : COLORS.green,
+            border: isOutOfStock
+              ? "1.5px solid rgba(255,255,255,0.05)"
+              : `1.5px solid ${hovered ? "transparent" : "rgba(56,189,248,0.18)"}`,
             borderRadius: 12,
             padding: isMobile ? "8px 0" : "11px 0",
             fontWeight: 700,
             fontSize: isMobile ? 11 : 13,
-            cursor: "pointer",
+            cursor: isOutOfStock ? "not-allowed" : "pointer",
             transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
             fontFamily: "'Sora', sans-serif",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
             minHeight: isMobile ? 36 : 44,
           }}
         >
-          {adding ? (
+          {isOutOfStock ? (
+            "Out of Stock"
+          ) : adding ? (
             <><span>✓</span> Added!</>
           ) : hovered ? (
             <><Zap size={13} /> Add to Cart</>

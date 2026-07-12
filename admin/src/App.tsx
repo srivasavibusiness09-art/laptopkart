@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { collection, doc, setDoc, deleteDoc, onSnapshot, query } from "firebase/firestore";
+import { db, auth, googleProvider } from "./lib/firebase";
+import { signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
+import { uploadProductImage } from "./lib/storage";
 import {
   LayoutDashboard,
   Laptop,
@@ -13,36 +17,12 @@ import {
   Sparkles,
   CheckCircle,
   FileText,
-  Bell
+  Bell,
+  LogOut,
+  Truck
 } from 'lucide-react';
 
-const compressImage = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800;
-        const scale = Math.min(MAX_WIDTH / img.width, 1);
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const base64 = canvas.toDataURL('image/jpeg', 0.7);
-          resolve(base64);
-        } else {
-          reject(new Error('Canvas context error'));
-        }
-      };
-      img.onerror = (err) => reject(err);
-    };
-    reader.onerror = (err) => reject(err);
-  });
-};
+// compressImage removed (using storage.ts module)
 
 // Core Type Definitions
 interface Product {
@@ -67,6 +47,7 @@ interface Product {
   ram: "8GB" | "16GB" | "32GB";
   storage: string;
   badge: "Best Seller" | "Gaming" | "Value Deal" | "Top Rated";
+  stock?: number;
 }
 
 interface AccessoryProduct {
@@ -196,7 +177,18 @@ const DEFAULT_BANNERS: Banner[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders'>('overview');
+  const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed'>('active');
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const handleResize = () => setIsMobile(window.innerWidth < 992);
+      handleResize();
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
   const [products, setProducts] = useState<Product[]>([]);
   const [accessories, setAccessories] = useState<AccessoryProduct[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -217,7 +209,7 @@ export default function App() {
   const [productForm, setProductForm] = useState<Partial<Product>>({
     name: '', brand: 'Dell', category: 'Business', price: 0, mrp: 0,
     condition: 'Refurbished', grade: 'A+', warranty: '1 Year Warranty',
-    specs: '', img: '', processor: '', ram: '8GB', storage: '256GB SSD', badge: 'Top Rated'
+    specs: '', img: '', processor: '', ram: '8GB', storage: '256GB SSD', badge: 'Top Rated', stock: 1
   });
 
   // Form states - Accessory
@@ -230,29 +222,65 @@ export default function App() {
     src: '', badge: 'Offers', title: '', desc: '', target: 'listing'
   });
 
-  // Load from local storage
+  // Live snapshot database listeners for Products, Accessories, Banners, and Orders
   useEffect(() => {
-    const p = localStorage.getItem('laptopkart_products');
-    const a = localStorage.getItem('laptopkart_accessories');
-    const b = localStorage.getItem('laptopkart_banners');
+    // 1. Subscribe to Products
+    const unsubscribeProducts = onSnapshot(
+      query(collection(db, "products")),
+      (snapshot) => {
+        const list: Product[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id as any, ...doc.data() } as Product);
+        });
+        // Use Firestore data if available, else fall back to defaults
+        setProducts(list.length > 0 ? list : DEFAULT_PRODUCTS);
+      },
+      (error) => {
+        console.error("[Firestore] Products read failed:", error.code, error.message);
+        triggerAlert('danger', `Firebase Error (products): ${error.code} — Check Firestore Security Rules.`);
+        setProducts(DEFAULT_PRODUCTS);
+      }
+    );
 
-    if (p) setProducts(JSON.parse(p));
-    else {
-      localStorage.setItem('laptopkart_products', JSON.stringify(DEFAULT_PRODUCTS));
-      setProducts(DEFAULT_PRODUCTS);
-    }
+    // 2. Subscribe to Accessories
+    const unsubscribeAccessories = onSnapshot(
+      query(collection(db, "accessories")),
+      (snapshot) => {
+        const list: AccessoryProduct[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id as any, ...doc.data() } as AccessoryProduct);
+        });
+        setAccessories(list.length > 0 ? list : DEFAULT_ACCESSORIES);
+      },
+      (error) => {
+        console.error("[Firestore] Accessories read failed:", error.code, error.message);
+        triggerAlert('danger', `Firebase Error (accessories): ${error.code} — Check Firestore Security Rules.`);
+        setAccessories(DEFAULT_ACCESSORIES);
+      }
+    );
 
-    if (a) setAccessories(JSON.parse(a));
-    else {
-      localStorage.setItem('laptopkart_accessories', JSON.stringify(DEFAULT_ACCESSORIES));
-      setAccessories(DEFAULT_ACCESSORIES);
-    }
+    // 3. Subscribe to Banners
+    const unsubscribeBanners = onSnapshot(
+      query(collection(db, "banners")),
+      (snapshot) => {
+        const list: Banner[] = [];
+        snapshot.forEach((doc) => {
+          list.push(doc.data() as Banner);
+        });
+        setBanners(list.length > 0 ? list : DEFAULT_BANNERS);
+      },
+      (error) => {
+        console.error("[Firestore] Banners read failed:", error.code, error.message);
+        triggerAlert('danger', `Firebase Error (banners): ${error.code} — Check Firestore Security Rules.`);
+        setBanners(DEFAULT_BANNERS);
+      }
+    );
 
-    if (b) setBanners(JSON.parse(b));
-    else {
-      localStorage.setItem('laptopkart_banners', JSON.stringify(DEFAULT_BANNERS));
-      setBanners(DEFAULT_BANNERS);
-    }
+    return () => {
+      unsubscribeProducts();
+      unsubscribeAccessories();
+      unsubscribeBanners();
+    };
   }, []);
 
   const triggerAlert = (type: 'success' | 'danger', text: string) => {
@@ -269,22 +297,22 @@ export default function App() {
     const maxFiles = Math.min(files.length, 5 - currentImages.length);
 
     for (let i = 0; i < maxFiles; i++) {
-      promises.push(compressImage(files[i]));
+      promises.push(uploadProductImage(files[i]));
     }
 
     try {
-      const base64s = await Promise.all(promises);
-      const newImages = [...currentImages, ...base64s].slice(0, 5);
+      const urls = await Promise.all(promises);
+      const newImages = [...currentImages, ...urls].slice(0, 5);
       
       setProductForm(prev => ({
         ...prev,
         images: newImages,
         img: prev.img || newImages[0] || ''
       }));
-      triggerAlert('success', `Loaded ${base64s.length} local images.`);
+      triggerAlert('success', `Uploaded ${urls.length} images successfully to Cloudinary.`);
     } catch (err) {
-      console.error("Error compressing images: ", err);
-      triggerAlert('danger', 'Error loading local images.');
+      console.error("Error uploading images: ", err);
+      triggerAlert('danger', 'Error uploading images.');
     }
   };
 
@@ -302,12 +330,12 @@ export default function App() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     try {
-      const base64 = await compressImage(files[0]);
+      const url = await uploadProductImage(files[0]);
       setAccessoryForm(prev => ({
         ...prev,
-        img: base64
+        img: url
       }));
-      triggerAlert('success', 'Accessory image uploaded successfully.');
+      triggerAlert('success', 'Accessory image uploaded successfully to Cloudinary.');
     } catch (err) {
       console.error(err);
       triggerAlert('danger', 'Error uploading accessory image.');
@@ -316,51 +344,58 @@ export default function App() {
 
   interface Order {
     orderId: string;
-    date: string;
+    createdAt?: string;
     items: { id: number; name: string; price: number; qty: number; img: string }[];
     total: number;
     address: { name: string; phone: string; pincode: string; city: string; state: string; street: string };
+    status?: string;
+    paymentMethod?: string;
+    email?: string;
+    uid?: string;
+    trackingId?: string;
+    trackingUrl?: string;
+    courierPartner?: string;
   }
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [newOrderAlert, setNewOrderAlert] = useState<Order | null>(null);
 
-  // Poll for new orders from local storage
+  // Subscribe to live order checkouts (WebSockets)
   useEffect(() => {
-    const loadOrders = () => {
-      const stored = localStorage.getItem("laptopkart_orders");
-      if (stored) {
-        const parsed: Order[] = JSON.parse(stored);
-        if (orders.length > 0 && parsed.length > orders.length) {
-          const latestOrder = parsed[0];
-          setNewOrderAlert(latestOrder);
-          // Play mock audio or visual blink
-          setTimeout(() => setNewOrderAlert(null), 7000);
+    let isInitial = true;
+    const unsubscribeOrders = onSnapshot(query(collection(db, "orders")), (snapshot) => {
+      const list: Order[] = [];
+      let newOrder: Order | null = null;
+
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const ord = change.doc.data() as Order;
+          if (!isInitial) {
+            newOrder = ord;
+          }
         }
-        setOrders(parsed);
+      });
+
+      snapshot.forEach((doc) => {
+        list.push(doc.data() as Order);
+      });
+
+      // Sort orders descending by createdAt timestamp
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+      if (newOrder) {
+        setNewOrderAlert(newOrder);
+        // Clear new order alert toast after 8 seconds
+        setTimeout(() => setNewOrderAlert(null), 8000);
       }
-    };
+      setOrders(list);
+      isInitial = false;
+    }, (error) => {
+      console.error("[Firestore] Orders read failed:", error);
+    });
 
-    loadOrders();
-    const timer = setInterval(loadOrders, 2500);
-    return () => clearInterval(timer);
-  }, [orders.length]);
-
-  // Sync back to local storage
-  const saveProducts = (newList: Product[]) => {
-    setProducts(newList);
-    localStorage.setItem('laptopkart_products', JSON.stringify(newList));
-  };
-
-  const saveAccessories = (newList: AccessoryProduct[]) => {
-    setAccessories(newList);
-    localStorage.setItem('laptopkart_accessories', JSON.stringify(newList));
-  };
-
-  const saveBanners = (newList: Banner[]) => {
-    setBanners(newList);
-    localStorage.setItem('laptopkart_banners', JSON.stringify(newList));
-  };
+    return () => unsubscribeOrders();
+  }, []);
 
   // Product CRUD Handlers
   const handleProductSubmit = (e: React.FormEvent) => {
@@ -369,8 +404,10 @@ export default function App() {
     const mrp = Number(productForm.mrp) || 0;
     const discount = mrp > 0 ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
+    const docId = productModal.mode === 'edit' ? String(productModal.item!.id) : doc(collection(db, "products")).id;
+
     const pData: Product = {
-      id: productModal.mode === 'edit' ? productModal.item!.id : Date.now(),
+      id: docId as any,
       name: productForm.name || 'Generic Laptop',
       brand: productForm.brand || 'Dell',
       category: productForm.category || 'Business',
@@ -390,19 +427,22 @@ export default function App() {
       ram: productForm.ram as "8GB" | "16GB" | "32GB" || '8GB',
       storage: productForm.storage || '256GB SSD',
       badge: productForm.badge as "Best Seller" | "Gaming" | "Value Deal" | "Top Rated" || 'Top Rated',
+      stock: productForm.stock !== undefined ? productForm.stock : 1,
     };
 
     if (productForm.condition === 'Refurbished') {
       pData.grade = productForm.grade as "A+" | "A" | "B+";
     }
 
-    if (productModal.mode === 'add') {
-      saveProducts([pData, ...products]);
-      triggerAlert('success', 'Product added successfully!');
-    } else {
-      saveProducts(products.map(item => item.id === pData.id ? pData : item));
-      triggerAlert('success', 'Product updated successfully!');
-    }
+    setDoc(doc(db, "products", docId), pData)
+      .then(() => {
+        triggerAlert('success', productModal.mode === 'add' ? 'Product added successfully!' : 'Product updated successfully!');
+      })
+      .catch((err) => {
+        console.error(err);
+        triggerAlert('danger', 'Error saving product.');
+      });
+
     setProductModal({ open: false, mode: 'add' });
   };
 
@@ -411,11 +451,69 @@ export default function App() {
     setProductModal({ open: true, mode: 'edit', item });
   };
 
-  const handleProductDelete = (id: number) => {
+  const handleProductDelete = (id: any) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      saveProducts(products.filter(item => item.id !== id));
-      triggerAlert('success', 'Product deleted successfully!');
+      deleteDoc(doc(db, "products", String(id)))
+        .then(() => triggerAlert('success', 'Product deleted successfully!'))
+        .catch(() => triggerAlert('danger', 'Failed to delete product.'));
     }
+  };
+
+  const handleOrderStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      await setDoc(doc(db, "orders", orderId), { status: newStatus }, { merge: true });
+      triggerAlert('success', `Order #${orderId} status set to "${newStatus}"`);
+    } catch (err) {
+      console.error("Error updating order status:", err);
+      triggerAlert('danger', "Failed to update order status.");
+    }
+  };
+
+  const handleSaveTracking = async (orderId: string, partner: string, awb: string) => {
+    let trackingUrl = '';
+    const cleanAwb = awb.trim();
+    if (cleanAwb) {
+      const lowerPartner = partner.toLowerCase();
+      if (lowerPartner.includes('delhivery')) {
+        trackingUrl = `https://www.delhivery.com/track/package/${cleanAwb}`;
+      } else if (lowerPartner.includes('dtdc')) {
+        trackingUrl = `https://www.dtdc.in/tracking/tracking_results.asp?pinno=${cleanAwb}`;
+      } else if (lowerPartner.includes('bluedart')) {
+        trackingUrl = `https://www.bluedart.com/tracking?awb=${cleanAwb}`;
+      } else if (lowerPartner.includes('speedpost')) {
+        trackingUrl = `https://www.indiapost.gov.in/VAS/Pages/trackconsignment.aspx`;
+      } else if (lowerPartner.includes('shiprocket')) {
+        trackingUrl = `https://shiprocket.co/tracking/${cleanAwb}`;
+      } else {
+        trackingUrl = `https://www.google.com/search?q=track+package+${cleanAwb}`;
+      }
+    }
+
+    try {
+      await setDoc(doc(db, "orders", orderId), {
+        courierPartner: partner,
+        trackingId: cleanAwb,
+        trackingUrl: trackingUrl
+      }, { merge: true });
+      triggerAlert('success', `Tracking saved for Order #${orderId}`);
+    } catch (err) {
+      console.error("Error saving tracking info:", err);
+      triggerAlert('danger', "Failed to save tracking details.");
+    }
+  };
+
+  const triggerWhatsAppAlert = (ord: Order) => {
+    const rawPhone = ord.address?.phone || "";
+    const cleanPhone = rawPhone.replace(/[^0-9]/g, "");
+    const formattedPhone = cleanPhone.startsWith("91") ? cleanPhone : `91${cleanPhone}`;
+
+    const text = `Hello ${ord.address?.name || "Customer"},\n\n` +
+                 `Your Laptopkart order *#${ord.orderId}* status has been updated to *${ord.status || 'Pending'}*! 📦\n\n` +
+                 (ord.trackingId ? `🚚 Courier: *${ord.courierPartner}*\n🔢 AWB Consignment: *${ord.trackingId}*\n🔗 Track Shipment: ${ord.trackingUrl}\n\n` : "") +
+                 `Thank you for shopping with Laptopkart! ⚡`;
+
+    const url = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
   };
 
   // Accessory CRUD Handlers
@@ -424,8 +522,10 @@ export default function App() {
     const price = Number(accessoryForm.price) || 0;
     const mrp = Number(accessoryForm.mrp) || 0;
 
+    const docId = accessoryModal.mode === 'edit' ? String(accessoryModal.item!.id) : doc(collection(db, "accessories")).id;
+
     const aData: AccessoryProduct = {
-      id: accessoryModal.mode === 'edit' ? accessoryModal.item!.id : Date.now(),
+      id: docId as any,
       name: accessoryForm.name || 'Generic Accessory',
       brand: accessoryForm.brand || 'Dell',
       category: accessoryForm.category || 'Monitors',
@@ -437,13 +537,15 @@ export default function App() {
       img: accessoryForm.img || 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&q=80&auto=format&fit=crop',
     };
 
-    if (accessoryModal.mode === 'add') {
-      saveAccessories([aData, ...accessories]);
-      triggerAlert('success', 'Accessory added successfully!');
-    } else {
-      saveAccessories(accessories.map(item => item.id === aData.id ? aData : item));
-      triggerAlert('success', 'Accessory updated successfully!');
-    }
+    setDoc(doc(db, "accessories", docId), aData)
+      .then(() => {
+        triggerAlert('success', accessoryModal.mode === 'add' ? 'Accessory added successfully!' : 'Accessory updated successfully!');
+      })
+      .catch((err) => {
+        console.error(err);
+        triggerAlert('danger', 'Error saving accessory.');
+      });
+
     setAccessoryModal({ open: false, mode: 'add' });
   };
 
@@ -452,16 +554,19 @@ export default function App() {
     setAccessoryModal({ open: true, mode: 'edit', item });
   };
 
-  const handleAccessoryDelete = (id: number) => {
+  const handleAccessoryDelete = (id: any) => {
     if (confirm('Are you sure you want to delete this accessory?')) {
-      saveAccessories(accessories.filter(item => item.id !== id));
-      triggerAlert('success', 'Accessory deleted successfully!');
+      deleteDoc(doc(db, "accessories", String(id)))
+        .then(() => triggerAlert('success', 'Accessory deleted successfully!'))
+        .catch(() => triggerAlert('danger', 'Failed to delete accessory.'));
     }
   };
 
   // Banner CRUD Handlers
   const handleBannerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const docId = bannerForm.title ? bannerForm.title.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase() : doc(collection(db, "banners")).id;
+
     const bData: Banner = {
       src: bannerForm.src || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80&auto=format&fit=crop',
       badge: bannerForm.badge || 'Contest',
@@ -469,16 +574,21 @@ export default function App() {
       desc: bannerForm.desc || 'Details of contest and reward prizes.',
       target: bannerForm.target || 'listing',
     };
-    saveBanners([...banners, bData]);
-    triggerAlert('success', 'Offer banner published successfully!');
+
+    setDoc(doc(db, "banners", docId), bData)
+      .then(() => triggerAlert('success', 'Offer banner published successfully!'))
+      .catch(() => triggerAlert('danger', 'Error publishing banner.'));
+
     setBannerForm({ src: '', badge: 'Offers', title: '', desc: '', target: 'listing' });
     setBannerModal({ open: false });
   };
 
-  const handleBannerDelete = (idx: number) => {
+  const handleBannerDelete = (title: string) => {
     if (confirm('Are you sure you want to delete this slide banner?')) {
-      saveBanners(banners.filter((_, i) => i !== idx));
-      triggerAlert('success', 'Banner removed successfully!');
+      const docId = title.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+      deleteDoc(doc(db, "banners", docId))
+        .then(() => triggerAlert('success', 'Banner removed successfully!'))
+        .catch(() => triggerAlert('danger', 'Error removing banner.'));
     }
   };
 
@@ -492,6 +602,8 @@ export default function App() {
     a.name.toLowerCase().includes(accessorySearch.toLowerCase()) ||
     a.brand.toLowerCase().includes(accessorySearch.toLowerCase())
   );
+
+
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0d1117' }}>
@@ -532,6 +644,7 @@ export default function App() {
             { id: 'products', label: 'Laptops & PCs', icon: <Laptop size={18} /> },
             { id: 'accessories', label: 'Accessories', icon: <Keyboard size={18} /> },
             { id: 'banners', label: 'Offers & Contests', icon: <ImageIcon size={18} /> },
+            { id: 'orders', label: 'Customer Orders', icon: <FileText size={18} /> },
           ].map(tab => (
             <button
               key={tab.id}
@@ -551,6 +664,8 @@ export default function App() {
             </button>
           ))}
         </nav>
+
+
 
         {/* Footer info */}
         <div style={{ marginTop: 'auto', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: 12 }}>
@@ -626,7 +741,7 @@ export default function App() {
                 { label: 'Total Products', val: products.length, icon: <Laptop size={20} color="#38BDF8" />, bg: 'rgba(56,189,248,0.1)' },
                 { label: 'Accessories Listed', val: accessories.length, icon: <Keyboard size={20} color="#8B5CF6" />, bg: 'rgba(139,92,246,0.1)' },
                 { label: 'Active Banner Slides', val: banners.length, icon: <ImageIcon size={20} color="#EF4444" />, bg: 'rgba(239,68,68,0.1)' },
-                { label: 'Mock Profit (Monthly)', val: `₹${(products.length * 12500).toLocaleString('en-IN')}`, icon: <TrendingUp size={20} color="#10B981" />, bg: 'rgba(16,185,129,0.1)' },
+                { label: 'Total Sales Revenue', val: `₹${orders.filter(ord => ord.status !== 'Cancelled' && ord.status !== 'Pending (COD)').reduce((sum, ord) => sum + ord.total, 0).toLocaleString('en-IN')}`, icon: <TrendingUp size={20} color="#10B981" />, bg: 'rgba(16,185,129,0.1)' },
               ].map(stat => (
                 <div key={stat.label} style={{
                   background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
@@ -693,10 +808,25 @@ export default function App() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 220, overflowY: 'auto', paddingRight: 4 }}>
                     {orders.map((ord) => (
-                      <div key={ord.orderId} style={{
-                        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(56,189,248,0.06)',
-                        borderRadius: 12, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                      }}>
+                      <div
+                        key={ord.orderId}
+                        onClick={() => { setActiveTab('orders'); setOrdersFilter('active'); }}
+                        style={{
+                          background: 'rgba(255,255,255,0.02)',
+                          border: '1px solid rgba(56,189,248,0.06)',
+                          borderRadius: 12, padding: 12,
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          cursor: 'pointer', transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = 'rgba(56, 189, 248, 0.05)';
+                          e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.18)';
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                          e.currentTarget.style.borderColor = 'rgba(56,189,248,0.06)';
+                        }}
+                      >
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                           <img src={ord.items[0]?.img} style={{ width: 44, height: 33, borderRadius: 4, objectFit: 'cover' }} />
                           <div>
@@ -709,7 +839,37 @@ export default function App() {
                         </div>
                         <div style={{ textAlign: 'right' }}>
                           <div style={{ color: '#38BDF8', fontWeight: 850, fontSize: 13 }}>₹{ord.total.toLocaleString('en-IN')}</div>
-                          <span style={{ fontSize: 9, background: 'rgba(16,185,129,0.1)', color: '#10B981', padding: '2px 6px', borderRadius: 100, display: 'inline-block', marginTop: 2 }}>Paid</span>
+                          {(() => {
+                            const status = ord.status || 'Pending';
+                            let bg = 'rgba(56,189,248,0.1)';
+                            let color = '#38BDF8';
+                            if (status === 'Cancelled') {
+                              bg = 'rgba(239,68,68,0.1)';
+                              color = '#EF4444';
+                            } else if (status === 'Pending (COD)') {
+                              bg = 'rgba(245,158,11,0.1)';
+                              color = '#F59E0B';
+                            } else if (status === 'Completed') {
+                              bg = 'rgba(16,185,129,0.1)';
+                              color = '#10B981';
+                            }
+                            return (
+                              <span style={{
+                                fontSize: 9,
+                                background: bg,
+                                color: color,
+                                padding: '2px 6px',
+                                borderRadius: 100,
+                                display: 'inline-block',
+                                marginTop: 2,
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.02em'
+                              }}>
+                                {status}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     ))}
@@ -963,7 +1123,7 @@ export default function App() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 14 }}>
                       <span style={{ fontSize: 11, color: '#38BDF8', fontWeight: 600 }}>Target view: {b.target.toUpperCase()}</span>
                       <button
-                        onClick={() => handleBannerDelete(idx)}
+                        onClick={() => handleBannerDelete(b.title)}
                         style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}
                       >
                         <Trash2 size={13} /> Remove
@@ -975,6 +1135,333 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* ── Tab: CUSTOMER ORDERS MANAGER ── */}
+        {activeTab === 'orders' && (() => {
+          const activeOrders = orders.filter(ord => {
+            const status = ord.status || 'Pending';
+            return status !== 'Completed' && status !== 'Cancelled';
+          });
+          const completedOrders = orders.filter(ord => {
+            const status = ord.status || 'Pending';
+            return status === 'Completed' || status === 'Cancelled';
+          });
+          const displayedOrders = ordersFilter === 'active' ? activeOrders : completedOrders;
+
+          const getStatusStyle = (status: string) => {
+            switch(status) {
+              case 'Completed': return { bg: 'rgba(16,185,129,0.12)', color: '#10B981', border: 'rgba(16,185,129,0.25)' };
+              case 'Cancelled': return { bg: 'rgba(239,68,68,0.12)', color: '#EF4444', border: 'rgba(239,68,68,0.25)' };
+              case 'Shipped': return { bg: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: 'rgba(139,92,246,0.25)' };
+              case 'Pending (COD)': return { bg: 'rgba(245,158,11,0.12)', color: '#F59E0B', border: 'rgba(245,158,11,0.25)' };
+              case 'Paid (Simulated)': return { bg: 'rgba(6,182,212,0.12)', color: '#06B6D4', border: 'rgba(6,182,212,0.25)' };
+              case 'Paid':
+              default: return { bg: 'rgba(56,189,248,0.12)', color: '#38BDF8', border: 'rgba(56,189,248,0.25)' };
+            }
+          };
+
+          return (
+            <div className="fade-in">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <div>
+                  <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+                    Customer Orders Registry
+                  </h1>
+                  <p style={{ color: '#8B9BBE', fontSize: 15 }}>
+                    Manage incoming store transactions, delivery addresses, and shipping statuses.
+                  </p>
+                </div>
+              </div>
+
+              {/* Segmented Filter Control */}
+              <div style={{ display: 'flex', gap: 12, marginBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 16 }}>
+                <button
+                  onClick={() => setOrdersFilter('active')}
+                  style={{
+                    background: ordersFilter === 'active' ? 'rgba(56,189,248,0.1)' : 'transparent',
+                    border: `1px solid ${ordersFilter === 'active' ? 'rgba(56,189,248,0.25)' : 'transparent'}`,
+                    borderRadius: 12, padding: '10px 20px',
+                    color: ordersFilter === 'active' ? '#38BDF8' : '#8B9BBE',
+                    fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                    fontFamily: 'Sora', display: 'flex', alignItems: 'center', gap: 8
+                  }}
+                >
+                  Active Orders
+                  <span style={{
+                    background: ordersFilter === 'active' ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.06)',
+                    color: ordersFilter === 'active' ? '#38BDF8' : '#8B9BBE',
+                    borderRadius: 100, fontSize: 11, padding: '2px 8px', fontWeight: 800
+                  }}>
+                    {activeOrders.length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setOrdersFilter('completed')}
+                  style={{
+                    background: ordersFilter === 'completed' ? 'rgba(16,185,129,0.1)' : 'transparent',
+                    border: `1px solid ${ordersFilter === 'completed' ? 'rgba(16,185,129,0.25)' : 'transparent'}`,
+                    borderRadius: 12, padding: '10px 20px',
+                    color: ordersFilter === 'completed' ? '#10B981' : '#8B9BBE',
+                    fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                    fontFamily: 'Sora', display: 'flex', alignItems: 'center', gap: 8
+                  }}
+                >
+                  Completed & Archived
+                  <span style={{
+                    background: ordersFilter === 'completed' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)',
+                    color: ordersFilter === 'completed' ? '#10B981' : '#8B9BBE',
+                    borderRadius: 100, fontSize: 11, padding: '2px 8px', fontWeight: 800
+                  }}>
+                    {completedOrders.length}
+                  </span>
+                </button>
+              </div>
+
+              {/* Orders List container */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {displayedOrders.length === 0 ? (
+                  <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, padding: 48, textAlign: 'center' }}>
+                    <FileText size={48} color="#8B9BBE" style={{ marginBottom: 16, opacity: 0.5 }} />
+                    <p style={{ color: '#8B9BBE', fontSize: 15, margin: 0 }}>
+                      {ordersFilter === 'active' 
+                        ? 'No active customer orders to process. All set!' 
+                        : 'No completed or archived customer orders found.'}
+                    </p>
+                  </div>
+                ) : (
+                  displayedOrders.map((ord) => (
+                    <div key={ord.orderId} style={{
+                      background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
+                      borderRadius: 24, padding: 24, boxShadow: '0 8px 30px rgba(0,0,0,0.15)'
+                    }}>
+                      {/* Header Row */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 16, marginBottom: 16 }}>
+                        <div>
+                          <h3 style={{ fontFamily: 'Sora', color: '#fff', fontSize: 18, fontWeight: 800, margin: '0 0 4px' }}>
+                            Order #{ord.orderId}
+                          </h3>
+                          <span style={{ color: '#8B9BBE', fontSize: 12 }}>
+                            Placed on: {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <span style={{ color: '#8B9BBE', fontSize: 12, fontWeight: 650 }}>Status:</span>
+                          {(() => {
+                            const currentStatus = ord.status || 'Pending';
+                            const stStyle = getStatusStyle(currentStatus);
+                            return (
+                              <div style={{ position: 'relative', display: 'inline-block' }}>
+                                <select
+                                  value={currentStatus}
+                                  onChange={(e) => handleOrderStatusChange(ord.orderId, e.target.value)}
+                                  style={{
+                                    background: stStyle.bg,
+                                    color: stStyle.color,
+                                    border: `1px solid ${stStyle.border}`,
+                                    borderRadius: 100,
+                                    padding: '6px 28px 6px 14px',
+                                    fontSize: 11,
+                                    fontWeight: 800,
+                                    outline: 'none',
+                                    cursor: 'pointer',
+                                    fontFamily: 'Sora',
+                                    letterSpacing: '0.03em',
+                                    textTransform: 'uppercase',
+                                    appearance: 'none',
+                                    WebkitAppearance: 'none',
+                                    transition: 'all 0.2s',
+                                  }}
+                                >
+                                  <option value="Paid" style={{ background: '#131a24', color: '#fff' }}>Paid</option>
+                                  <option value="Pending (COD)" style={{ background: '#131a24', color: '#fff' }}>Pending (COD)</option>
+                                  <option value="Paid (Simulated)" style={{ background: '#131a24', color: '#fff' }}>Paid (Simulated)</option>
+                                  <option value="Shipped" style={{ background: '#131a24', color: '#fff' }}>Shipped</option>
+                                  <option value="Completed" style={{ background: '#131a24', color: '#fff' }}>Completed</option>
+                                  <option value="Cancelled" style={{ background: '#131a24', color: '#fff' }}>Cancelled</option>
+                                </select>
+                                <span style={{
+                                  position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                                  pointerEvents: 'none', color: stStyle.color, display: 'flex', alignItems: 'center'
+                                }}>
+                                  <svg width="8" height="5" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* Inline Courier Tracking Input Form for Shipped orders */}
+                      {(ord.status === 'Shipped' || ord.status === 'Completed') && (
+                        <div style={{
+                          background: 'rgba(56,189,248,0.02)',
+                          border: '1px solid rgba(56,189,248,0.12)',
+                          borderRadius: 20, padding: 20, marginBottom: 24,
+                          display: 'flex', flexDirection: 'column', gap: 16,
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                        }}>
+                          {/* Top Row with Header Icon and Auto Save status */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#38BDF8', fontWeight: 800, fontSize: 12, fontFamily: 'Sora', letterSpacing: '0.04em' }}>
+                              <Truck size={14} /> COURIER DISPATCH METADATA
+                            </div>
+                            <span style={{ fontSize: 10, color: '#8B9BBE', fontStyle: 'italic' }}>
+                              {ord.trackingId ? '🟢 Details synchronized' : '⚡ Auto-saves on input blur'}
+                            </span>
+                          </div>
+
+                          {/* Controls Row */}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
+                            {/* Courier selector */}
+                            <div style={{ flex: 1, minWidth: 160 }}>
+                              <label style={{ display: 'block', color: '#8B9BBE', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Courier Partner</label>
+                              <div style={{ position: 'relative' }}>
+                                <select
+                                  value={ord.courierPartner || 'Delhivery'}
+                                  onChange={(e) => handleSaveTracking(ord.orderId, e.target.value, ord.trackingId || '')}
+                                  style={{
+                                    width: '100%', background: '#0d1117', border: '1px solid rgba(255,255,255,0.08)',
+                                    borderRadius: 12, padding: '10px 14px', color: '#fff', fontSize: 13, outline: 'none', cursor: 'pointer',
+                                    appearance: 'none', WebkitAppearance: 'none'
+                                  }}
+                                >
+                                  <option value="Delhivery">Delhivery</option>
+                                  <option value="DTDC">DTDC</option>
+                                  <option value="BlueDart">BlueDart</option>
+                                  <option value="SpeedPost">India Post (Speed Post)</option>
+                                  <option value="Shiprocket">Shiprocket</option>
+                                  <option value="Custom">Custom Courier</option>
+                                </select>
+                                <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#38BDF8', display: 'flex', alignItems: 'center' }}>
+                                  <svg width="8" height="5" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Tracking ID */}
+                            <div style={{ flex: 1.5, minWidth: 220 }}>
+                              <label style={{ display: 'block', color: '#8B9BBE', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>AWB Tracking / Waybill Number</label>
+                              <input
+                                type="text"
+                                placeholder="Enter AWB consignment code..."
+                                defaultValue={ord.trackingId || ''}
+                                onBlur={(e) => handleSaveTracking(ord.orderId, ord.courierPartner || 'Delhivery', e.target.value)}
+                                style={{
+                                  width: '100%', background: '#0d1117', border: '1px solid rgba(255,255,255,0.08)',
+                                  borderRadius: 12, padding: '10px 14px', color: '#fff', fontSize: 13, outline: 'none',
+                                  boxSizing: 'border-box'
+                                }}
+                              />
+                            </div>
+
+                            {/* Tracking shortcut link button */}
+                            {ord.trackingId && (
+                              <a
+                                href={ord.trackingUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)',
+                                  color: '#38BDF8', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 700,
+                                  cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6,
+                                  fontFamily: 'Sora', transition: 'all 0.2s', height: 38, boxSizing: 'border-box'
+                                }}
+                              >
+                                Test Tracking Link ↗
+                              </a>
+                            )}
+
+                             {/* Send WhatsApp Alert button */}
+                             <button
+                               onClick={() => triggerWhatsAppAlert(ord)}
+                               style={{
+                                 background: '#25D366', border: 'none',
+                                 color: '#000', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 800,
+                                 cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
+                                 fontFamily: 'Sora', transition: 'all 0.2s', height: 38, boxSizing: 'border-box'
+                               }}
+                               onMouseEnter={e => { e.currentTarget.style.background = '#20ba5a'; }}
+                               onMouseLeave={e => { e.currentTarget.style.background = '#25D366'; }}
+                             >
+                               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 6 }}>
+                                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.79-4.024c1.667.988 3.3 1.494 5.207 1.495 5.568 0 10.099-4.522 10.101-10.086.002-2.697-1.042-5.232-2.942-7.136S14.717 1.378 12.015 1.378c-5.57 0-10.107 4.524-10.109 10.092-.001 1.93.526 3.513 1.503 5.176l-.988 3.606 3.693-.972zm11.722-7.93c-.322-.162-1.905-.94-2.202-1.048-.297-.108-.514-.162-.73.162-.217.324-.838 1.048-1.027 1.265-.19.217-.378.243-.7.08-1.637-.818-2.775-1.433-3.886-3.333-.292-.5-.102-.77.06-.931.144-.144.322-.378.484-.567.162-.19.216-.324.324-.54.108-.217.054-.405-.027-.567-.08-.162-.73-1.76-1.002-2.411-.266-.64-.532-.553-.73-.563-.19-.009-.407-.01-.622-.01s-.567.08-.865.405c-.297.324-1.136 1.109-1.136 2.703s1.163 3.136 1.325 3.353c.162.217 2.291 3.5 5.55 4.908.775.334 1.38.533 1.85.682.78.248 1.49.213 2.05.129.624-.093 1.905-.779 2.176-1.495.271-.716.271-1.33.19-1.458-.08-.129-.297-.216-.62-.378z"/>
+                               </svg>
+                               Send WhatsApp Alert
+                             </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Details Column Grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1.5fr 1fr', gap: 24, flexWrap: 'wrap' }}>
+                        {/* Left: Ordered Items */}
+                        <div>
+                          <h4 style={{ color: '#8B9BBE', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', marginBottom: 12, letterSpacing: '0.05em' }}>Items Purchased</h4>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            {ord.items.map((item, idx) => (
+                              <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                                <img src={item.img} alt={item.name} style={{ width: 44, height: 33, borderRadius: 6, objectFit: 'cover', background: '#0d1117' }} />
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }} title={item.name}>
+                                    {item.name}
+                                  </div>
+                                  <div style={{ color: '#8B9BBE', fontSize: 11 }}>
+                                    ₹{item.price.toLocaleString('en-IN')} × {item.qty}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Middle: Customer Details & Shipping Address */}
+                        <div>
+                          <h4 style={{ color: '#8B9BBE', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', marginBottom: 12, letterSpacing: '0.05em' }}>Shipping & Customer Info</h4>
+                          <div style={{ color: '#fff', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <div>
+                              <strong style={{ color: '#38BDF8' }}>Name:</strong> {ord.address.name || 'N/A'}
+                            </div>
+                            <div>
+                              <strong style={{ color: '#38BDF8' }}>Phone:</strong> {ord.address.phone || 'N/A'}
+                            </div>
+                            {ord.email && (
+                              <div>
+                                <strong style={{ color: '#38BDF8' }}>Email:</strong> {ord.email}
+                              </div>
+                            )}
+                            <div>
+                              <strong style={{ color: '#38BDF8' }}>Address:</strong> {ord.address.street || 'N/A'}, {ord.address.city || 'N/A'}, {ord.address.state || 'N/A'} - {ord.address.pincode || 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right: Payment Method & Total */}
+                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-end', textAlign: isMobile ? 'left' : 'right' }}>
+                          <div>
+                            <h4 style={{ color: '#8B9BBE', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', marginBottom: 12, letterSpacing: '0.05em' }}>Summary</h4>
+                            <div style={{ color: '#8B9BBE', fontSize: 12, marginBottom: 4 }}>
+                              Payment Method: <span style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase' }}>{ord.paymentMethod || 'Razorpay'}</span>
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ color: '#8B9BBE', fontSize: 12, marginBottom: 2 }}>Grand Total</div>
+                            <div style={{ color: '#10B981', fontSize: 24, fontWeight: 850, fontFamily: 'Sora' }}>
+                              ₹{ord.total.toLocaleString('en-IN')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
       </main>
 
@@ -1089,6 +1576,75 @@ export default function App() {
                   value={productForm.warranty} onChange={e => setProductForm({ ...productForm, warranty: e.target.value })}
                   className="form-input"
                 />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Stock Quantity</label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: 'rgba(13, 17, 23, 0.7)',
+                  border: '1px solid rgba(56, 189, 248, 0.15)',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  height: 44
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setProductForm(prev => ({ ...prev, stock: Math.max(0, (prev.stock === undefined ? 1 : prev.stock) - 1) }))}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: 'none',
+                      color: '#8B9BBE',
+                      width: 44,
+                      height: '100%',
+                      cursor: 'pointer',
+                      fontSize: 20,
+                      fontWeight: 'bold',
+                      transition: 'background 0.2s',
+                      outline: 'none'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                  >−</button>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={productForm.stock === undefined ? 1 : productForm.stock}
+                    onChange={e => setProductForm({ ...productForm, stock: Math.max(0, Number(e.target.value)) })}
+                    style={{
+                      flex: 1,
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#fff',
+                      textAlign: 'center',
+                      fontWeight: 700,
+                      fontSize: 14,
+                      outline: 'none',
+                      width: '100%',
+                      padding: 0
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setProductForm(prev => ({ ...prev, stock: (prev.stock === undefined ? 1 : prev.stock) + 1 }))}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: 'none',
+                      color: '#8B9BBE',
+                      width: 44,
+                      height: '100%',
+                      cursor: 'pointer',
+                      fontSize: 20,
+                      fontWeight: 'bold',
+                      transition: 'background 0.2s',
+                      outline: 'none'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)'}
+                  >+</button>
+                </div>
               </div>
 
               <div>

@@ -37,6 +37,7 @@ export type Product = {
   ram: "8GB" | "16GB" | "32GB";
   storage: string;
   badge: "Best Seller" | "Gaming" | "Value Deal" | "Top Rated";
+  stock?: number;
 };
 
 export const products: Product[] = [

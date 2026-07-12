@@ -12,9 +12,10 @@ interface Props {
   cart: CartItem[];
   setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
   setPage: (p: string) => void;
+  triggerAlert: (type: "success" | "warning" | "error", msg: string) => void;
 }
 
-export default function CartPage({ cart, setCart, setPage }: Props) {
+export default function CartPage({ cart, setCart, setPage, triggerAlert }: Props) {
   const [coupon, setCoupon]   = useState("");
   const [applied, setApplied] = useState(false);
   const isMobile = useIsMobile();
@@ -26,7 +27,18 @@ export default function CartPage({ cart, setCart, setPage }: Props) {
 
   const remove    = (id: number) => setCart((c) => c.filter((i) => i.id !== id));
   const updateQty = (id: number, d: number) =>
-    setCart((c) => c.map((i) => i.id === id ? { ...i, qty: Math.max(1, (i.qty || 1) + d) } : i));
+    setCart((c) => c.map((i) => {
+      if (i.id === id) {
+        const nextQty = (i.qty || 1) + d;
+        const limit = i.stock !== undefined ? i.stock : 1;
+        if (nextQty > limit) {
+          triggerAlert("warning", `Sorry, only ${limit} unit(s) of this item are available in stock.`);
+          return i;
+        }
+        return { ...i, qty: Math.max(1, nextQty) };
+      }
+      return i;
+    }));
 
   if (cart.length === 0) {
     return (

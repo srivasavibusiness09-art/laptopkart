@@ -5,7 +5,7 @@ import {
   Heart, ShoppingCart, Star, Shield, RefreshCw, Truck, BadgeCheck,
   Share2, ChevronLeft, ChevronRight, Zap, Tag, Info, Award,
 } from "lucide-react";
-import { COLORS, products } from "@/data/products";
+import { COLORS } from "@/data/products";
 import type { Product } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import { useIsMobile } from "@/lib/hooks";
@@ -17,6 +17,8 @@ interface Props {
   wishlist: number[];
   setPage: (p: string) => void;
   onViewProduct: (p: Product) => void;
+  productsList: Product[];
+  triggerAlert: (type: "success" | "warning" | "error", msg: string) => void;
 }
 
 const specIcons: Record<string, string> = {
@@ -24,7 +26,7 @@ const specIcons: Record<string, string> = {
   OS: "🪟", Battery: "🔋", Weight: "⚖", Camera: "📷",
 };
 
-export default function ProductDetail({ product, onAddToCart, onWishlist, wishlist, setPage, onViewProduct }: Props) {
+export default function ProductDetail({ product, onAddToCart, onWishlist, wishlist, setPage, onViewProduct, productsList, triggerAlert }: Props) {
   const [tab, setTab]     = useState<"specs" | "why" | "reviews">("specs");
   const [qty, setQty]     = useState(1);
   const [added, setAdded] = useState(false);
@@ -49,9 +51,6 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
     ? product.images.slice(0, 5)
     : [
         product?.img || "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=800&q=80&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&q=80&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&q=80&auto=format&fit=crop",
       ];
 
   // Reset page state and scroll to top when user views a related product
@@ -79,7 +78,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   if (!product) return null;
 
   const isWished  = wishlist.includes(product.id);
-  const related   = products.filter((p) => p.id !== product.id).slice(0, 4);
+  const related   = productsList.filter((p) => p.id !== product.id).slice(0, 4);
 
   const handleAdd = () => {
     for (let i = 0; i < qty; i++) onAddToCart(product);
@@ -477,28 +476,51 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
               display: "flex", alignItems: "center", gap: 0,
               background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`,
               borderRadius: 14, overflow: "hidden",
+              opacity: (product.stock !== undefined ? product.stock : 1) <= 0 ? 0.5 : 1,
+              pointerEvents: (product.stock !== undefined ? product.stock : 1) <= 0 ? "none" : "auto",
             }}>
               <button onClick={() => setQty(Math.max(1, qty - 1))} style={{
                 background: "transparent", border: "none", color: COLORS.text,
                 width: 44, height: 48, cursor: "pointer", fontSize: 20,
               }}>−</button>
               <span style={{ color: COLORS.text, fontWeight: 700, width: 32, textAlign: "center" }}>{qty}</span>
-              <button onClick={() => setQty(qty + 1)} style={{
+              <button onClick={() => {
+                const limit = product.stock !== undefined ? product.stock : 1;
+                if (qty + 1 > limit) {
+                  triggerAlert("warning", `Sorry, only ${limit} unit(s) of this item are available in stock.`);
+                  return;
+                }
+                setQty(qty + 1);
+              }} style={{
                 background: "transparent", border: "none", color: COLORS.text,
                 width: 44, height: 48, cursor: "pointer", fontSize: 20,
               }}>+</button>
             </div>
-            <button onClick={handleAdd} style={{
-              flex: 1, minWidth: 180,
-              background: added ? "#10B981" : "linear-gradient(135deg, #3B82F6, #38BDF8)",
-              color: "#000", border: "none", borderRadius: 14,
-              height: 48, fontWeight: 800, fontSize: 15,
-              cursor: "pointer", fontFamily: "'Sora', sans-serif",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-              transition: "all 0.25s ease",
-              boxShadow: "0 0 40px rgba(56,189,248,0.22)",
-            }}>
-              {added ? <><span>✓</span> Added!</> : <><Zap size={15} /> Add to Cart</>}
+            <button
+              onClick={handleAdd}
+              disabled={(product.stock !== undefined ? product.stock : 1) <= 0}
+              style={{
+                flex: 1, minWidth: 180,
+                background: (product.stock !== undefined ? product.stock : 1) <= 0
+                  ? "#2A354F"
+                  : added ? "#10B981" : "linear-gradient(135deg, #3B82F6, #38BDF8)",
+                color: (product.stock !== undefined ? product.stock : 1) <= 0 ? COLORS.muted : "#000",
+                border: "none", borderRadius: 14,
+                height: 48, fontWeight: 800, fontSize: 15,
+                cursor: (product.stock !== undefined ? product.stock : 1) <= 0 ? "not-allowed" : "pointer",
+                fontFamily: "'Sora', sans-serif",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                transition: "all 0.25s ease",
+                boxShadow: (product.stock !== undefined ? product.stock : 1) <= 0 ? "none" : "0 0 40px rgba(56,189,248,0.22)",
+              }}
+            >
+              {(product.stock !== undefined ? product.stock : 1) <= 0 ? (
+                "Out of Stock"
+              ) : added ? (
+                <><span>✓</span> Added!</>
+              ) : (
+                <><Zap size={15} /> Add to Cart</>
+              )}
             </button>
             <button
               onClick={() => onWishlist(product.id)}
@@ -514,7 +536,14 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             </button>
           </div>
 
-          <button onClick={() => setPage("checkout")} style={{
+          <button
+            onClick={() => {
+              for (let i = 0; i < qty; i++) {
+                onAddToCart(product);
+              }
+              setPage("checkout");
+            }}
+            style={{
             width: "100%", background: "transparent",
             border: "1px solid rgba(255,255,255,0.12)",
             color: COLORS.text, borderRadius: 14, height: 48,

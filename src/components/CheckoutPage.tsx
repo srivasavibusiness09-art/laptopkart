@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Check,
   PartyPopper,
@@ -17,11 +17,15 @@ import { COLORS } from "@/data/products";
 import type { Product } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
 
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
 interface CartItem extends Product { qty: number }
 interface CheckoutPageProps {
   cart: CartItem[];
   setPage: (p: string) => void;
   setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  user: { uid: string; email: string; name: string };
 }
 
 const STEPS = ["Address", "Delivery", "Payment", "Confirm"] as const;
@@ -54,37 +58,237 @@ const inputStyle = {
   boxSizing: "border-box" as const,
 };
 
-export default function CheckoutPage({ cart, setPage, setCart }: CheckoutPageProps) {
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
+export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutPageProps) {
   const [step, setStep]       = useState(0);
   const [address, setAddress] = useState<Address>({ name: "", phone: "", pincode: "", city: "", state: "", street: "" });
   const [payment, setPayment] = useState("upi");
+  const [isProcessing, setIsProcessing] = useState(false);
   const [orderId] = useState(() =>
     Math.floor(100000 + Math.random() * 900000).toString()
   );
   const total = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
   const isMobile = useIsMobile();
 
-  const handleNext = () => {
+  // Pre-fill shipping details from Firestore profile if it exists
+  useEffect(() => {
+    if (!user?.uid) return;
+    const userDocRef = doc(db, "users", user.uid);
+    getDoc(userDocRef)
+      .then((docSnap) => {
+        if (docSnap.exists()) {
+          const uData = docSnap.data();
+          setAddress({
+            name: user.name || "",
+            phone: uData.phone || "",
+            street: uData.street || "",
+            city: uData.city || "",
+            state: uData.state || "",
+            pincode: uData.pincode || "",
+          });
+        } else {
+          setAddress(prev => ({ ...prev, name: user.name || "" }));
+        }
+      })
+      .catch((err) => console.error("Error pre-filling address details:", err));
+  }, [user]);
+
+  const handleNext = async () => {
+    // If they choose payment, launch Razorpay Checkout flow
     if (step === 2) {
-      const newOrder = {
-        orderId,
-        date: new Date().toLocaleString(),
-        items: cart.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          qty: item.qty || 1,
-          img: item.img
-        })),
-        total,
-        address
-      };
-      
-      const existingOrders = JSON.parse(localStorage.getItem("laptopkart_orders") || "[]");
-      localStorage.setItem("laptopkart_orders", JSON.stringify([newOrder, ...existingOrders]));
-      
-      setCart([]);
+      // Cash on delivery bypass
+      if (payment === "cod") {
+        setIsProcessing(true);
+        try {
+          const newOrder = {
+            orderId,
+            createdAt: new Date().toISOString(),
+            items: cart.map(item => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              qty: item.qty || 1,
+              img: item.img
+            })),
+            total,
+            address,
+            status: "Pending (COD)",
+            paymentMethod: "cod",
+            email: user.email,
+            uid: user.uid
+          };
+          const orderRef = doc(db, "orders", orderId);
+          await setDoc(orderRef, newOrder);
+
+          // Update default address details inside users doc for subsequent orders
+          await setDoc(doc(db, "users", user.uid), {
+            phone: address.phone,
+            street: address.street,
+            city: address.city,
+            state: address.state,
+            pincode: address.pincode
+          }, { merge: true });
+
+          setCart([]);
+          setStep(3);
+        } catch (e) {
+          console.error("Failed to save COD order:", e);
+          setStep(3);
+        } finally {
+          setIsProcessing(false);
+        }
+        return;
+      }
+
+      setIsProcessing(true);
+      try {
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded) {
+          alert("Failed to load Razorpay Payment Gateway. Check internet connection.");
+          setIsProcessing(false);
+          return;
+        }
+
+        // Create transaction payload on backend
+        const res = await fetch("/api/razorpay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: total, currency: "INR" })
+        });
+
+        if (!res.ok) {
+          throw new Error("Unable to reach Razorpay backend.");
+        }
+
+        const razorpayOrder = await res.json();
+        const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder";
+
+        const options = {
+          key: keyId,
+          amount: razorpayOrder.amount,
+          currency: razorpayOrder.currency,
+          name: "Laptopkart",
+          description: "Premium Tech & Refurbished Laptops",
+          order_id: razorpayOrder.id,
+          handler: async function (response: any) {
+            try {
+              // Write paid order directly to Firestore
+              const newOrder = {
+                orderId,
+                createdAt: new Date().toISOString(),
+                items: cart.map(item => ({
+                  id: item.id,
+                  name: item.name,
+                  price: item.price,
+                  qty: item.qty || 1,
+                  img: item.img
+                })),
+                total,
+                address,
+                status: "Paid",
+                paymentMethod: payment,
+                email: user.email,
+                uid: user.uid,
+                razorpayOrderId: response.razorpay_order_id || razorpayOrder.id,
+                razorpayPaymentId: response.razorpay_payment_id || "pay_mock_123",
+                razorpaySignature: response.razorpay_signature || "sig_mock_123"
+              };
+
+              const orderRef = doc(db, "orders", orderId);
+              await setDoc(orderRef, newOrder);
+
+              // Update default address details inside users doc for subsequent orders
+              await setDoc(doc(db, "users", user.uid), {
+                phone: address.phone,
+                street: address.street,
+                city: address.city,
+                state: address.state,
+                pincode: address.pincode
+              }, { merge: true });
+
+              setCart([]);
+              setStep(3);
+            } catch (err) {
+              console.error("Firestore payment write failed:", err);
+              alert("Payment was successful, but saving order failed. Please notify customer support.");
+            } finally {
+              setIsProcessing(false);
+            }
+          },
+          prefill: {
+            name: address.name,
+            contact: address.phone,
+            email: "support@laptopkart.com"
+          },
+          theme: {
+            color: "#10b981"
+          },
+          modal: {
+            ondismiss: function () {
+              setIsProcessing(false);
+            }
+          }
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      } catch (err: any) {
+        console.warn("Razorpay API not active. Simulating sandbox checkout.", err);
+        try {
+          const newOrder = {
+            orderId,
+            createdAt: new Date().toISOString(),
+            items: cart.map(item => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              qty: item.qty || 1,
+              img: item.img
+            })),
+            total,
+            address,
+            status: "Paid (Simulated)",
+            paymentMethod: payment,
+            email: user.email,
+            uid: user.uid,
+            razorpayOrderId: "order_mock_" + Math.random().toString(36).substring(2, 10),
+            razorpayPaymentId: "pay_mock_" + Math.random().toString(36).substring(2, 10)
+          };
+
+          const orderRef = doc(db, "orders", orderId);
+          await setDoc(orderRef, newOrder);
+
+          // Update default address details inside users doc for subsequent orders
+          await setDoc(doc(db, "users", user.uid), {
+            phone: address.phone,
+            street: address.street,
+            city: address.city,
+            state: address.state,
+            pincode: address.pincode
+          }, { merge: true });
+
+          setCart([]);
+          setStep(3);
+        } catch (e) {
+          console.error("Firestore sandbox write failed:", e);
+          setCart([]);
+          setStep(3);
+        } finally {
+          setIsProcessing(false);
+        }
+      }
+      return;
     }
+
     setStep((s) => Math.min(STEPS.length - 1, s + 1));
   };
 

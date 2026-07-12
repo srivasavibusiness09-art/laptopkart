@@ -11,6 +11,8 @@ import type { Product } from "@/data/products";
 import Hero from "@/components/Hero";
 import ProductCard from "@/components/ProductCard";
 import { useIsMobile } from "@/lib/hooks";
+import { collection, doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 /* ── Trust Strip ──────────────────────────────────────── */
 const trustItems = [
@@ -100,11 +102,75 @@ interface HomepageProps {
   onAddToCart: (p: Product) => void;
   onWishlist: (id: number) => void;
   wishlist: number[];
+  accessories: any[];
+  customerReviews: any[];
+  user: any;
+  triggerAlert: (type: "success" | "warning" | "error", msg: string) => void;
 }
 
-export default function Homepage({ products, banners, setPage, onViewProduct, onAddToCart, onWishlist, wishlist }: HomepageProps) {
+export default function Homepage({ products, banners, setPage, onViewProduct, onAddToCart, onWishlist, wishlist, accessories, customerReviews, user, triggerAlert }: HomepageProps) {
   const isMobile = useIsMobile();
   const [step, setStep] = useState(0);
+
+  // Review states
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const [isWritingReview, setIsWritingReview] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewerName, setReviewerName] = useState("");
+  const [reviewerCity, setReviewerCity] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewText.trim()) return triggerAlert("warning", "Please enter review text.");
+    const name = reviewerName.trim() || user?.name || "Anonymous";
+    const city = reviewerCity.trim() || "Verified Buyer";
+
+    setReviewSubmitting(true);
+    try {
+      // Create a clean new doc in reviews collection
+      const newReviewRef = doc(collection(db, "reviews"));
+      await setDoc(newReviewRef, {
+        name,
+        city,
+        rating: reviewRating,
+        text: reviewText.trim(),
+        createdAt: new Date().toISOString()
+      });
+      setReviewSuccess(true);
+      setReviewText("");
+      setReviewerName("");
+      setReviewerCity("");
+      setIsWritingReview(false);
+      setTimeout(() => setReviewSuccess(false), 3000);
+      triggerAlert("success", "Review submitted! Thank you for sharing.");
+    } catch (err) {
+      console.error("Error submitting review:", err);
+      triggerAlert("error", "Failed to submit review. Please try again.");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const getCategoryCount = (catName: string) => {
+    if (catName === "Accessories") {
+      const len = accessories?.length || 0;
+      return `${len} ${len === 1 ? "item" : "items"}`;
+    }
+    const normalizedCat = catName.toLowerCase();
+    const count = products.filter((p) => {
+      const pCat = (p.category || "").toLowerCase();
+      if (normalizedCat.includes("business") && pCat.includes("business")) return true;
+      if (normalizedCat.includes("gaming") && pCat.includes("gaming")) return true;
+      if (normalizedCat.includes("macbook") && pCat.includes("macbook")) return true;
+      if (normalizedCat.includes("ultrabook") && pCat.includes("ultrabook")) return true;
+      if (normalizedCat.includes("workstation") && pCat.includes("workstation")) return true;
+      return pCat === normalizedCat;
+    }).length;
+    return `${count} ${count === 1 ? "item" : "items"}`;
+  };
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [result, setResult] = useState<Product[] | null>(null);
 
@@ -148,7 +214,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
         {section(
           <>
             <SectionHeader eyebrow="Contests &amp; Rewards" title="Offers &amp; Contests" subtitle="Join our community writing challenge and unlock exclusive savings" />
-            
+
             <div
               onClick={() => {
                 if (banners && banners[activeSlideIdx]) {
@@ -241,7 +307,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
               </div>
             </div>
           </>
-        , true)}
+          , true)}
       </div>
 
       {/* ── Categories ──────────────────────────── */}
@@ -291,7 +357,9 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                     color: COLORS.text, fontWeight: 700, fontSize: isMobile ? 13 : 14,
                     fontFamily: "'Sora', sans-serif", marginBottom: 3,
                   }}>{cat.name}</div>
-                  <div style={{ color: COLORS.muted, fontSize: 11 }}>{cat.count}</div>
+                  <div style={{ color: COLORS.muted, fontSize: 11 }}>
+                    {getCategoryCount(cat.name)}
+                  </div>
                 </div>
               </div>
             ))}
@@ -566,56 +634,216 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
       )}
 
       {/* ── Customer Reviews ─────────────────────── */}
-      {section(
-        <>
-          <SectionHeader eyebrow="Reviews" title="50,000+ Happy Customers" subtitle="Trusted by students, professionals, and businesses across India" />
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit,minmax(250px,1fr))",
-            gap: 20,
-          }}>
-            {reviews.map((r, i) => (
-              <div key={r.name} style={{
-                background: COLORS.cardBg,
-                border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 20, padding: 24,
-                animation: `fadeUp 0.5s ease ${i * 0.1}s both`,
-                transition: "border-color 0.2s",
-              }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(56,189,248,0.22)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.cardBorder; }}
+      {(() => {
+        const combinedReviews = [
+          ...customerReviews.map(r => ({
+            name: r.name,
+            city: r.city || "Verified Buyer",
+            rating: r.rating || 5,
+            text: r.text,
+            avatar: r.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2),
+            isReal: true
+          })),
+          ...reviews.map(r => ({ ...r, isReal: false }))
+        ];
+        const displayedReviews = showAllReviews ? combinedReviews : combinedReviews.slice(0, 6);
+
+        return section(
+          <>
+            <SectionHeader eyebrow="Reviews" title="1000+ Happy Customers" subtitle="Trusted by students, professionals, and businesses across India" />
+
+            {/* Write a Review Toggle */}
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <button
+                onClick={() => setIsWritingReview(!isWritingReview)}
+                style={{
+                  background: isWritingReview ? "rgba(255,255,255,0.06)" : `linear-gradient(135deg, ${COLORS.green}, #38BDF8)`,
+                  color: isWritingReview ? "#fff" : "#000",
+                  border: isWritingReview ? "1px solid rgba(255,255,255,0.12)" : "none",
+                  borderRadius: 12, padding: "10px 24px", fontSize: 13, fontWeight: 800,
+                  cursor: "pointer", fontFamily: "'Sora', sans-serif",
+                  display: "inline-flex", alignItems: "center", gap: 8, transition: "all 0.2s"
+                }}
               >
-                <div style={{ display: "flex", gap: 2, marginBottom: 12 }}>
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star key={s} size={13}
-                      fill={s <= r.rating ? "#F59E0B" : "transparent"}
-                      color={s <= r.rating ? "#F59E0B" : "rgba(255,255,255,0.15)"} />
-                  ))}
+                {isWritingReview ? "Cancel Review" : "Write a Review"}
+              </button>
+            </div>
+
+            {/* Submit Success Toast */}
+            {reviewSuccess && (
+              <div style={{
+                background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)",
+                color: "#10B981", borderRadius: 12, padding: "12px 24px",
+                maxWidth: 400, margin: "0 auto 20px", textAlign: "center",
+                fontWeight: 700, fontSize: 13, fontFamily: "Sora"
+              }}>
+                ✓ Review submitted successfully! Thank you.
+              </div>
+            )}
+
+            {/* Review Form Block */}
+            {isWritingReview && (
+              <form
+                onSubmit={handleReviewSubmit}
+                style={{
+                  background: COLORS.cardBg,
+                  border: "1px solid rgba(56,189,248,0.18)",
+                  borderRadius: 24, padding: isMobile ? 20 : 32,
+                  maxWidth: 600, margin: "0 auto 40px",
+                  display: "flex", flexDirection: "column", gap: 16,
+                  boxShadow: "0 12px 40px rgba(0,0,0,0.3)"
+                }}
+              >
+                <h3 style={{ margin: 0, fontFamily: "Sora", color: "#fff", fontSize: 18, fontWeight: 800 }}>Share Your Experience</h3>
+                
+                {/* Rating selection (Stars) */}
+                <div>
+                  <label style={{ display: "block", color: COLORS.muted, fontSize: 11, fontWeight: 700, marginBottom: 8, textTransform: "uppercase" }}>Your Rating</label>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        size={24}
+                        onClick={() => setReviewRating(s)}
+                        fill={s <= reviewRating ? "#F59E0B" : "transparent"}
+                        color={s <= reviewRating ? "#F59E0B" : "rgba(255,255,255,0.2)"}
+                        style={{ cursor: "pointer", transition: "transform 0.1s" }}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <p style={{ color: COLORS.text, fontSize: 14, lineHeight: 1.7, margin: "0 0 16px" }}>
-                  &ldquo;{r.text}&rdquo;
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
-                    width: 38, height: 38, borderRadius: "50%",
-                    background: "linear-gradient(135deg, rgba(56,189,248,0.15), rgba(99,102,241,0.15))",
-                    border: "1px solid rgba(56,189,248,0.22)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: COLORS.green, fontWeight: 800, fontSize: 12,
-                    fontFamily: "'Sora', sans-serif",
-                  }}>
-                    {r.avatar}
+
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
+                  <div>
+                    <label style={{ display: "block", color: COLORS.muted, fontSize: 11, fontWeight: 700, marginBottom: 6, textTransform: "uppercase" }}>Your Name</label>
+                    <input
+                      type="text"
+                      placeholder={user?.name || "e.g. John Doe"}
+                      value={reviewerName}
+                      onChange={(e) => setReviewerName(e.target.value)}
+                      style={{
+                        width: "100%", background: "#0d1117", border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: 12, padding: "10px 14px", color: "#fff", fontSize: 13, outline: "none",
+                        boxSizing: "border-box"
+                      }}
+                    />
                   </div>
                   <div>
-                    <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 13 }}>{r.name}</div>
-                    <div style={{ color: COLORS.muted, fontSize: 12 }}>{r.city}</div>
+                    <label style={{ display: "block", color: COLORS.muted, fontSize: 11, fontWeight: 700, marginBottom: 6, textTransform: "uppercase" }}>Your City</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Delhi, Mumbai"
+                      value={reviewerCity}
+                      onChange={(e) => setReviewerCity(e.target.value)}
+                      style={{
+                        width: "100%", background: "#0d1117", border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: 12, padding: "10px 14px", color: "#fff", fontSize: 13, outline: "none",
+                        boxSizing: "border-box"
+                      }}
+                    />
                   </div>
                 </div>
+
+                <div>
+                  <label style={{ display: "block", color: COLORS.muted, fontSize: 11, fontWeight: 700, marginBottom: 6, textTransform: "uppercase" }}>Review Text</label>
+                  <textarea
+                    placeholder="Tell us what you liked about your device..."
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    required
+                    rows={4}
+                    style={{
+                      width: "100%", background: "#0d1117", border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: 12, padding: "12px 14px", color: "#fff", fontSize: 13, outline: "none",
+                      resize: "none", boxSizing: "border-box", fontFamily: "inherit", lineHeight: 1.5
+                    }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={reviewSubmitting}
+                  style={{
+                    background: `linear-gradient(135deg, ${COLORS.green}, #38BDF8)`,
+                    color: "#000", border: "none", borderRadius: 12,
+                    height: 48, fontWeight: 800, fontSize: 14, cursor: "pointer",
+                    fontFamily: "'Sora', sans-serif", display: "flex", alignItems: "center", justifyContent: "center"
+                  }}
+                >
+                  {reviewSubmitting ? "Submitting Review..." : "Submit Review"}
+                </button>
+              </form>
+            )}
+
+            {/* Reviews Grid */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit,minmax(280px,1fr))",
+              gap: 20,
+            }}>
+              {displayedReviews.map((r, i) => (
+                <div key={`${r.name}-${i}`} style={{
+                  background: COLORS.cardBg,
+                  border: `1px solid ${COLORS.cardBorder}`,
+                  borderRadius: 20, padding: 24,
+                  animation: `fadeUp 0.5s ease ${i * 0.1}s both`,
+                  transition: "border-color 0.2s",
+                }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(56,189,248,0.22)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.cardBorder; }}
+                >
+                  <div style={{ display: "flex", gap: 2, marginBottom: 12 }}>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} size={13}
+                        fill={s <= r.rating ? "#F59E0B" : "transparent"}
+                        color={s <= r.rating ? "#F59E0B" : "rgba(255,255,255,0.15)"} />
+                    ))}
+                  </div>
+                  <p style={{ color: COLORS.text, fontSize: 14, lineHeight: 1.7, margin: "0 0 16px" }}>
+                    &ldquo;{r.text}&rdquo;
+                  </p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 38, height: 38, borderRadius: "50%",
+                      background: "linear-gradient(135deg, rgba(56,189,248,0.15), rgba(99,102,241,0.15))",
+                      border: "1px solid rgba(56,189,248,0.22)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: COLORS.green, fontWeight: 800, fontSize: 12,
+                      fontFamily: "'Sora', sans-serif",
+                    }}>
+                      {r.avatar}
+                    </div>
+                    <div>
+                      <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 13 }}>{r.name}</div>
+                      <div style={{ color: COLORS.muted, fontSize: 12 }}>{r.city}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Show More toggle button */}
+            {combinedReviews.length > 6 && (
+              <div style={{ textAlign: "center", marginTop: 36 }}>
+                <button
+                  onClick={() => setShowAllReviews(!showAllReviews)}
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    color: "#fff", borderRadius: 12, padding: "10px 28px",
+                    fontSize: 13, fontWeight: 700, cursor: "pointer",
+                    fontFamily: "'Sora', sans-serif", transition: "all 0.2s"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+                >
+                  {showAllReviews ? "Show Less Reviews" : `Show More Reviews (${combinedReviews.length - 6} more)`}
+                </button>
               </div>
-            ))}
-          </div>
-        </>
-      )}
+            )}
+          </>, true
+        );
+      })()}
 
       {/* ── Newsletter ───────────────────────────── */}
       {section(
