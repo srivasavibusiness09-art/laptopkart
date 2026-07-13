@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail
 } from "firebase/auth";
 import { auth, googleProvider, appleProvider } from "@/lib/firebase";
 import { COLORS, products, accessoriesList } from "@/data/products";
@@ -13,34 +14,160 @@ import { useIsMobile } from "@/lib/hooks";
 import {
   BookOpen, Scale, GraduationCap, Gamepad2, Battery,
   Phone, Mail, MessageSquare, MapPin, CheckCircle2,
-  Lock, User, Laptop, ShieldCheck, Leaf, Coins, ChevronRight, Star, ShoppingCart, Heart
+  Lock, User, Laptop, ShieldCheck, Leaf, Coins, ChevronRight, Star, ShoppingCart, Heart, Keyboard,
+  Eye, EyeOff
 } from "lucide-react";
 import { FaApple, FaGoogle } from "react-icons/fa6";
 
-export function ComparePage() {
+export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
   const isMobile = useIsMobile();
-  const [selected, setSelected] = useState([products[0], products[1], products[2]]);
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [livePrices, setLivePrices] = useState<Record<string, { amazon: number | null; flipkart: number | null }>>({});
+  const [loadingPrices, setLoadingPrices] = useState<Record<string, boolean>>({});
+
+  // Automatically sync/initialize selectedIds when productsList is loaded or changed
+  useEffect(() => {
+    if (productsList.length > 0) {
+      const firstId = String(productsList[0]?.id || "");
+      const secondId = String(productsList[1]?.id || productsList[0]?.id || "");
+      setSelectedIds([firstId, secondId].filter(Boolean));
+    }
+  }, [productsList]);
+
+  const selected = selectedIds
+    .map(id => productsList.find(pr => String(pr.id) === id))
+    .filter(Boolean);
+
+  // Load live prices whenever selected products change
+  useEffect(() => {
+    const fetchPrice = async (p: any) => {
+      const pid = String(p.id);
+      if (livePrices[pid] !== undefined || loadingPrices[pid]) return;
+
+      setLoadingPrices(prev => ({ ...prev, [pid]: true }));
+      try {
+        const res = await fetch(`/api/live-price?query=${encodeURIComponent(p.name)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setLivePrices(prev => ({
+            ...prev,
+            [pid]: {
+              amazon: data.amazonPrice,
+              flipkart: data.flipkartPrice
+            }
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to load live price for", p.name, err);
+      } finally {
+        setLoadingPrices(prev => ({ ...prev, [pid]: false }));
+      }
+    };
+
+    selected.forEach(p => {
+      if (p) {
+        fetchPrice(p);
+      }
+    });
+  }, [selectedIds]);
+
   const specs = ["price", "mrp", "discount", "rating", "processor", "ram", "storage", "warranty", "grade"];
   const labels: Record<string, string> = { price: "Price", mrp: "MRP", discount: "Discount %", rating: "Rating", processor: "Processor", ram: "RAM", storage: "Storage", warranty: "Warranty", grade: "Grade" };
 
+  if (productsList.length === 0) {
+    return (
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "40px 14px" : "80px 20px", textAlign: "center" }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+          <Scale size={48} color={COLORS.muted} />
+        </div>
+        <h2 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontWeight: 700, fontSize: 20 }}>No Products to Compare</h2>
+        <p style={{ color: COLORS.muted, fontSize: 14, marginTop: 8, maxWidth: 450, margin: "8px auto 0", lineHeight: 1.5 }}>
+          Your storefront catalog is currently empty. Please add items in the admin panel to enable product comparison.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "20px 14px" : "32px 20px" }}>
-      <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 24 : 28, fontWeight: 800, color: COLORS.text, marginBottom: 24 }}>Compare Products</h1>
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "20px 14px" : "32px 20px" }}>
+      <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 24 : 28, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>Compare Products</h1>
+      <p style={{ color: COLORS.muted, fontSize: 14, marginBottom: 24 }}>Compare our refurb/brand new prices directly with live online marketplace listings.</p>
+
       <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: isMobile ? 620 : 700 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: isMobile ? 500 : 600 }}>
           <thead>
             <tr>
               <th style={{ padding: isMobile ? "12px 12px" : "16px 20px", background: COLORS.cardBg, color: COLORS.muted, textAlign: "left", fontSize: 14, border: `1px solid ${COLORS.cardBorder}` }}>Feature</th>
-              {selected.map(p => (
-                <th key={p.id} style={{ padding: isMobile ? "12px" : "20px", background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, minWidth: isMobile ? 180 : 200 }}>
+              {selected.map((p, index) => (
+                <th key={index} style={{ padding: isMobile ? "12px" : "20px", background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, minWidth: isMobile ? 180 : 200, verticalAlign: "top" }}>
                   <div style={{ width: 120, height: 120, margin: "0 auto 12px", background: COLORS.background, borderRadius: 12, overflow: "hidden" }}>
                     <img src={p.img} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </div>
-                  <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 14, fontFamily: "'Sora', sans-serif" }}>{p.name}</div>
-                  <select onChange={e => { const np = products.find(pr => pr.id === parseInt(e.target.value))!; setSelected(s => s.map(sp => sp.id === p.id ? np : sp)); }} value={p.id}
-                    style={{ background: COLORS.darkBg, border: `1px solid ${COLORS.cardBorder}`, color: COLORS.muted, borderRadius: 8, padding: "6px 10px", marginTop: 8, width: "100%", fontSize: 12 }}>
-                    {products.map(pr => <option key={pr.id} value={pr.id}>{pr.name}</option>)}
+                  <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 14, fontFamily: "'Sora', sans-serif", minHeight: 40 }}>{p.name}</div>
+
+                  <select
+                    onChange={e => {
+                      const newId = e.target.value;
+                      setSelectedIds(s => s.map((id, idx) => idx === index ? newId : id));
+                    }}
+                    value={String(p.id)}
+                    style={{ background: COLORS.darkBg, border: `1px solid ${COLORS.cardBorder}`, color: COLORS.muted, borderRadius: 8, padding: "8px 10px", marginTop: 8, width: "100%", fontSize: 12 }}
+                  >
+                    {productsList.map(pr => <option key={pr.id} value={String(pr.id)}>{pr.name}</option>)}
                   </select>
+
+                  {/* Online Live Prices Lookup Widget */}
+                  {(() => {
+                    const priceInfo = livePrices[String(p.id)];
+                    const isLoading = loadingPrices[String(p.id)];
+
+                    const amazonVal = priceInfo?.amazon || p.mrp;
+                    const flipkartVal = priceInfo?.flipkart || (p.mrp + (p.mrp * 0.01 > 500 ? 500 : Math.round(p.mrp * 0.01)));
+
+                    return (
+                      <div style={{
+                        marginTop: 16,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                        textAlign: "left",
+                        padding: 12,
+                        background: "rgba(255, 255, 255, 0.03)",
+                        borderRadius: 14,
+                        border: "1px solid rgba(255, 255, 255, 0.05)"
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: 10, fontWeight: 800, color: COLORS.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Live Market Comparison</span>
+                          {isLoading && <span style={{ fontSize: 9, color: COLORS.green, fontWeight: 700 }}>Updating...</span>}
+                        </div>
+
+                        <a
+                          href={`https://www.amazon.in/s?k=${encodeURIComponent(p.name)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "#FF9900", textDecoration: "none", fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                        >
+                          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            Amazon India ↗
+                          </span>
+                          <span style={{ fontWeight: 700 }}>₹{amazonVal.toLocaleString('en-IN')}</span>
+                        </a>
+
+                        <a
+                          href={`https://www.flipkart.com/search?q=${encodeURIComponent(p.name)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "#2874F0", textDecoration: "none", fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                        >
+                          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            Flipkart ↗
+                          </span>
+                          <span style={{ fontWeight: 700 }}>₹{flipkartVal.toLocaleString('en-IN')}</span>
+                        </a>
+                      </div>
+                    );
+                  })()}
                 </th>
               ))}
             </tr>
@@ -49,13 +176,13 @@ export function ComparePage() {
             {specs.map((spec, i) => (
               <tr key={spec} style={{ background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
                 <td style={{ padding: isMobile ? "10px 12px" : "14px 20px", color: COLORS.muted, fontSize: 14, fontWeight: 600, border: `1px solid ${COLORS.cardBorder}` }}>{labels[spec]}</td>
-                {selected.map(p => {
+                {selected.map((p, index) => {
                   const rawVal = p[spec as keyof typeof p] as string | number;
                   const val = spec === "price" || spec === "mrp" ? `₹${(rawVal as number).toLocaleString('en-IN')}` : spec === "discount" ? `${rawVal}%` : spec === "rating" ? `★ ${rawVal}` : rawVal;
                   const best = spec === "price" ? Math.min(...selected.map(s => s.price)) === p.price : spec === "rating" ? Math.max(...selected.map(s => s.rating)) === p.rating : spec === "discount" ? Math.max(...selected.map(s => s.discount)) === p.discount : false;
                   return (
-                    <td key={p.id} style={{ padding: isMobile ? "10px 12px" : "14px 20px", textAlign: "center", color: best ? COLORS.green : COLORS.text, fontWeight: best ? 800 : 500, fontSize: 14, border: `1px solid ${COLORS.cardBorder}`, background: best ? "rgba(59,130,246,0.12)" : "transparent" }}>
-                      {val}{best && <span style={{ display: "block", fontSize: 10, color: COLORS.green }}>Best</span>}
+                    <td key={index} style={{ padding: isMobile ? "10px 12px" : "14px 20px", textAlign: "center", color: best ? COLORS.green : COLORS.text, fontWeight: best ? 800 : 500, fontSize: 14, border: `1px solid ${COLORS.cardBorder}`, background: best ? "rgba(59,130,246,0.12)" : "transparent" }}>
+                      {val}{best && <span style={{ display: "block", fontSize: 10, color: COLORS.green }}>Best Value</span>}
                     </td>
                   );
                 })}
@@ -188,9 +315,9 @@ export function ContactPage() {
         </div>
         <div>
           {[
-            { icon: <Phone size={18} color={COLORS.green} />, label: "Phone", val: "+91 99999 99999", sub: "Call us 10AM - 7PM" },
-            { icon: <Mail size={18} color={COLORS.green} />, label: "Email", val: "support@laptopkart.com", sub: "Reply within 24 hours" },
-            { icon: <MessageSquare size={18} color={COLORS.green} />, label: "WhatsApp", val: "+91 99999 99999", sub: "Quick replies on chat" },
+            { icon: <Phone size={18} color={COLORS.green} />, label: "Phone", val: "+91 97503 31313", sub: "Call us 10AM - 7PM" },
+            { icon: <Mail size={18} color={COLORS.green} />, label: "Email", val: "srivasavibusiness09@gmail.com", sub: "Reply within 24 hours" },
+            { icon: <MessageSquare size={18} color={COLORS.green} />, label: "WhatsApp", val: "+91 97503 31313", sub: "Quick replies on chat" },
             { icon: <MapPin size={18} color={COLORS.green} />, label: "Address", val: "Chennai, Tamil Nadu", sub: "Visit our showroom" }
           ].map(({ icon, label, val, sub }) => (
             <div key={label} style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 14, padding: "16px 20px", marginBottom: 12, display: "flex", gap: 16, alignItems: "center" }}>
@@ -210,17 +337,20 @@ export function ContactPage() {
   );
 }
 
-export function LoginPage({ setPage, onLogin }: { setPage: (p: string) => void; onLogin: (user: any) => void }) {
+export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: string) => void; onLogin: (user: any) => void; triggerAlert?: (type: "success" | "warning" | "error", message: string) => void }) {
   const isMobile = useIsMobile();
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ email: "", password: "", name: "" });
   const [errorMsg, setErrorMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
     if (!form.email) {
-      setErrorMsg("Please enter your email address.");
+      const errorText = "Please enter your email address.";
+      setErrorMsg(errorText);
+      if (triggerAlert) triggerAlert("error", errorText);
       return;
     }
 
@@ -255,7 +385,9 @@ export function LoginPage({ setPage, onLogin }: { setPage: (p: string) => void; 
           isMock: true
         });
       } else {
-        setErrorMsg(error.message.replace("Firebase: ", ""));
+        const errorText = error.message.replace("Firebase: ", "");
+        setErrorMsg(errorText);
+        if (triggerAlert) triggerAlert("error", errorText);
       }
     }
   };
@@ -273,6 +405,9 @@ export function LoginPage({ setPage, onLogin }: { setPage: (p: string) => void; 
       });
     } catch (error: any) {
       console.warn("Firebase Google Auth Error:", error);
+      const errorText = error.message.replace("Firebase: ", "");
+      setErrorMsg(errorText);
+      if (triggerAlert) triggerAlert("error", errorText);
       if (error.code === "auth/invalid-api-key" || error.code === "auth/network-request-failed" || error.message.includes("apiKey") || error.message.includes("api_key")) {
         onLogin({
           name: "Mock Google User",
@@ -282,6 +417,30 @@ export function LoginPage({ setPage, onLogin }: { setPage: (p: string) => void; 
         });
       } else {
         setErrorMsg(error.message.replace("Firebase: ", ""));
+      }
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setErrorMsg("");
+    if (!form.email) {
+      const errorText = "Please enter your email address first to request a password reset.";
+      setErrorMsg(errorText);
+      if (triggerAlert) triggerAlert("error", errorText);
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, form.email);
+      if (triggerAlert) {
+        triggerAlert("success", `Password reset email sent to ${form.email}. Check your inbox!`);
+      }
+    } catch (error: any) {
+      console.warn("Forgot Password Error:", error);
+      const errorText = error.message.replace("Firebase: ", "");
+      setErrorMsg(errorText);
+      if (triggerAlert) {
+        triggerAlert("error", errorText);
       }
     }
   };
@@ -494,7 +653,11 @@ export function LoginPage({ setPage, onLogin }: { setPage: (p: string) => void; 
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
               <label style={{ color: COLORS.muted, fontSize: 12, fontWeight: 600, display: "block" }}>Password</label>
               {mode === "login" && (
-                <button type="button" style={{ background: "transparent", border: "none", color: "#38BDF8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  style={{ background: "transparent", border: "none", color: "#38BDF8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+                >
                   Forgot Password?
                 </button>
               )}
@@ -508,12 +671,31 @@ export function LoginPage({ setPage, onLogin }: { setPage: (p: string) => void; 
             }}>
               <Lock size={15} color={COLORS.muted} />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={form.password}
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                 style={{ flex: 1, background: "transparent", border: "none", color: COLORS.text, fontSize: 14, outline: "none" }}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: COLORS.muted,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 4,
+                  transition: "color 0.2s"
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = COLORS.text}
+                onMouseLeave={e => e.currentTarget.style.color = COLORS.muted}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 
@@ -926,117 +1108,140 @@ export function AccessoriesPage({
       </div>
 
       {/* Grid */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-        gap: 24,
-      }}>
-        {filteredItems.map(item => {
-          const isWished = wishlist.includes(item.id);
-          const saving = item.mrp - item.price;
-          return (
-            <div
-              key={item.id}
-              style={{
-                background: COLORS.cardBg,
-                border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 20, overflow: "hidden",
-                display: "flex", flexDirection: "column",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform = "translateY(-6px)";
-                e.currentTarget.style.borderColor = "rgba(56,189,248,0.28)";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = "none";
-                e.currentTarget.style.borderColor = COLORS.cardBorder;
-              }}
-            >
-              {/* Image Box */}
-              <div style={{ height: 180, overflow: "hidden", background: "#0d1117", position: "relative" }}>
-                <img src={item.img} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                
-                {/* Save Badge */}
-                <span style={{
-                  position: "absolute", top: 12, left: 12,
-                  background: "rgba(16,185,129,0.92)", color: "#fff",
-                  fontSize: 10, fontWeight: 800, padding: "4px 8px", borderRadius: 6,
-                }}>
-                  SAVE ₹{saving.toLocaleString("en-IN")}
-                </span>
+      {filteredItems.length === 0 ? (
+        <div style={{
+          textAlign: "center", padding: "60px 20px", background: COLORS.cardBg,
+          border: `1px solid ${COLORS.cardBorder}`, borderRadius: 24,
+          margin: "20px 0",
+        }}>
+          <div style={{
+            display: "inline-flex", justifyContent: "center", alignItems: "center",
+            width: 80, height: 80, borderRadius: "50%",
+            background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,150,240,0.12)",
+            marginBottom: 20,
+          }}>
+            <Keyboard size={36} color={COLORS.green} />
+          </div>
+          <h3 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: 18, fontWeight: 700, margin: "0 0 8px" }}>
+            No Accessories Available
+          </h3>
+          <p style={{ color: COLORS.muted, fontSize: 14, maxWidth: 360, margin: "0 auto" }}>
+            We don't have any accessories listed in this category right now. Check back soon!
+          </p>
+        </div>
+      ) : (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+          gap: 24,
+        }}>
+          {filteredItems.map(item => {
+            const isWished = wishlist.includes(item.id);
+            const saving = item.mrp - item.price;
+            return (
+              <div
+                key={item.id}
+                style={{
+                  background: COLORS.cardBg,
+                  border: `1px solid ${COLORS.cardBorder}`,
+                  borderRadius: 20, overflow: "hidden",
+                  display: "flex", flexDirection: "column",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = "translateY(-6px)";
+                  e.currentTarget.style.borderColor = "rgba(56,189,248,0.28)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = "none";
+                  e.currentTarget.style.borderColor = COLORS.cardBorder;
+                }}
+              >
+                {/* Image Box */}
+                <div style={{ height: 180, overflow: "hidden", background: "#0d1117", position: "relative" }}>
+                  <img src={item.img} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
 
-                {/* Wishlist Button */}
-                <button
-                  onClick={(e) => { e.stopPropagation(); onWishlist(item.id); }}
-                  style={{
-                    position: "absolute", top: 12, right: 12,
-                    background: "rgba(13,17,23,0.65)", backdropFilter: "blur(8px)",
-                    border: "none", borderRadius: "50%", width: 34, height: 34,
-                    display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-                  }}
-                >
-                  <Heart size={15} fill={isWished ? "#EF4444" : "transparent"} color={isWished ? "#EF4444" : "#fff"} />
-                </button>
-              </div>
+                  {/* Save Badge */}
+                  <span style={{
+                    position: "absolute", top: 12, left: 12,
+                    background: "rgba(16,185,129,0.92)", color: "#fff",
+                    fontSize: 10, fontWeight: 800, padding: "4px 8px", borderRadius: 6,
+                  }}>
+                    SAVE ₹{saving.toLocaleString("en-IN")}
+                  </span>
 
-              {/* Body */}
-              <div style={{ padding: 20, display: "flex", flexDirection: "column", flex: 1 }}>
-                <span style={{ color: COLORS.green, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
-                  {item.brand} • {item.category}
-                </span>
-                
-                <h3 style={{
-                  fontFamily: "'Sora', sans-serif", fontSize: 15, fontWeight: 700,
-                  color: COLORS.text, margin: "0 0 6px", lineHeight: 1.4,
-                  height: 42, overflow: "hidden", textOverflow: "ellipsis",
-                }}>
-                  {item.name}
-                </h3>
-
-                <p style={{ color: COLORS.muted, fontSize: 12, margin: "0 0 16px", height: 18, overflow: "hidden" }}>
-                  {item.specs}
-                </p>
-
-                {/* Rating */}
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 18 }}>
-                  <div style={{ display: "flex", gap: 2 }}>
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <Star key={s} size={11} fill={s <= Math.floor(item.rating) ? "#FBBF24" : "transparent"} color={s <= Math.floor(item.rating) ? "#FBBF24" : "rgba(255,255,255,0.15)"} />
-                    ))}
-                  </div>
-                  <span style={{ color: COLORS.text, fontWeight: 700, fontSize: 12 }}>{item.rating}</span>
-                </div>
-
-                {/* Price & Add to Cart */}
-                <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: COLORS.text }}>
-                      ₹{item.price.toLocaleString("en-IN")}
-                    </div>
-                    <div style={{ fontSize: 12, color: COLORS.muted, textDecoration: "line-through" }}>
-                      ₹{item.mrp.toLocaleString("en-IN")}
-                    </div>
-                  </div>
-
+                  {/* Wishlist Button */}
                   <button
-                    onClick={() => onAddToCart({ ...item, specs: item.specs, warranty: "6 Months" })}
+                    onClick={(e) => { e.stopPropagation(); onWishlist(item.id); }}
                     style={{
-                      background: "linear-gradient(135deg, #3B82F6, #38BDF8)",
-                      color: "#000", border: "none", borderRadius: 10,
-                      padding: "8px 16px", fontSize: 12, fontWeight: 800,
-                      cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
-                      fontFamily: "'Sora', sans-serif",
+                      position: "absolute", top: 12, right: 12,
+                      background: "rgba(13,17,23,0.65)", backdropFilter: "blur(8px)",
+                      border: "none", borderRadius: "50%", width: 34, height: 34,
+                      display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
                     }}
                   >
-                    <ShoppingCart size={12} /> Add
+                    <Heart size={15} fill={isWished ? "#EF4444" : "transparent"} color={isWished ? "#EF4444" : "#fff"} />
                   </button>
                 </div>
+
+                {/* Body */}
+                <div style={{ padding: 20, display: "flex", flexDirection: "column", flex: 1 }}>
+                  <span style={{ color: COLORS.green, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
+                    {item.brand} • {item.category}
+                  </span>
+
+                  <h3 style={{
+                    fontFamily: "'Sora', sans-serif", fontSize: 15, fontWeight: 700,
+                    color: COLORS.text, margin: "0 0 6px", lineHeight: 1.4,
+                    height: 42, overflow: "hidden", textOverflow: "ellipsis",
+                  }}>
+                    {item.name}
+                  </h3>
+
+                  <p style={{ color: COLORS.muted, fontSize: 12, margin: "0 0 16px", height: 18, overflow: "hidden" }}>
+                    {item.specs}
+                  </p>
+
+                  {/* Rating */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 18 }}>
+                    <div style={{ display: "flex", gap: 2 }}>
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star key={s} size={11} fill={s <= Math.floor(item.rating) ? "#FBBF24" : "transparent"} color={s <= Math.floor(item.rating) ? "#FBBF24" : "rgba(255,255,255,0.15)"} />
+                      ))}
+                    </div>
+                    <span style={{ color: COLORS.text, fontWeight: 700, fontSize: 12 }}>{item.rating}</span>
+                  </div>
+
+                  {/* Price & Add to Cart */}
+                  <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: COLORS.text }}>
+                        ₹{item.price.toLocaleString("en-IN")}
+                      </div>
+                      <div style={{ fontSize: 12, color: COLORS.muted, textDecoration: "line-through" }}>
+                        ₹{item.mrp.toLocaleString("en-IN")}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => onAddToCart({ ...item, specs: item.specs, warranty: "6 Months" })}
+                      style={{
+                        background: "linear-gradient(135deg, #3B82F6, #38BDF8)",
+                        color: "#000", border: "none", borderRadius: 10,
+                        padding: "8px 16px", fontSize: 12, fontWeight: 800,
+                        cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
+                        fontFamily: "'Sora', sans-serif",
+                      }}
+                    >
+                      <ShoppingCart size={12} /> Add
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

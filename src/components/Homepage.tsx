@@ -210,8 +210,9 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
       <TrustStrip />
 
       {/* ── Offers & Contests Section ── */}
-      <div id="offers-section">
-        {section(
+      {banners && banners.length > 0 && (
+        <div id="offers-section">
+          {section(
           <>
             <SectionHeader eyebrow="Contests &amp; Rewards" title="Offers &amp; Contests" subtitle="Join our community writing challenge and unlock exclusive savings" />
 
@@ -308,7 +309,8 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
             </div>
           </>
           , true)}
-      </div>
+        </div>
+      )}
 
       {/* ── Categories ──────────────────────────── */}
       {section(
@@ -322,7 +324,17 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
             {categories.map((cat, i) => (
               <div
                 key={cat.name}
-                onClick={() => setPage(cat.name === "Accessories" ? "accessories" : "listing")}
+                onClick={() => {
+                  if (cat.name === "Accessories") {
+                    setPage("accessories");
+                  } else if (cat.name === "Business Laptops") {
+                    setPage("listing:Business");
+                  } else if (cat.name === "Gaming Laptops") {
+                    setPage("listing:Gaming");
+                  } else {
+                    setPage(`listing:${cat.name}`);
+                  }
+                }}
                 style={{
                   background: COLORS.cardBg,
                   border: `1px solid ${COLORS.cardBorder}`,

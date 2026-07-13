@@ -292,7 +292,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                     type="tel"
                     value={addressDetails.phone}
                     onChange={(e) => setAddressDetails({ ...addressDetails, phone: e.target.value })}
-                    placeholder="e.g. +91 99999 99999"
+                    placeholder="e.g. +91 97503 31313"
                     style={inputStyle}
                   />
                 </div>
@@ -505,9 +505,9 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                           {/* Progress Line Active Fill */}
                           <div style={{
                             position: "absolute", top: 12, left: "10%", height: 2,
-                            width: (o.status === "Completed" || o.status === "Delivered") ? "80%" 
-                                  : o.status === "Shipped" ? "53%" 
-                                  : "26%",
+                            width: (o.status === "Completed" || o.status === "Delivered") ? "80%"
+                              : o.status === "Shipped" ? "53%"
+                                : "26%",
                             background: COLORS.green, zIndex: 0,
                             transition: "width 0.4s ease"
                           }} />

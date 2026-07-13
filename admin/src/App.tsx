@@ -48,6 +48,7 @@ interface Product {
   storage: string;
   badge: "Best Seller" | "Gaming" | "Value Deal" | "Top Rated";
   stock?: number;
+  deviceType?: "Laptop" | "Desktop";
 }
 
 interface AccessoryProduct {
@@ -209,8 +210,10 @@ export default function App() {
   const [productForm, setProductForm] = useState<Partial<Product>>({
     name: '', brand: 'Dell', category: 'Business', price: 0, mrp: 0,
     condition: 'Refurbished', grade: 'A+', warranty: '1 Year Warranty',
-    specs: '', img: '', processor: '', ram: '8GB', storage: '256GB SSD', badge: 'Top Rated', stock: 1
+    specs: '', img: '', processor: '', ram: '8GB', storage: '256GB SSD', badge: 'Top Rated', stock: 1,
+    deviceType: 'Laptop'
   });
+  const [galleryLinksText, setGalleryLinksText] = useState("");
 
   // Form states - Accessory
   const [accessoryForm, setAccessoryForm] = useState<Partial<AccessoryProduct>>({
@@ -232,13 +235,12 @@ export default function App() {
         snapshot.forEach((doc) => {
           list.push({ id: doc.id as any, ...doc.data() } as Product);
         });
-        // Use Firestore data if available, else fall back to defaults
-        setProducts(list.length > 0 ? list : DEFAULT_PRODUCTS);
+        setProducts(list);
       },
       (error) => {
         console.error("[Firestore] Products read failed:", error.code, error.message);
         triggerAlert('danger', `Firebase Error (products): ${error.code} — Check Firestore Security Rules.`);
-        setProducts(DEFAULT_PRODUCTS);
+        setProducts([]);
       }
     );
 
@@ -250,12 +252,12 @@ export default function App() {
         snapshot.forEach((doc) => {
           list.push({ id: doc.id as any, ...doc.data() } as AccessoryProduct);
         });
-        setAccessories(list.length > 0 ? list : DEFAULT_ACCESSORIES);
+        setAccessories(list);
       },
       (error) => {
         console.error("[Firestore] Accessories read failed:", error.code, error.message);
         triggerAlert('danger', `Firebase Error (accessories): ${error.code} — Check Firestore Security Rules.`);
-        setAccessories(DEFAULT_ACCESSORIES);
+        setAccessories([]);
       }
     );
 
@@ -267,12 +269,12 @@ export default function App() {
         snapshot.forEach((doc) => {
           list.push(doc.data() as Banner);
         });
-        setBanners(list.length > 0 ? list : DEFAULT_BANNERS);
+        setBanners(list);
       },
       (error) => {
         console.error("[Firestore] Banners read failed:", error.code, error.message);
         triggerAlert('danger', `Firebase Error (banners): ${error.code} — Check Firestore Security Rules.`);
-        setBanners(DEFAULT_BANNERS);
+        setBanners([]);
       }
     );
 
@@ -309,6 +311,7 @@ export default function App() {
         images: newImages,
         img: prev.img || newImages[0] || ''
       }));
+      setGalleryLinksText(newImages.join(', '));
       triggerAlert('success', `Uploaded ${urls.length} images successfully to Cloudinary.`);
     } catch (err) {
       console.error("Error uploading images: ", err);
@@ -324,6 +327,7 @@ export default function App() {
       images: newImages,
       img: prev.img === currentImages[idx] ? (newImages[0] || '') : prev.img
     }));
+    setGalleryLinksText(newImages.join(', '));
   };
 
   const handleAccessoryImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -339,6 +343,27 @@ export default function App() {
     } catch (err) {
       console.error(err);
       triggerAlert('danger', 'Error uploading accessory image.');
+    }
+  };
+
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+
+  const handleBannerImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingBanner(true);
+    try {
+      const url = await uploadProductImage(files[0]);
+      setBannerForm(prev => ({
+        ...prev,
+        src: url
+      }));
+      triggerAlert('success', 'Slide background image uploaded successfully.');
+    } catch (err) {
+      console.error(err);
+      triggerAlert('danger', 'Error uploading slide image.');
+    } finally {
+      setUploadingBanner(false);
     }
   };
 
@@ -408,9 +433,10 @@ export default function App() {
 
     const pData: Product = {
       id: docId as any,
-      name: productForm.name || 'Generic Laptop',
+      name: productForm.name || 'Generic Product',
       brand: productForm.brand || 'Dell',
       category: productForm.category || 'Business',
+      deviceType: productForm.deviceType || 'Laptop',
       price,
       mrp,
       discount,
@@ -448,6 +474,7 @@ export default function App() {
 
   const handleProductEdit = (item: Product) => {
     setProductForm({ ...item });
+    setGalleryLinksText(item.images?.join(', ') || '');
     setProductModal({ open: true, mode: 'edit', item });
   };
 
@@ -499,6 +526,17 @@ export default function App() {
     } catch (err) {
       console.error("Error saving tracking info:", err);
       triggerAlert('danger', "Failed to save tracking details.");
+    }
+  };
+
+  const handleOrderDelete = async (orderId: string) => {
+    if (!window.confirm(`Are you sure you want to delete Order #${orderId} permanently?`)) return;
+    try {
+      await deleteDoc(doc(db, "orders", orderId));
+      triggerAlert('success', `Order #${orderId} deleted successfully.`);
+    } catch (err) {
+      console.error(err);
+      triggerAlert('danger', `Error deleting Order #${orderId}.`);
     }
   };
 
@@ -898,8 +936,10 @@ export default function App() {
                   setProductForm({
                     name: '', brand: 'Dell', category: 'Business', price: 0, mrp: 0,
                     condition: 'Refurbished', grade: 'A+', warranty: '1 Year Warranty',
-                    specs: '', img: '', processor: '', ram: '8GB', storage: '256GB SSD', badge: 'Top Rated'
+                    specs: '', img: '', processor: '', ram: '8GB', storage: '256GB SSD', badge: 'Top Rated',
+                    deviceType: 'Laptop'
                   });
+                  setGalleryLinksText('');
                   setProductModal({ open: true, mode: 'add' });
                 }}
                 style={{
@@ -1245,6 +1285,35 @@ export default function App() {
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          {((ord.status || 'Pending') === 'Completed' || (ord.status || 'Pending') === 'Cancelled') && (
+                            <button
+                              onClick={() => handleOrderDelete(ord.orderId)}
+                              style={{
+                                background: 'rgba(239, 68, 68, 0.1)',
+                                border: '1px solid rgba(239, 68, 68, 0.25)',
+                                color: '#EF4444',
+                                borderRadius: 10,
+                                padding: '6px 12px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                fontSize: 11,
+                                fontWeight: 700,
+                                fontFamily: 'Sora'
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                              }}
+                            >
+                              <Trash2 size={13} />
+                              Delete
+                            </button>
+                          )}
                           <span style={{ color: '#8B9BBE', fontSize: 12, fontWeight: 650 }}>Status:</span>
                           {(() => {
                             const currentStatus = ord.status || 'Pending';
@@ -1507,12 +1576,34 @@ export default function App() {
               </div>
 
               <div>
+                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Device Type</label>
+                <select
+                  value={productForm.deviceType || 'Laptop'}
+                  onChange={e => {
+                    const type = e.target.value as any;
+                    setProductForm({
+                      ...productForm,
+                      deviceType: type,
+                      category: type === 'Desktop' ? 'Desktops' : 'Business'
+                    });
+                  }}
+                  className="form-input" style={{ background: '#0d1117' }}
+                >
+                  <option value="Laptop">Laptop</option>
+                  <option value="Desktop">Desktop</option>
+                </select>
+              </div>
+
+              <div>
                 <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Category</label>
                 <select
                   value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })}
                   className="form-input" style={{ background: '#0d1117' }}
                 >
-                  {['Business', 'Gaming', 'MacBooks', 'Ultrabooks', 'Workstations'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  {productForm.deviceType === 'Desktop'
+                    ? ['Desktops', 'Workstations', 'Gaming'].map(opt => <option key={opt} value={opt}>{opt}</option>)
+                    : ['Business', 'Gaming', 'MacBooks', 'Ultrabooks', 'Workstations'].map(opt => <option key={opt} value={opt}>{opt}</option>)
+                  }
                 </select>
               </div>
 
@@ -1780,6 +1871,30 @@ export default function App() {
                     className="form-input"
                   />
                 </div>
+
+                <div style={{ marginTop: 10 }}>
+                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter gallery image URLs (comma-separated):</label>
+                  <textarea
+                    placeholder="Paste direct image links separated by commas... e.g. https://link1.com, https://link2.com"
+                    value={galleryLinksText} 
+                    onChange={e => {
+                      const text = e.target.value;
+                      setGalleryLinksText(text);
+                      
+                      const urls = text.split(',')
+                        .map(url => url.trim())
+                        .filter(url => url.length > 0);
+                        
+                      setProductForm(prev => ({ 
+                        ...prev, 
+                        images: urls,
+                        img: prev.img ? prev.img : (urls[0] || '')
+                      }));
+                    }}
+                    className="form-input"
+                    style={{ minHeight: 60, resize: 'vertical', background: '#0d1117', color: '#fff', border: '1px solid rgba(56,189,248,0.15)', borderRadius: 10, padding: 10 }}
+                  />
+                </div>
               </div>
 
               <div style={{ gridColumn: 'span 2', display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
@@ -1810,7 +1925,8 @@ export default function App() {
           <div className="fade-in" style={{
             background: '#131a24', border: '1px solid rgba(56,189,248,0.15)',
             borderRadius: 24, width: '100%', maxWidth: 550, padding: 32,
-            boxShadow: '0 24px 60px rgba(0,0,0,0.6)'
+            boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+            maxHeight: '90vh', overflowY: 'auto'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h2 style={{ fontFamily: 'Sora', fontSize: 22, color: '#fff', fontWeight: 800 }}>
@@ -1974,7 +2090,8 @@ export default function App() {
           <div className="fade-in" style={{
             background: '#131a24', border: '1px solid rgba(56,189,248,0.15)',
             borderRadius: 24, width: '100%', maxWidth: 550, padding: 32,
-            boxShadow: '0 24px 60px rgba(0,0,0,0.6)'
+            boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+            maxHeight: '90vh', overflowY: 'auto'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h2 style={{ fontFamily: 'Sora', fontSize: 22, color: '#fff', fontWeight: 800 }}>
@@ -2026,12 +2143,61 @@ export default function App() {
               </div>
 
               <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Slide Poster Image URL</label>
-                <input
-                  type="text" placeholder="Paste slide background image link..."
-                  value={bannerForm.src} onChange={e => setBannerForm({ ...bannerForm, src: e.target.value })}
-                  className="form-input"
-                />
+                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Slide Poster Image</label>
+                
+                {bannerForm.src && (
+                  <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
+                    <img src={bannerForm.src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                )}
+
+                <div
+                  onClick={() => { if (!uploadingBanner) document.getElementById('banner-file-input')?.click(); }}
+                  style={{
+                    background: 'rgba(26, 34, 53, 0.4)',
+                    border: '2px dashed rgba(56,189,248,0.25)',
+                    borderRadius: 16,
+                    padding: '24px 20px',
+                    textAlign: 'center',
+                    cursor: uploadingBanner ? 'wait' : 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={e => {
+                    if (!uploadingBanner) {
+                      e.currentTarget.style.borderColor = '#38BDF8';
+                      e.currentTarget.style.background = 'rgba(56,189,248,0.04)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!uploadingBanner) {
+                      e.currentTarget.style.borderColor = 'rgba(56,189,248,0.25)';
+                      e.currentTarget.style.background = 'rgba(26, 34, 53, 0.4)';
+                    }
+                  }}
+                >
+                  <ImageIcon size={28} color="#38BDF8" style={{ marginBottom: 8 }} />
+                  <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
+                    {uploadingBanner ? 'Uploading image...' : 'Browse local computer files'}
+                  </div>
+                  <div style={{ color: '#8B9BBE', fontSize: 11 }}>Choose 1 image (Recommended Ratio: 3:1)</div>
+                  <input
+                    id="banner-file-input"
+                    type="file"
+                    accept="image/*"
+                    disabled={uploadingBanner}
+                    onChange={handleBannerImageUpload}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+
+                <div style={{ marginTop: 8 }}>
+                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter image URL:</label>
+                  <input
+                    type="text" placeholder="Paste direct image link..."
+                    value={bannerForm.src || ''} onChange={e => setBannerForm({ ...bannerForm, src: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>

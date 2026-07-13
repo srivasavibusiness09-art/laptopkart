@@ -25,7 +25,10 @@ export default function Footer({ setPage }: FooterProps) {
 
   const getFooterLinkTarget = (link: string): string => {
     const l = link.toLowerCase().trim();
-    if (l === "laptops" || l === "desktops" || l === "macbooks" || l === "gaming") return "listing";
+    if (l === "laptops") return "listing:Laptops";
+    if (l === "desktops") return "listing:Desktops";
+    if (l === "macbooks") return "listing:MacBooks";
+    if (l === "gaming") return "listing:Gaming";
     if (l === "accessories") return "accessories";
     if (l === "about us" || l === "careers" || l === "press" || l === "partners") return "about";
     if (l === "blog") return "blog";
@@ -97,8 +100,8 @@ export default function Footer({ setPage }: FooterProps) {
             {/* Contact info */}
             <div style={{ marginBottom: 20 }}>
               {[
-                { icon: <Phone size={12} color={COLORS.green} />, text: "+91 99999 99999" },
-                { icon: <Mail size={12} color={COLORS.green} />, text: "support@laptopkart.com" },
+                { icon: <Phone size={12} color={COLORS.green} />, text: "+91 97503 31313" },
+                { icon: <Mail size={12} color={COLORS.green} />, text: "srivasavibusiness09@gmail.com" },
                 { icon: <Clock size={12} color={COLORS.green} />, text: "Mon–Sat: 10AM – 7PM" },
               ].map(({ icon, text }) => (
                 <div key={text} style={{
@@ -204,8 +207,13 @@ export default function Footer({ setPage }: FooterProps) {
           alignItems: "center",
           flexWrap: "wrap", gap: 12,
         }}>
-          <div style={{ color: COLORS.muted, fontSize: 12 }}>
-            © 2024 Laptopkart. All Rights Reserved.
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ color: COLORS.muted, fontSize: 12 }}>
+              © 2026 Laptopkart. All Rights Reserved.
+            </div>
+            <div style={{ color: COLORS.muted, fontSize: 11, fontWeight: 500 }}>
+              Developed by D²Dev
+            </div>
           </div>
           {!isMobile && (
             <div style={{ display: "flex", gap: 20 }}>

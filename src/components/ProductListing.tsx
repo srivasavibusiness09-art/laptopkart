@@ -13,6 +13,7 @@ interface ProductListingProps {
   onAddToCart: (p: Product) => void;
   onWishlist: (id: number) => void;
   wishlist: number[];
+  initialCategory?: string;
 }
 
 const filterConfig = [
@@ -33,7 +34,7 @@ const sortOptions = [
   { label: "Biggest Discount", value: "discount" },
 ];
 
-export default function ProductListing({ products, onViewProduct, onAddToCart, onWishlist, wishlist }: ProductListingProps) {
+export default function ProductListing({ products, onViewProduct, onAddToCart, onWishlist, wishlist, initialCategory = "All" }: ProductListingProps) {
   const [filters, setFilters] = useState<Filters>({ brand: "", ram: "", grade: "", condition: "", priceMax: 200000 });
   const [sort, setSort]       = useState("popular");
   const [search, setSearch]   = useState("");
@@ -43,7 +44,15 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
   const setFilter = (k: FilterKey, v: string) =>
     setFilters((f) => ({ ...f, [k]: f[k] === v ? "" : v }));
 
-  const filtered = products
+  const categoryFilteredProducts = products.filter((p) => {
+    const isDesktop = p.deviceType === "Desktop" || p.category.toLowerCase().trim() === "desktops";
+    if (!initialCategory || initialCategory === "All" || initialCategory === "Offers") return true;
+    if (initialCategory === "Laptops") return !isDesktop;
+    if (initialCategory === "Desktops") return isDesktop;
+    return p.category.toLowerCase().trim() === initialCategory.toLowerCase().trim();
+  });
+
+  const filtered = categoryFilteredProducts
     .filter((p) =>
       (!filters.brand || p.brand === filters.brand) &&
       (!filters.ram   || p.ram   === filters.ram)   &&
@@ -144,7 +153,7 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
             color: COLORS.text, letterSpacing: "-0.03em",
             margin: "0 0 20px",
           }}>
-            All Laptops
+            {initialCategory === "Desktops" ? "All Desktops" : (initialCategory && initialCategory !== "All" && initialCategory !== "Offers" && initialCategory !== "Laptops") ? `${initialCategory} Laptops` : "All Laptops"}
             <span style={{ color: COLORS.muted, fontWeight: 400, fontSize: "0.5em", marginLeft: 12 }}>
               {filtered.length} products
             </span>
@@ -160,7 +169,7 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search laptops, specs…"
+                placeholder={`Search ${initialCategory === "Desktops" ? "desktops" : "laptops"}, specs…`}
                 style={{
                   width: "100%", background: COLORS.cardBg,
                   border: `1px solid ${COLORS.cardBorder}`,

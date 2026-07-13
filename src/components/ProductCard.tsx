@@ -18,7 +18,7 @@ interface Props {
 function StarRating({ rating }: { rating: number }) {
   return (
     <div style={{ display: "flex", gap: 2 }}>
-      {[1,2,3,4,5].map((i) => (
+      {[1, 2, 3, 4, 5].map((i) => (
         <Star key={i} size={11}
           fill={i <= Math.floor(rating) ? "#F59E0B" : "transparent"}
           color={i <= Math.floor(rating) ? "#F59E0B" : "rgba(255,255,255,0.15)"} />
@@ -29,7 +29,7 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function ProductCard({ product, onView, onAddToCart, onWishlist, wishlist }: Props) {
   const [hovered, setHovered] = useState(false);
-  const [adding, setAdding]   = useState(false);
+  const [adding, setAdding] = useState(false);
   const isWished = wishlist.includes(product.id);
   const isMobile = useIsMobile();
 
@@ -46,13 +46,14 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
 
   const badgeColors: Record<string, string> = {
     "Best Seller": "#EF4444",
-    "Gaming":      "#8B5CF6",
-    "Top Rated":   "#10B981",
-    "Value Deal":  "#F59E0B",
+    "Gaming": "#8B5CF6",
+    "Top Rated": "#10B981",
+    "Value Deal": "#F59E0B",
   };
 
   return (
     <div
+      onClick={() => onView(product)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -103,7 +104,6 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
 
       {/* Image */}
       <div
-        onClick={() => onView(product)}
         style={{
           height: isMobile ? 110 : 190, overflow: "hidden", position: "relative",
           background: `linear-gradient(135deg, ${COLORS.background} 0%, ${COLORS.darkBg} 100%)`,

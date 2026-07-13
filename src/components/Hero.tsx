@@ -267,7 +267,7 @@ export default function Hero({ setPage }: HeroProps) {
                 border: "1px solid rgba(245,158,11,0.25)",
               }}>
                 <div style={{ color: "#F59E0B", fontSize: 12, fontWeight: 700 }}>★ 4.8 / 5 Rating</div>
-                <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>50,000+ Reviews</div>
+                <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>1000+ Reviews</div>
               </div>
             </div>
           </div>

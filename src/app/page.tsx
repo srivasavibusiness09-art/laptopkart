@@ -36,6 +36,8 @@ export default function App() {
   /* Show landing intro first; after user enters store, show main app */
   const [showLanding, setShowLanding] = useState(true);
   const [page, setPage] = useState("home");
+  const [listingCategory, setListingCategory] = useState<string>("All");
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<number[]>([]);
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
@@ -79,21 +81,14 @@ export default function App() {
         snapshot.forEach((doc) => {
           list.push({ id: doc.id as any, ...doc.data() } as Product);
         });
-        // Always use Firestore list — if empty show nothing (not stale static data)
-        if (list.length > 0) {
-          setProductsList(list);
-          console.log(`[Firestore] ✅ Products loaded: ${list.length} items`);
-        } else {
-          // Only fall back to static on very first load before any admin data exists
-          if (!firestoreReady) setProductsList(products);
-          console.warn("[Firestore] Products collection is empty — showing static defaults.");
-        }
+        setProductsList(list);
+        console.log(`[Firestore] ✅ Products loaded: ${list.length} items`);
         productsReady = true;
         checkAllReady();
       },
       (error) => {
         console.error("[Firestore] ❌ Products read failed:", error.code, error.message);
-        setProductsList(products); // safe static fallback
+        setProductsList(products); // safe static fallback on error
         productsReady = true;
         checkAllReady();
       }
@@ -108,19 +103,14 @@ export default function App() {
         snapshot.forEach((doc) => {
           list.push({ id: doc.id as any, ...doc.data() });
         });
-        if (list.length > 0) {
-          setAccessories(list);
-          console.log(`[Firestore] ✅ Accessories loaded: ${list.length} items`);
-        } else {
-          if (!firestoreReady) setAccessories(accessoriesList);
-          console.warn("[Firestore] Accessories collection is empty — showing static defaults.");
-        }
+        setAccessories(list);
+        console.log(`[Firestore] ✅ Accessories loaded: ${list.length} items`);
         accessoriesReady = true;
         checkAllReady();
       },
       (error) => {
         console.error("[Firestore] ❌ Accessories read failed:", error.code, error.message);
-        setAccessories(accessoriesList);
+        setAccessories(accessoriesList); // safe static fallback on error
         accessoriesReady = true;
         checkAllReady();
       }
@@ -135,19 +125,14 @@ export default function App() {
         snapshot.forEach((doc) => {
           list.push(doc.data());
         });
-        if (list.length > 0) {
-          setBanners(list);
-          console.log(`[Firestore] ✅ Banners loaded: ${list.length} items`);
-        } else {
-          if (!firestoreReady) setBanners(initialBanners);
-          console.warn("[Firestore] Banners collection is empty — showing static defaults.");
-        }
+        setBanners(list);
+        console.log(`[Firestore] ✅ Banners loaded: ${list.length} items`);
         bannersReady = true;
         checkAllReady();
       },
       (error) => {
         console.error("[Firestore] ❌ Banners read failed:", error.code, error.message);
-        setBanners(initialBanners);
+        setBanners(initialBanners); // safe static fallback on error
         bannersReady = true;
         checkAllReady();
       }
@@ -180,11 +165,22 @@ export default function App() {
     };
   }, []);
 
-  const handleNavigate = (newPage: string) => {
-    setPage(newPage);
+  const handleNavigate = (pageStr: string) => {
+    let targetPage = pageStr;
+    if (pageStr.startsWith("listing:")) {
+      const cat = pageStr.split(":")[1];
+      setListingCategory(cat);
+      targetPage = "listing";
+    } else {
+      if (pageStr === "listing") {
+        setListingCategory("All");
+      }
+    }
+
+    setPage(targetPage);
     if (typeof window !== "undefined") {
-      if (window.history.state?.page !== newPage) {
-        window.history.pushState({ page: newPage }, "", `#${newPage}`);
+      if (window.history.state?.page !== targetPage) {
+        window.history.pushState({ page: targetPage }, "", `#${targetPage}`);
       }
     }
   };
@@ -424,6 +420,7 @@ export default function App() {
           onAddToCart={handleAddToCart}
           onWishlist={handleWishlist}
           wishlist={wishlist}
+          initialCategory={listingCategory}
         />
       )}
       {page === "product" && (
@@ -452,11 +449,11 @@ export default function App() {
           onWishlist={handleWishlist}
         />
       )}
-      {page === "compare" && <ComparePage />}
+      {page === "compare" && <ComparePage productsList={productsList} />}
       {page === "about" && <AboutPage />}
       {page === "blog" && <BlogPage user={user} setPage={handleNavigate} />}
       {page === "contact" && <ContactPage />}
-      {page === "login" && <LoginPage setPage={handleNavigate} onLogin={handleLogin} />}
+      {page === "login" && <LoginPage setPage={handleNavigate} onLogin={handleLogin} triggerAlert={triggerStoreAlert} />}
       {page === "profile" && user && (
         <ProfilePage user={user} setUser={setUser} setPage={handleNavigate} triggerAlert={triggerStoreAlert} />
       )}

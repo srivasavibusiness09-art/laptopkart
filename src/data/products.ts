@@ -38,6 +38,7 @@ export type Product = {
   storage: string;
   badge: "Best Seller" | "Gaming" | "Value Deal" | "Top Rated";
   stock?: number;
+  deviceType?: "Laptop" | "Desktop";
 };
 
 export const products: Product[] = [

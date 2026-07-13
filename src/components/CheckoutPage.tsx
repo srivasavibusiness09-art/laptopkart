@@ -31,17 +31,17 @@ interface CheckoutPageProps {
 const STEPS = ["Address", "Delivery", "Payment", "Confirm"] as const;
 
 const DELIVERY_OPTIONS = [
-  { name: "Standard (Free)", time: "3-5 days", price: "₹0",  icon: <Truck size={18} /> },
-  { name: "Express",         time: "1-2 days", price: "₹199", icon: <Zap size={18} /> },
-  { name: "Same Day",        time: "Today",    price: "₹399", icon: <MapPin size={18} /> },
+  { name: "Standard (Free)", time: "3-5 days", price: "₹0", icon: <Truck size={18} /> },
+  { name: "Express", time: "1-2 days", price: "₹199", icon: <Zap size={18} /> },
+  { name: "Same Day", time: "Today", price: "₹399", icon: <MapPin size={18} /> },
 ];
 
 const PAYMENT_OPTIONS = [
-  { val: "upi",        label: "UPI / PhonePe / GPay", icon: <Smartphone size={20} /> },
-  { val: "card",       label: "Credit / Debit Card",  icon: <CreditCard size={20} /> },
-  { val: "netbanking", label: "Net Banking",           icon: <Building2 size={20} /> },
-  { val: "emi",        label: "EMI (No Cost)",         icon: <CalendarDays size={20} /> },
-  { val: "cod",        label: "Cash on Delivery",      icon: <Banknote size={20} /> },
+  { val: "upi", label: "UPI / PhonePe / GPay", icon: <Smartphone size={20} /> },
+  { val: "card", label: "Credit / Debit Card", icon: <CreditCard size={20} /> },
+  { val: "netbanking", label: "Net Banking", icon: <Building2 size={20} /> },
+  { val: "emi", label: "EMI (No Cost)", icon: <CalendarDays size={20} /> },
+  { val: "cod", label: "Cash on Delivery", icon: <Banknote size={20} /> },
 ];
 
 interface Address { name: string; phone: string; pincode: string; city: string; state: string; street: string }
@@ -69,11 +69,11 @@ const loadRazorpayScript = () => {
 };
 
 export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutPageProps) {
-  const [step, setStep]       = useState(0);
+  const [step, setStep] = useState(0);
   const [address, setAddress] = useState<Address>({ name: "", phone: "", pincode: "", city: "", state: "", street: "" });
   const [payment, setPayment] = useState("upi");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [orderId] = useState(() =>
+  const [orderId, setOrderId] = useState(() =>
     Math.floor(100000 + Math.random() * 900000).toString()
   );
   const total = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
@@ -102,15 +102,40 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
       .catch((err) => console.error("Error pre-filling address details:", err));
   }, [user]);
 
+  const ensureUniqueOrderId = async (currentId: string): Promise<string> => {
+    let checkId = currentId;
+    let attempts = 0;
+    while (attempts < 100) {
+      const docRef = doc(db, "orders", checkId);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        setOrderId(checkId);
+        return checkId;
+      }
+      checkId = Math.floor(100000 + Math.random() * 900000).toString();
+      attempts++;
+    }
+    throw new Error("Failed to generate a unique Order ID.");
+  };
+
   const handleNext = async () => {
     // If they choose payment, launch Razorpay Checkout flow
     if (step === 2) {
+      setIsProcessing(true);
+      let finalOrderId = orderId;
+      try {
+        finalOrderId = await ensureUniqueOrderId(orderId);
+      } catch (err) {
+        alert("Unable to generate a unique Order ID. Please try again.");
+        setIsProcessing(false);
+        return;
+      }
+
       // Cash on delivery bypass
       if (payment === "cod") {
-        setIsProcessing(true);
         try {
           const newOrder = {
-            orderId,
+            orderId: finalOrderId,
             createdAt: new Date().toISOString(),
             items: cart.map(item => ({
               id: item.id,
@@ -126,7 +151,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
             email: user.email,
             uid: user.uid
           };
-          const orderRef = doc(db, "orders", orderId);
+          const orderRef = doc(db, "orders", finalOrderId);
           await setDoc(orderRef, newOrder);
 
           // Update default address details inside users doc for subsequent orders
@@ -183,7 +208,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
             try {
               // Write paid order directly to Firestore
               const newOrder = {
-                orderId,
+                orderId: finalOrderId,
                 createdAt: new Date().toISOString(),
                 items: cart.map(item => ({
                   id: item.id,
@@ -203,7 +228,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
                 razorpaySignature: response.razorpay_signature || "sig_mock_123"
               };
 
-              const orderRef = doc(db, "orders", orderId);
+              const orderRef = doc(db, "orders", finalOrderId);
               await setDoc(orderRef, newOrder);
 
               // Update default address details inside users doc for subsequent orders
@@ -227,7 +252,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
           prefill: {
             name: address.name,
             contact: address.phone,
-            email: "support@laptopkart.com"
+            email: "srivasavibusiness09@gmail.com"
           },
           theme: {
             color: "#10b981"
@@ -245,7 +270,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
         console.warn("Razorpay API not active. Simulating sandbox checkout.", err);
         try {
           const newOrder = {
-            orderId,
+            orderId: finalOrderId,
             createdAt: new Date().toISOString(),
             items: cart.map(item => ({
               id: item.id,
@@ -264,7 +289,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
             razorpayPaymentId: "pay_mock_" + Math.random().toString(36).substring(2, 10)
           };
 
-          const orderRef = doc(db, "orders", orderId);
+          const orderRef = doc(db, "orders", finalOrderId);
           await setDoc(orderRef, newOrder);
 
           // Update default address details inside users doc for subsequent orders
@@ -333,7 +358,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
                 <MapPin size={20} color={COLORS.green} /> Delivery Address
               </h2>
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
-                {([ ["Full Name", "name", "text"], ["Phone", "phone", "tel"], ["Pincode", "pincode", "text"], ["City", "city", "text"], ["State", "state", "text"] ] as [string, keyof Address, string][]).map(([label, key, type]) => (
+                {([["Full Name", "name", "text"], ["Phone", "phone", "tel"], ["Pincode", "pincode", "text"], ["City", "city", "text"], ["State", "state", "text"]] as [string, keyof Address, string][]).map(([label, key, type]) => (
                   <div key={key}>
                     <label style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6, display: "block" }}>{label}</label>
                     <input type={type} value={address[key]} onChange={(e) => setAddress((a) => ({ ...a, [key]: e.target.value }))} style={inputStyle} />
@@ -403,8 +428,8 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
 
           {/* Nav buttons */}
           {step < 3 && (
-             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32, gap: 10, flexDirection: isMobile ? "column-reverse" : "row" }}>
-               {step > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32, gap: 10, flexDirection: isMobile ? "column-reverse" : "row" }}>
+              {step > 0 && (
                 <button onClick={() => setStep((s) => s - 1)} style={{ background: "transparent", color: COLORS.muted, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 24px", cursor: "pointer", fontSize: 14, width: isMobile ? "100%" : "auto" }}>
                   ← Back
                 </button>
