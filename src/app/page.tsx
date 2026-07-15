@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { COLORS, products, accessoriesList, initialBanners } from "@/data/products";
 import type { Product } from "@/data/products";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 import LandingPage from "@/components/LandingPage";
 import Navbar from "@/components/Navbar";
@@ -209,6 +211,14 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [pendingAction, setPendingAction] = useState<any>(null);
   const [statusNotification, setStatusNotification] = useState<any>(null);
+
+  // Sync and persist Firebase Auth session state on mount
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser || null);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Real-time listener for order status updates to show floating toast notifications to client
   useEffect(() => {

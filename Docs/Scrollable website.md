@@ -418,7 +418,7 @@ Use premium floating glass cards.
 
 50,000+ Devices Sold
 
-72+ Quality Checks
+Quality Checks
 
 1 Year Warranty
 

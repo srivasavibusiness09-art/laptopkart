@@ -40,7 +40,7 @@ const PAYMENT_OPTIONS = [
   { val: "upi", label: "UPI / PhonePe / GPay", icon: <Smartphone size={20} /> },
   { val: "card", label: "Credit / Debit Card", icon: <CreditCard size={20} /> },
   { val: "netbanking", label: "Net Banking", icon: <Building2 size={20} /> },
-  { val: "emi", label: "EMI (No Cost)", icon: <CalendarDays size={20} /> },
+  { val: "emi", label: "EMI*", icon: <CalendarDays size={20} /> },
   { val: "cod", label: "Cash on Delivery", icon: <Banknote size={20} /> },
 ];
 

@@ -17,9 +17,9 @@ import { db } from "@/lib/firebase";
 /* ── Trust Strip ──────────────────────────────────────── */
 const trustItems = [
   { icon: <Shield size={15} color={COLORS.green} />, text: "1 Year Warranty" },
-  { icon: <RefreshCw size={15} color={COLORS.green} />, text: "7 Day Replacement" },
+  { icon: <RefreshCw size={15} color={COLORS.green} />, text: "7 Day Replacement*" },
   { icon: <Truck size={15} color={COLORS.green} />, text: "Free Shipping" },
-  { icon: <CreditCard size={15} color={COLORS.green} />, text: "EMI Available" },
+  { icon: <CreditCard size={15} color={COLORS.green} />, text: "EMI Available*" },
   { icon: <CheckCircle2 size={15} color={COLORS.green} />, text: "Quality Checked" },
 ];
 
@@ -86,10 +86,10 @@ const finderQ = [
 ];
 
 const whyItems = [
-  { icon: <Microscope size={28} color={COLORS.green} />, t: "Quality Tested", d: "72+ point checks" },
+  { icon: <Microscope size={28} color={COLORS.green} />, t: "Quality Tested", d: "Multi-point checks" },
   { icon: <CheckCircle2 size={28} color={COLORS.green} />, t: "100% Original", d: "Genuine parts" },
-  { icon: <Shield size={28} color={COLORS.green} />, t: "1 Year Warranty", d: "Hassle free" },
-  { icon: <RefreshCw size={28} color={COLORS.green} />, t: "7-Day Returns", d: "No questions asked" },
+  { icon: <Shield size={28} color={COLORS.green} />, t: "1 Year Warranty*", d: "Hassle free" },
+  { icon: <RefreshCw size={28} color={COLORS.green} />, t: "7-Day Returns*", d: "No questions asked" },
   { icon: <BadgeDollarSign size={28} color={COLORS.green} />, t: "Best Price", d: "Save up to 70%" },
 ];
 
@@ -213,102 +213,102 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
       {banners && banners.length > 0 && (
         <div id="offers-section">
           {section(
-          <>
-            <SectionHeader eyebrow="Contests &amp; Rewards" title="Offers &amp; Contests" subtitle="Join our community writing challenge and unlock exclusive savings" />
+            <>
+              <SectionHeader eyebrow="Contests &amp; Rewards" title="Offers &amp; Contests" subtitle="Join our community writing challenge and unlock exclusive savings" />
 
-            <div
-              onClick={() => {
-                if (banners && banners[activeSlideIdx]) {
-                  setPage(banners[activeSlideIdx].target);
-                }
-              }}
-              style={{
-                position: "relative",
-                borderRadius: 24,
-                overflow: "hidden",
-                border: `1px solid ${COLORS.cardBorder}`,
-                background: COLORS.background,
-                aspectRatio: isMobile ? "16/9" : "3.1/1",
-                cursor: "pointer",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
-                transition: "transform 0.25s ease, border-color 0.2s",
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform = "scale(1.005)";
-                e.currentTarget.style.borderColor = "rgba(56,189,248,0.22)";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.borderColor = COLORS.cardBorder;
-              }}
-            >
-              <div style={{
-                display: "flex",
-                width: "100%",
-                height: "100%",
-                transform: `translateX(-${activeSlideIdx * 100}%)`,
-                transition: "transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)",
-              }}>
-                {(banners || []).map((img, i) => (
-                  <div key={i} style={{ flexShrink: 0, width: "100%", height: "100%", position: "relative" }}>
-                    <img src={img.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    <div style={{
-                      position: "absolute", inset: 0,
-                      background: "linear-gradient(90deg, rgba(13,17,23,0.9) 0%, rgba(13,17,23,0.3) 60%, transparent 100%)",
-                      display: "flex", flexDirection: "column", justifyContent: "center",
-                      padding: isMobile ? "20px 24px" : "40px 60px",
-                      boxSizing: "border-box",
-                    }}>
-                      <span style={{
-                        background: "rgba(56,189,248,0.1)", color: COLORS.green,
-                        fontSize: 10, fontWeight: 800, padding: "4px 10px",
-                        borderRadius: 100, textTransform: "uppercase", width: "fit-content",
-                        marginBottom: 12, letterSpacing: "0.05em",
+              <div
+                onClick={() => {
+                  if (banners && banners[activeSlideIdx]) {
+                    setPage(banners[activeSlideIdx].target);
+                  }
+                }}
+                style={{
+                  position: "relative",
+                  borderRadius: 24,
+                  overflow: "hidden",
+                  border: `1px solid ${COLORS.cardBorder}`,
+                  background: COLORS.background,
+                  aspectRatio: isMobile ? "16/9" : "3.1/1",
+                  cursor: "pointer",
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+                  transition: "transform 0.25s ease, border-color 0.2s",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = "scale(1.005)";
+                  e.currentTarget.style.borderColor = "rgba(56,189,248,0.22)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = "scale(1)";
+                  e.currentTarget.style.borderColor = COLORS.cardBorder;
+                }}
+              >
+                <div style={{
+                  display: "flex",
+                  width: "100%",
+                  height: "100%",
+                  transform: `translateX(-${activeSlideIdx * 100}%)`,
+                  transition: "transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)",
+                }}>
+                  {(banners || []).map((img, i) => (
+                    <div key={i} style={{ flexShrink: 0, width: "100%", height: "100%", position: "relative" }}>
+                      <img src={img.src} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <div style={{
+                        position: "absolute", inset: 0,
+                        background: "linear-gradient(90deg, rgba(13,17,23,0.9) 0%, rgba(13,17,23,0.3) 60%, transparent 100%)",
+                        display: "flex", flexDirection: "column", justifyContent: "center",
+                        padding: isMobile ? "20px 24px" : "40px 60px",
+                        boxSizing: "border-box",
                       }}>
-                        {img.badge}
-                      </span>
-                      <h3 style={{
-                        fontFamily: "'Sora', sans-serif",
-                        fontSize: isMobile ? 18 : 32,
-                        fontWeight: 800, color: "#fff",
-                        margin: "0 0 8px", letterSpacing: "-0.02em",
-                        lineHeight: 1.2,
-                      }}>
-                        {img.title}
-                      </h3>
-                      <p style={{
-                        color: "rgba(255,255,255,0.65)",
-                        fontSize: isMobile ? 11 : 15,
-                        margin: 0, maxWidth: 520, lineHeight: 1.5,
-                      }}>
-                        {img.desc}
-                      </p>
+                        <span style={{
+                          background: "rgba(56,189,248,0.1)", color: COLORS.green,
+                          fontSize: 10, fontWeight: 800, padding: "4px 10px",
+                          borderRadius: 100, textTransform: "uppercase", width: "fit-content",
+                          marginBottom: 12, letterSpacing: "0.05em",
+                        }}>
+                          {img.badge}
+                        </span>
+                        <h3 style={{
+                          fontFamily: "'Sora', sans-serif",
+                          fontSize: isMobile ? 18 : 32,
+                          fontWeight: 800, color: "#fff",
+                          margin: "0 0 8px", letterSpacing: "-0.02em",
+                          lineHeight: 1.2,
+                        }}>
+                          {img.title}
+                        </h3>
+                        <p style={{
+                          color: "rgba(255,255,255,0.65)",
+                          fontSize: isMobile ? 11 : 15,
+                          margin: 0, maxWidth: 520, lineHeight: 1.5,
+                        }}>
+                          {img.desc}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              {/* Slider dots */}
-              <div style={{
-                position: "absolute", bottom: 20, right: 30,
-                display: "flex", gap: 6, zIndex: 3,
-              }}>
-                {(banners || []).map((_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: activeSlideIdx === i ? 18 : 6,
-                      height: 6,
-                      borderRadius: 100,
-                      background: activeSlideIdx === i ? COLORS.green : "rgba(255,255,255,0.4)",
-                      transition: "all 0.25s",
-                    }}
-                  />
-                ))}
+                {/* Slider dots */}
+                <div style={{
+                  position: "absolute", bottom: 20, right: 30,
+                  display: "flex", gap: 6, zIndex: 3,
+                }}>
+                  {(banners || []).map((_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        width: activeSlideIdx === i ? 18 : 6,
+                        height: 6,
+                        borderRadius: 100,
+                        background: activeSlideIdx === i ? COLORS.green : "rgba(255,255,255,0.4)",
+                        transition: "all 0.25s",
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          </>
-          , true)}
+            </>
+            , true)}
         </div>
       )}
 
@@ -707,7 +707,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                 }}
               >
                 <h3 style={{ margin: 0, fontFamily: "Sora", color: "#fff", fontSize: 18, fontWeight: 800 }}>Share Your Experience</h3>
-                
+
                 {/* Rating selection (Stars) */}
                 <div>
                   <label style={{ display: "block", color: COLORS.muted, fontSize: 11, fontWeight: 700, marginBottom: 8, textTransform: "uppercase" }}>Your Rating</label>

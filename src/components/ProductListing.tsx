@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SlidersHorizontal, X, Search, ChevronDown } from "lucide-react";
 import { COLORS } from "@/data/products";
 import type { Product } from "@/data/products";
@@ -39,7 +39,13 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
   const [sort, setSort]       = useState("popular");
   const [search, setSearch]   = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(20);
   const isMobile = useIsMobile();
+
+  // Reset pagination limit when search or filters change
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [filters, search, sort, initialCategory]);
 
   const setFilter = (k: FilterKey, v: string) =>
     setFilters((f) => ({ ...f, [k]: f[k] === v ? "" : v }));
@@ -306,19 +312,51 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
                 </button>
               </div>
             ) : (
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: isMobile
-                  ? "repeat(2, 1fr)"
-                  : "repeat(auto-fill, minmax(240px, 1fr))",
-                gap: isMobile ? 12 : 18,
-              }}>
-                {filtered.map((p, i) => (
-                  <div key={p.id} style={{ animation: `fadeUp 0.4s ease ${i * 0.04}s both` }}>
-                    <ProductCard product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
+              <>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile
+                    ? "repeat(2, 1fr)"
+                    : "repeat(auto-fill, minmax(240px, 1fr))",
+                  gap: isMobile ? 12 : 18,
+                }}>
+                  {filtered.slice(0, visibleCount).map((p, i) => (
+                    <div key={p.id} style={{ animation: `fadeUp 0.4s ease ${i * 0.04}s both` }}>
+                      <ProductCard product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
+                    </div>
+                  ))}
+                </div>
+
+                {visibleCount < filtered.length && (
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
+                    <button
+                      onClick={() => setVisibleCount((prev) => prev + 20)}
+                      style={{
+                        background: "transparent",
+                        border: `1px solid ${COLORS.cardBorder}`,
+                        borderRadius: 14,
+                        padding: "12px 28px",
+                        color: COLORS.green,
+                        fontWeight: 700,
+                        fontSize: 14,
+                        cursor: "pointer",
+                        fontFamily: "'Sora', sans-serif",
+                        transition: "all 0.2s"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(56,189,248,0.06)";
+                        e.currentTarget.style.borderColor = COLORS.green;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.borderColor = COLORS.cardBorder;
+                      }}
+                    >
+                      Load More Products ({filtered.length - visibleCount} remaining)
+                    </button>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         </div>

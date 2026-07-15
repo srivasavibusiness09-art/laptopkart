@@ -207,7 +207,7 @@ export function AboutPage() {
         <div>
           <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 26 : 32, fontWeight: 800, color: COLORS.text, marginBottom: 16 }}>Our Mission</h2>
           <p style={{ color: COLORS.muted, fontSize: 16, lineHeight: 1.8, marginBottom: 16 }}>We started in 2019 with a simple goal — make high-quality refurbished laptops accessible to every Indian, whether a student, professional, or small business owner.</p>
-          <p style={{ color: COLORS.muted, fontSize: 16, lineHeight: 1.8 }}>Today, we&apos;ve sold over 50,000 devices across India, with every single device undergoing our rigorous 72-point quality inspection.</p>
+          <p style={{ color: COLORS.muted, fontSize: 16, lineHeight: 1.8 }}>Today, we&apos;ve sold over 50,000 devices across India, with every single device undergoing our rigorous multi-point quality check.</p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           {[["50K+", "Devices Sold"], ["4.8★", "Avg Rating"], ["1 Year", "Warranty"], ["99.2%", "Satisfaction"]].map(([v, l]) => (
@@ -799,7 +799,7 @@ export function WhyRefurbishedPage() {
           },
           {
             icon: <ShieldCheck size={24} color="#38BDF8" />,
-            title: "72-Point Inspection",
+            title: "Multi-Point Diagnostics",
             desc: "Every laptop undergoes testing, component restoration, and comes backed by a 1-Year Warranty.",
           },
           {
@@ -840,7 +840,7 @@ export function WhyRefurbishedPage() {
             <tbody>
               {[
                 { f: "Quality Grade", ref: "Grade A+ (Premium quality)", used: "Varies, unknown wear & tear", new: "Perfect condition" },
-                { f: "Testing & Cleaning", ref: "72-Point Inspection & sanitization", used: "None (sold as-is)", new: "Factory fresh" },
+                { f: "Testing & Cleaning", ref: "Multi-point diagnostics & sanitization", used: "None (sold as-is)", new: "Factory fresh" },
                 { f: "Warranty Included", ref: "1-Year Warranty & 7 Days replacement", used: "None", new: "1-Year brand warranty" },
                 { f: "Average Cost", ref: "50% - 70% Off original price", used: "Cheap but highly risky", new: "Full retail price" },
                 { f: "Environmental Footprint", ref: "Ultra-low (extends device lifecycle)", used: "Low", new: "High (raw material extraction)" },
@@ -857,7 +857,7 @@ export function WhyRefurbishedPage() {
         </div>
       </div>
 
-      {/* 72-Point Process Checklist */}
+      {/* Multi-Point Process Checklist */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 36, alignItems: "center" }}>
         <div>
           <h2 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: 24, fontWeight: 800, marginBottom: 16, lineHeight: 1.2 }}>

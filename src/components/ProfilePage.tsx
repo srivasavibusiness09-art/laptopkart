@@ -199,11 +199,14 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 16px", fontFamily: "'Sora', sans-serif",
             }}>
-              {user.name ? user.name.split(" ").map(n => n[0]).join("").toUpperCase() : "U"}
+              {(() => {
+                const nameStr = user.name || (user as any).displayName || user.email?.split("@")[0] || "Customer";
+                return nameStr.split(" ").filter(Boolean).map((n: string) => n[0]).join("").substring(0, 2).toUpperCase() || "U";
+              })()}
             </div>
 
             <h3 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
-              {user.name}
+              {user.name || (user as any).displayName || user.email?.split("@")[0] || "Customer"}
             </h3>
             <span style={{
               background: "rgba(56,189,248,0.10)", color: COLORS.green,

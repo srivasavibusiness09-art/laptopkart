@@ -24,6 +24,31 @@ const HEADERS = {
   "Accept-Language": "en-US,en;q=0.9",
 };
 
+async function fetchHTML(targetUrl: string): Promise<string | null> {
+  const apiKey = process.env.SCRAPER_API_KEY;
+  try {
+    let url = targetUrl;
+    let headers: HeadersInit = HEADERS;
+
+    if (apiKey && !apiKey.includes("YOUR_") && apiKey.trim() !== "") {
+      url = `http://api.scraperapi.com?api_key=${apiKey.trim()}&url=${encodeURIComponent(targetUrl)}`;
+      headers = {}; // ScraperAPI manages headers automatically
+    }
+
+    const res = await fetch(url, {
+      headers,
+      next: { revalidate: 3600 },
+    });
+
+    if (!res.ok) return null;
+    return await res.text();
+  } catch (err) {
+    console.error(`Fetch failed for URL: ${targetUrl}`, err);
+    return null;
+  }
+}
+
+
 function parsePriceText(text: string | undefined): number | null {
   if (!text) return null;
   const cleaned = text.replace(/[₹,\s]/g, "");
@@ -51,13 +76,8 @@ function titleMatchesQuery(title: string, query: string): boolean {
 
 async function getFlipkartPrice(query: string): Promise<number | null> {
   try {
-    const res = await fetch(`https://www.flipkart.com/search?q=${encodeURIComponent(query)}`, {
-      headers: HEADERS,
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-
-    const html = await res.text();
+    const html = await fetchHTML(`https://www.flipkart.com/search?q=${encodeURIComponent(query)}`);
+    if (!html) return null;
     if (html.includes("captcha") || html.length < 5000) return null;
 
     const $ = cheerio.load(html);
@@ -82,13 +102,8 @@ async function getFlipkartPrice(query: string): Promise<number | null> {
 
 async function getAmazonPrice(query: string): Promise<number | null> {
   try {
-    const res = await fetch(`https://www.amazon.in/s?k=${encodeURIComponent(query)}`, {
-      headers: HEADERS,
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-
-    const html = await res.text();
+    const html = await fetchHTML(`https://www.amazon.in/s?k=${encodeURIComponent(query)}`);
+    if (!html) return null;
     if (html.includes("Enter the characters you see below") || html.length < 5000) return null;
 
     const $ = cheerio.load(html);

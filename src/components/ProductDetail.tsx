@@ -35,8 +35,8 @@ const specIcons: Record<string, React.ReactNode> = {
 };
 
 export default function ProductDetail({ product, onAddToCart, onWishlist, wishlist, setPage, onViewProduct, productsList, triggerAlert }: Props) {
-  const [tab, setTab]     = useState<"specs" | "why" | "reviews">("specs");
-  const [qty, setQty]     = useState(1);
+  const [tab, setTab] = useState<"specs" | "why" | "reviews">("specs");
+  const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const isMobile = useIsMobile();
 
@@ -44,7 +44,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
     if (isBrandNew) {
       return `The brand new ${name} is a high-performance ${cat.toLowerCase()} machine engineered by ${brand} for cutting-edge speed, reliability, and modern efficiency. Factory sealed in its original packaging, this device comes with a full direct manufacturer warranty, ensuring pristine condition, peak battery runtime, and absolute peace of mind.`;
     }
-    return `The certified refurbished ${name} is a high-performance ${cat.toLowerCase()} machine engineered by ${brand} for reliability, speed, and comfort. Backed by our rigorous 72-point inspection, this device delivers commercial-grade utility, robust chassis durability, and smooth multitasking performance at a fraction of the cost of new hardware.`;
+    return `The certified refurbished ${name} is a high-performance ${cat.toLowerCase()} machine engineered by ${brand} for reliability, speed, and comfort. Backed by our rigorous multi-point inspection, this device delivers commercial-grade utility, robust chassis durability, and smooth multitasking performance at a fraction of the cost of new hardware.`;
   };
 
   // Carousel & zoom states
@@ -58,8 +58,8 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   const productImages = product?.images && product.images.length > 0
     ? product.images.slice(0, 5)
     : [
-        product?.img || "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80&auto=format&fit=crop",
-      ];
+      product?.img || "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80&auto=format&fit=crop",
+    ];
 
   // Reset page state and scroll to top when user views a related product
   useEffect(() => {
@@ -85,8 +85,8 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
 
   if (!product) return null;
 
-  const isWished  = wishlist.includes(product.id);
-  const related   = productsList.filter((p) => p.id !== product.id).slice(0, 4);
+  const isWished = wishlist.includes(product.id);
+  const related = productsList.filter((p) => p.id !== product.id).slice(0, 4);
 
   const handleAdd = () => {
     for (let i = 0; i < qty; i++) onAddToCart(product);
@@ -317,16 +317,16 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
           {(product.boxContents
             ? product.boxContents.split(",").map((s) => s.trim())
             : (product.condition === "Brand New" ? [
-                "Original Sealed Brand New Laptop",
-                "Official OEM Power Adapter & Charging Cable",
-                "Manufacturer Warranty Guide & Manuals",
-                "Original Retail Branding Box",
-              ] : [
-                "Refurbished Grade A+ Laptop",
-                "OEM-Compatible Power Adapter & Cord",
-                "Laptopkart Certification & Warranty Card",
-                "Eco-Friendly Protective Packaging Box",
-              ])
+              "Original Sealed Brand New Laptop",
+              "Official OEM Power Adapter & Charging Cable",
+              "Manufacturer Warranty Guide & Manuals",
+              "Original Retail Branding Box",
+            ] : [
+              "Refurbished Grade A+ Laptop",
+              "OEM-Compatible Power Adapter & Cord",
+              "Laptopkart Certification & Warranty Card",
+              "Eco-Friendly Protective Packaging Box",
+            ])
           ).map((item, idx) => (
             <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: COLORS.muted }}>
               <div style={{ width: 4, height: 4, borderRadius: "50%", background: COLORS.green }} />
@@ -383,7 +383,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
       </p>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
         <div style={{ display: "flex", gap: 2 }}>
-          {[1,2,3,4,5].map((s) => (
+          {[1, 2, 3, 4, 5].map((s) => (
             <Star key={s} size={14} fill={s <= Math.floor(product.rating) ? "#F59E0B" : "transparent"} color={s <= Math.floor(product.rating) ? "#F59E0B" : "rgba(255,255,255,0.15)"} />
           ))}
         </div>
@@ -416,7 +416,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             You save ₹{(product.mrp - product.price).toLocaleString("en-IN")}
           </span>
           <span style={{ color: COLORS.muted, fontSize: 12 }}>
-            EMI from ₹{Math.round(product.price / 12).toLocaleString("en-IN")}/mo
+            EMI* from ₹{Math.round(product.price / 12).toLocaleString("en-IN")}/mo
           </span>
         </div>
       </div>
@@ -492,14 +492,14 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
           setPage("checkout");
         }}
         style={{
-        width: "100%", background: "transparent",
-        border: "1px solid rgba(255,255,255,0.12)",
-        color: COLORS.text, borderRadius: 14, height: 48,
-        fontWeight: 700, fontSize: 15, cursor: "pointer",
-        fontFamily: "'Sora', sans-serif",
-        transition: "border-color 0.2s",
-        marginBottom: 22,
-      }}
+          width: "100%", background: "transparent",
+          border: "1px solid rgba(255,255,255,0.12)",
+          color: COLORS.text, borderRadius: 14, height: 48,
+          fontWeight: 700, fontSize: 15, cursor: "pointer",
+          fontFamily: "'Sora', sans-serif",
+          transition: "border-color 0.2s",
+          marginBottom: 22,
+        }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.3)"; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; }}
       >
@@ -555,7 +555,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
               "Unused keyboard, screen, and battery cells",
               "Zero defects — 100% pristine condition",
             ] : [
-              "72-point quality inspection completed",
+              "Multi-point quality diagnostics completed",
               "Original parts — no fake components",
               "Full operating system restored & verified",
               "Battery cycle count checked & disclosed",
@@ -583,7 +583,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
                   {product.rating}
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 4 }}>
-                  {[1,2,3,4,5].map((s) => (
+                  {[1, 2, 3, 4, 5].map((s) => (
                     <Star key={s} size={12} fill="#FBBF24" color="#FBBF24" />
                   ))}
                 </div>

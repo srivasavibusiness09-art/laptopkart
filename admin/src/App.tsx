@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, query } from "firebase/firestore";
-import { db, auth, googleProvider } from "./lib/firebase";
-import { signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
+import { db } from "./lib/firebase";
 import { uploadProductImage } from "./lib/storage";
 import {
   LayoutDashboard,
@@ -18,7 +17,6 @@ import {
   CheckCircle,
   FileText,
   Bell,
-  LogOut,
   Truck
 } from 'lucide-react';
 
@@ -73,7 +71,7 @@ interface Banner {
 }
 
 // Initial defaults to populate storage if empty
-const DEFAULT_PRODUCTS: Product[] = [
+export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: 11,
     name: "Apple MacBook Air M3 (Brand New)",
@@ -133,7 +131,7 @@ const DEFAULT_PRODUCTS: Product[] = [
   }
 ];
 
-const DEFAULT_ACCESSORIES: AccessoryProduct[] = [
+export const DEFAULT_ACCESSORIES: AccessoryProduct[] = [
   {
     id: 101,
     name: "Dell UltraSharp U2419H 24\" Monitor",
@@ -160,7 +158,7 @@ const DEFAULT_ACCESSORIES: AccessoryProduct[] = [
   }
 ];
 
-const DEFAULT_BANNERS: Banner[] = [
+export const DEFAULT_BANNERS: Banner[] = [
   {
     src: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80&auto=format&fit=crop",
     badge: "Blog Contest",
@@ -180,6 +178,7 @@ const DEFAULT_BANNERS: Banner[] = [
 export default function App() {
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders'>('overview');
   const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed'>('active');
+  const [ordersPage, setOrdersPage] = useState(0);
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -305,7 +304,7 @@ export default function App() {
     try {
       const urls = await Promise.all(promises);
       const newImages = [...currentImages, ...urls].slice(0, 5);
-      
+
       setProductForm(prev => ({
         ...prev,
         images: newImages,
@@ -546,9 +545,9 @@ export default function App() {
     const formattedPhone = cleanPhone.startsWith("91") ? cleanPhone : `91${cleanPhone}`;
 
     const text = `Hello ${ord.address?.name || "Customer"},\n\n` +
-                 `Your Laptopkart order *#${ord.orderId}* status has been updated to *${ord.status || 'Pending'}*! 📦\n\n` +
-                 (ord.trackingId ? `🚚 Courier: *${ord.courierPartner}*\n🔢 AWB Consignment: *${ord.trackingId}*\n🔗 Track Shipment: ${ord.trackingUrl}\n\n` : "") +
-                 `Thank you for shopping with Laptopkart! ⚡`;
+      `Your Laptopkart order *#${ord.orderId}* status has been updated to *${ord.status || 'Pending'}*! 📦\n\n` +
+      (ord.trackingId ? `🚚 Courier: *${ord.courierPartner}*\n🔢 AWB Consignment: *${ord.trackingId}*\n🔗 Track Shipment: ${ord.trackingUrl}\n\n` : "") +
+      `Thank you for shopping with Laptopkart! ⚡`;
 
     const url = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
@@ -645,7 +644,7 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0d1117' }}>
-      
+
       {/* ── Left Sidebar ── */}
       <aside style={{
         width: 260,
@@ -718,7 +717,7 @@ export default function App() {
 
       {/* ── Main Workspace ── */}
       <main style={{ flex: 1, padding: '40px 32px', overflowY: 'auto' }}>
-        
+
         {/* Alert Banner */}
         {alertMsg && (
           <div style={{
@@ -798,7 +797,7 @@ export default function App() {
 
             {/* Simulated Activity Section */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 24 }}>
-              
+
               <div style={{
                 background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
                 borderRadius: 20, padding: 24
@@ -811,14 +810,14 @@ export default function App() {
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981' }} />
                     <div>
                       <span style={{ fontSize: 13, color: '#fff', fontWeight: 600, display: 'block' }}>Next.js Storefront Sync Bridge:</span>
-                      <span style={{ fontSize: 12, color: '#10B981', fontWeight: 700 }}>Connected (Listening on LocalStorage)</span>
+                      <span style={{ fontSize: 12, color: '#10B981', fontWeight: 700 }}>Connected (Real-time Firestore Sync)</span>
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981' }} />
                     <div>
                       <span style={{ fontSize: 13, color: '#fff', fontWeight: 600, display: 'block' }}>Refurbishment Quality Inspection Engine:</span>
-                      <span style={{ fontSize: 12, color: '#8B9BBE' }}>72 points benchmark checklist loaded</span>
+                      <span style={{ fontSize: 12, color: '#8B9BBE' }}>Multiple Check point benchmark checklist loaded</span>
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1188,8 +1187,12 @@ export default function App() {
           });
           const displayedOrders = ordersFilter === 'active' ? activeOrders : completedOrders;
 
+          const PAGE_SIZE = 20;
+          const totalPages = Math.ceil(displayedOrders.length / PAGE_SIZE);
+          const paginatedOrders = displayedOrders.slice(ordersPage * PAGE_SIZE, (ordersPage + 1) * PAGE_SIZE);
+
           const getStatusStyle = (status: string) => {
-            switch(status) {
+            switch (status) {
               case 'Completed': return { bg: 'rgba(16,185,129,0.12)', color: '#10B981', border: 'rgba(16,185,129,0.25)' };
               case 'Cancelled': return { bg: 'rgba(239,68,68,0.12)', color: '#EF4444', border: 'rgba(239,68,68,0.25)' };
               case 'Shipped': return { bg: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: 'rgba(139,92,246,0.25)' };
@@ -1216,7 +1219,7 @@ export default function App() {
               {/* Segmented Filter Control */}
               <div style={{ display: 'flex', gap: 12, marginBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 16 }}>
                 <button
-                  onClick={() => setOrdersFilter('active')}
+                  onClick={() => { setOrdersFilter('active'); setOrdersPage(0); }}
                   style={{
                     background: ordersFilter === 'active' ? 'rgba(56,189,248,0.1)' : 'transparent',
                     border: `1px solid ${ordersFilter === 'active' ? 'rgba(56,189,248,0.25)' : 'transparent'}`,
@@ -1236,7 +1239,7 @@ export default function App() {
                   </span>
                 </button>
                 <button
-                  onClick={() => setOrdersFilter('completed')}
+                  onClick={() => { setOrdersFilter('completed'); setOrdersPage(0); }}
                   style={{
                     background: ordersFilter === 'completed' ? 'rgba(16,185,129,0.1)' : 'transparent',
                     border: `1px solid ${ordersFilter === 'completed' ? 'rgba(16,185,129,0.25)' : 'transparent'}`,
@@ -1259,17 +1262,17 @@ export default function App() {
 
               {/* Orders List container */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                {displayedOrders.length === 0 ? (
+                {paginatedOrders.length === 0 ? (
                   <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, padding: 48, textAlign: 'center' }}>
                     <FileText size={48} color="#8B9BBE" style={{ marginBottom: 16, opacity: 0.5 }} />
                     <p style={{ color: '#8B9BBE', fontSize: 15, margin: 0 }}>
-                      {ordersFilter === 'active' 
-                        ? 'No active customer orders to process. All set!' 
+                      {ordersFilter === 'active'
+                        ? 'No active customer orders to process. All set!'
                         : 'No completed or archived customer orders found.'}
                     </p>
                   </div>
                 ) : (
-                  displayedOrders.map((ord) => (
+                  paginatedOrders.map((ord) => (
                     <div key={ord.orderId} style={{
                       background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
                       borderRadius: 24, padding: 24, boxShadow: '0 8px 30px rgba(0,0,0,0.15)'
@@ -1353,7 +1356,7 @@ export default function App() {
                                   pointerEvents: 'none', color: stStyle.color, display: 'flex', alignItems: 'center'
                                 }}>
                                   <svg width="8" height="5" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                   </svg>
                                 </span>
                               </div>
@@ -1405,7 +1408,7 @@ export default function App() {
                                 </select>
                                 <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#38BDF8', display: 'flex', alignItems: 'center' }}>
                                   <svg width="8" height="5" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                   </svg>
                                 </span>
                               </div>
@@ -1444,23 +1447,23 @@ export default function App() {
                               </a>
                             )}
 
-                             {/* Send WhatsApp Alert button */}
-                             <button
-                               onClick={() => triggerWhatsAppAlert(ord)}
-                               style={{
-                                 background: '#25D366', border: 'none',
-                                 color: '#000', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 800,
-                                 cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
-                                 fontFamily: 'Sora', transition: 'all 0.2s', height: 38, boxSizing: 'border-box'
-                               }}
-                               onMouseEnter={e => { e.currentTarget.style.background = '#20ba5a'; }}
-                               onMouseLeave={e => { e.currentTarget.style.background = '#25D366'; }}
-                             >
-                               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 6 }}>
-                                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.79-4.024c1.667.988 3.3 1.494 5.207 1.495 5.568 0 10.099-4.522 10.101-10.086.002-2.697-1.042-5.232-2.942-7.136S14.717 1.378 12.015 1.378c-5.57 0-10.107 4.524-10.109 10.092-.001 1.93.526 3.513 1.503 5.176l-.988 3.606 3.693-.972zm11.722-7.93c-.322-.162-1.905-.94-2.202-1.048-.297-.108-.514-.162-.73.162-.217.324-.838 1.048-1.027 1.265-.19.217-.378.243-.7.08-1.637-.818-2.775-1.433-3.886-3.333-.292-.5-.102-.77.06-.931.144-.144.322-.378.484-.567.162-.19.216-.324.324-.54.108-.217.054-.405-.027-.567-.08-.162-.73-1.76-1.002-2.411-.266-.64-.532-.553-.73-.563-.19-.009-.407-.01-.622-.01s-.567.08-.865.405c-.297.324-1.136 1.109-1.136 2.703s1.163 3.136 1.325 3.353c.162.217 2.291 3.5 5.55 4.908.775.334 1.38.533 1.85.682.78.248 1.49.213 2.05.129.624-.093 1.905-.779 2.176-1.495.271-.716.271-1.33.19-1.458-.08-.129-.297-.216-.62-.378z"/>
-                               </svg>
-                               Send WhatsApp Alert
-                             </button>
+                            {/* Send WhatsApp Alert button */}
+                            <button
+                              onClick={() => triggerWhatsAppAlert(ord)}
+                              style={{
+                                background: '#25D366', border: 'none',
+                                color: '#000', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 800,
+                                cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
+                                fontFamily: 'Sora', transition: 'all 0.2s', height: 38, boxSizing: 'border-box'
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = '#20ba5a'; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = '#25D366'; }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 6 }}>
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.79-4.024c1.667.988 3.3 1.494 5.207 1.495 5.568 0 10.099-4.522 10.101-10.086.002-2.697-1.042-5.232-2.942-7.136S14.717 1.378 12.015 1.378c-5.57 0-10.107 4.524-10.109 10.092-.001 1.93.526 3.513 1.503 5.176l-.988 3.606 3.693-.972zm11.722-7.93c-.322-.162-1.905-.94-2.202-1.048-.297-.108-.514-.162-.73.162-.217.324-.838 1.048-1.027 1.265-.19.217-.378.243-.7.08-1.637-.818-2.775-1.433-3.886-3.333-.292-.5-.102-.77.06-.931.144-.144.322-.378.484-.567.162-.19.216-.324.324-.54.108-.217.054-.405-.027-.567-.08-.162-.73-1.76-1.002-2.411-.266-.64-.532-.553-.73-.563-.19-.009-.407-.01-.622-.01s-.567.08-.865.405c-.297.324-1.136 1.109-1.136 2.703s1.163 3.136 1.325 3.353c.162.217 2.291 3.5 5.55 4.908.775.334 1.38.533 1.85.682.78.248 1.49.213 2.05.129.624-.093 1.905-.779 2.176-1.495.271-.716.271-1.33.19-1.458-.08-.129-.297-.216-.62-.378z" />
+                              </svg>
+                              Send WhatsApp Alert
+                            </button>
                           </div>
                         </div>
                       )}
@@ -1528,6 +1531,43 @@ export default function App() {
                   ))
                 )}
               </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 32 }}>
+                  <button
+                    disabled={ordersPage === 0}
+                    onClick={() => setOrdersPage(p => Math.max(0, p - 1))}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: ordersPage === 0 ? '#4b5563' : '#fff',
+                      borderRadius: 10, padding: '8px 16px',
+                      cursor: ordersPage === 0 ? 'not-allowed' : 'pointer',
+                      fontFamily: 'Sora', fontWeight: 600, fontSize: 13
+                    }}
+                  >
+                    Previous
+                  </button>
+                  <span style={{ color: '#8B9BBE', fontSize: 13, fontWeight: 700, fontFamily: 'Sora' }}>
+                    Page {ordersPage + 1} of {totalPages}
+                  </span>
+                  <button
+                    disabled={ordersPage >= totalPages - 1}
+                    onClick={() => setOrdersPage(p => Math.min(totalPages - 1, p + 1))}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: ordersPage >= totalPages - 1 ? '#4b5563' : '#fff',
+                      borderRadius: 10, padding: '8px 16px',
+                      cursor: ordersPage >= totalPages - 1 ? 'not-allowed' : 'pointer',
+                      fontFamily: 'Sora', fontWeight: 600, fontSize: 13
+                    }}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           );
         })()}
@@ -1555,7 +1595,7 @@ export default function App() {
             </div>
 
             <form onSubmit={handleProductSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-              
+
               <div>
                 <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Product Name</label>
                 <input
@@ -1876,17 +1916,17 @@ export default function App() {
                   <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter gallery image URLs (comma-separated):</label>
                   <textarea
                     placeholder="Paste direct image links separated by commas... e.g. https://link1.com, https://link2.com"
-                    value={galleryLinksText} 
+                    value={galleryLinksText}
                     onChange={e => {
                       const text = e.target.value;
                       setGalleryLinksText(text);
-                      
+
                       const urls = text.split(',')
                         .map(url => url.trim())
                         .filter(url => url.length > 0);
-                        
-                      setProductForm(prev => ({ 
-                        ...prev, 
+
+                      setProductForm(prev => ({
+                        ...prev,
                         images: urls,
                         img: prev.img ? prev.img : (urls[0] || '')
                       }));
@@ -1936,7 +1976,7 @@ export default function App() {
             </div>
 
             <form onSubmit={handleAccessorySubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              
+
               <div>
                 <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Accessory Name</label>
                 <input
@@ -2101,7 +2141,7 @@ export default function App() {
             </div>
 
             <form onSubmit={handleBannerSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              
+
               <div>
                 <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Banner Title</label>
                 <input
@@ -2144,7 +2184,7 @@ export default function App() {
 
               <div>
                 <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Slide Poster Image</label>
-                
+
                 {bannerForm.src && (
                   <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
                     <img src={bannerForm.src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

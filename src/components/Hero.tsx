@@ -10,7 +10,7 @@ interface HeroProps { setPage: (p: string) => void }
 const stats = [
   { value: "50K+", label: "Devices Sold" },
   { value: "1 Year", label: "Warranty" },
-  { value: "72+", label: "QC Checks" },
+  { value: "Tested", label: "QC Checks" },
   { value: "4.8★", label: "Rating" },
 ];
 
@@ -126,7 +126,7 @@ export default function Hero({ setPage }: HeroProps) {
             lineHeight: 1.7, marginBottom: 36,
             maxWidth: 460,
           }}>
-            Every device undergoes a 72-point quality inspection.
+            Every device undergoes a rigorous quality check.
             Premium performance at a fraction of the cost.
           </p>
 
@@ -257,7 +257,7 @@ export default function Hero({ setPage }: HeroProps) {
                 border: "1px solid rgba(56,189,248,0.18)",
               }}>
                 <div style={{ color: COLORS.green, fontSize: 12, fontWeight: 700 }}>✓ Quality Checked</div>
-                <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>72-point inspection</div>
+                <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>Multi-point inspection</div>
               </div>
               {/* Bottom badge */}
               <div style={{
