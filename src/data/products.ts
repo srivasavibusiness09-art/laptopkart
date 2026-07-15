@@ -1,8 +1,8 @@
 export const COLORS = {
-  darkBg: "#0d1117",
-  background: "#131a24",
-  cardBg: "#1a2235",
-  cardBorder: "rgba(56,150,240,0.12)",
+  darkBg: "#070A13",
+  background: "#0C1020",
+  cardBg: "#111625",
+  cardBorder: "rgba(56,189,248,0.08)",
   text: "#E8EDF5",
   muted: "#8B9BBE",
   green: "#38BDF8",
@@ -12,7 +12,7 @@ export const COLORS = {
   primary: "#3B82F6",
   accent: "#F59E0B",
   badge: "#3B82F6",
-  black: "#0d1117",
+  black: "#070A13",
 } as const;
 
 export type Product = {
@@ -34,8 +34,10 @@ export type Product = {
   description?: string;
   boxContents?: string;
   processor: string;
-  ram: "8GB" | "16GB" | "32GB";
+  ram: string;
+  availableRams?: string[];
   storage: string;
+  availableStorages?: string[];
   badge: "Best Seller" | "Gaming" | "Value Deal" | "Top Rated";
   stock?: number;
   deviceType?: "Laptop" | "Desktop";
@@ -302,9 +304,9 @@ export const navLinks = [
   "Offers",
   "Laptops",
   "Desktops",
+  "Blog",
   "Accessories",
   "Resell Laptop",
-  "Blog",
   "About",
 ] as const;
 

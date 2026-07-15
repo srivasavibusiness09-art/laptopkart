@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import { COLORS } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
+import Button from "./common/Button";
+import Card from "./common/Card";
 
 interface HeroProps { setPage: (p: string) => void }
 
@@ -32,7 +34,7 @@ export default function Hero({ setPage }: HeroProps) {
   return (
     <section style={{
       minHeight: isMobile ? "auto" : "100vh",
-      background: `linear-gradient(160deg, #0d1117 0%, #111827 50%, #0d1525 100%)`,
+      background: `linear-gradient(160deg, #070A13 0%, #0C1020 50%, #080C16 100%)`,
       display: "flex", alignItems: "center",
       position: "relative", overflow: "hidden",
       padding: isMobile ? "58px 18px 48px" : "60px 40px 48px",
@@ -43,33 +45,33 @@ export default function Hero({ setPage }: HeroProps) {
         <div style={{
           position: "absolute", top: "15%", left: "55%",
           width: "55vw", height: "55vw",
-          background: "radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 65%)",
-          borderRadius: "50%", filter: "blur(50px)",
+          background: "radial-gradient(circle, rgba(41,121,255,0.16) 0%, transparent 65%)",
+          borderRadius: "50%", filter: "blur(60px)",
           animation: "pulse-glow 5s ease-in-out infinite",
         }} />
         {/* Indigo orb — left */}
         <div style={{
           position: "absolute", top: "40%", left: "-10%",
           width: "45vw", height: "45vw",
-          background: "radial-gradient(circle, rgba(99,102,241,0.10) 0%, transparent 65%)",
-          borderRadius: "50%", filter: "blur(50px)",
+          background: "radial-gradient(circle, rgba(124,77,255,0.12) 0%, transparent 65%)",
+          borderRadius: "50%", filter: "blur(60px)",
           animation: "pulse-glow 7s ease-in-out infinite 1.5s",
         }} />
         {/* Cyan accent — bottom */}
         <div style={{
           position: "absolute", bottom: "5%", left: "35%",
           width: "30vw", height: "30vw",
-          background: "radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 70%)",
-          borderRadius: "50%", filter: "blur(40px)",
+          background: "radial-gradient(circle, rgba(0,229,255,0.08) 0%, transparent 70%)",
+          borderRadius: "50%", filter: "blur(50px)",
           animation: "pulse-glow 9s ease-in-out infinite 3s",
         }} />
         {/* Grid pattern overlay */}
         <div style={{
           position: "absolute", inset: 0,
-          backgroundImage: "linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px)",
+          backgroundImage: "linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px)",
           backgroundSize: "60px 60px",
-          maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%)",
-          WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%)",
+          maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 35%, transparent 100%)",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 35%, transparent 100%)",
         }} />
       </div>
 
@@ -131,60 +133,19 @@ export default function Hero({ setPage }: HeroProps) {
           </p>
 
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 48 }}>
-            <button
+            <Button
               onClick={() => setPage("listing")}
-              style={{
-                background: "linear-gradient(135deg, #3B82F6, #38BDF8)",
-                color: "#000",
-                border: "none",
-                borderRadius: 100,
-                padding: isMobile ? "13px 26px" : "16px 36px",
-                fontSize: isMobile ? 14 : 16, fontWeight: 800,
-                cursor: "pointer",
-                fontFamily: "'Sora', sans-serif",
-                display: "flex", alignItems: "center", gap: 8,
-                boxShadow: "0 0 40px rgba(56,189,248,0.30)",
-                transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
-              }}
-              onMouseEnter={(e) => {
-                const b = e.currentTarget as HTMLButtonElement;
-                b.style.transform = "translateY(-2px)";
-                b.style.boxShadow = "0 0 60px rgba(56,189,248,0.50)";
-              }}
-              onMouseLeave={(e) => {
-                const b = e.currentTarget as HTMLButtonElement;
-                b.style.transform = "translateY(0)";
-                b.style.boxShadow = "0 0 40px rgba(56,189,248,0.30)";
-              }}
+              size="lg"
             >
               Shop Laptops <ArrowRight size={16} />
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setPage("why-refurbished")}
-              style={{
-                background: "rgba(56,189,248,0.07)",
-                color: COLORS.text,
-                border: "1px solid rgba(56,189,248,0.20)",
-                borderRadius: 100,
-                padding: isMobile ? "13px 22px" : "16px 32px",
-                fontSize: isMobile ? 14 : 16, fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "'Sora', sans-serif",
-                transition: "all 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                const b = e.currentTarget as HTMLButtonElement;
-                b.style.borderColor = "rgba(56,189,248,0.40)";
-                b.style.background = "rgba(56,189,248,0.12)";
-              }}
-              onMouseLeave={(e) => {
-                const b = e.currentTarget as HTMLButtonElement;
-                b.style.borderColor = "rgba(56,189,248,0.20)";
-                b.style.background = "rgba(56,189,248,0.07)";
-              }}
+              variant="ghost"
+              size="lg"
             >
               Why Refurbished?
-            </button>
+            </Button>
           </div>
 
           {/* Stats */}
@@ -195,26 +156,28 @@ export default function Hero({ setPage }: HeroProps) {
               gap: 14,
             }}>
               {stats.map((s, i) => (
-                <div key={s.label} style={{
-                  background: "rgba(56,189,248,0.05)",
-                  border: "1px solid rgba(56,189,248,0.12)",
-                  borderRadius: 14,
-                  padding: "16px 12px",
-                  textAlign: "center",
-                  animation: `fadeUp 0.6s ease ${i * 0.1}s both`,
-                  backdropFilter: "blur(8px)",
-                }}>
+                <Card
+                  key={s.label}
+                  style={{
+                    background: "rgba(56,189,248,0.02)",
+                    border: "1px solid rgba(56,189,248,0.08)",
+                    borderRadius: 14,
+                    padding: "16px 12px",
+                    textAlign: "center",
+                    animation: `fadeUp 0.6s ease ${i * 0.1}s both`,
+                  }}
+                >
                   <div style={{
                     fontFamily: "'Sora', sans-serif",
                     fontSize: 22, fontWeight: 800,
                     color: COLORS.green, marginBottom: 3,
                   }}>
-                    {s.label === "Devices Sold" ? `${Math.min(count, 1000).toLocaleString("en-IN")}+` : s.value}
+                    {s.label === "Devices Sold" ? `${Math.min(count, 5000).toLocaleString("en-IN")}+` : s.value}
                   </div>
                   <div style={{ color: COLORS.muted, fontSize: 11, letterSpacing: "0.02em" }}>
                     {s.label}
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           )}
@@ -234,16 +197,18 @@ export default function Hero({ setPage }: HeroProps) {
             }} />
 
             {/* Product card */}
-            <div style={{
-              width: 380, height: 380,
-              borderRadius: 28,
-              overflow: "hidden",
-              border: "1px solid rgba(56,189,248,0.15)",
-              boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 60px rgba(59,130,246,0.18), 0 0 120px rgba(99,102,241,0.10)",
-              animation: "float 5s ease-in-out infinite",
-              position: "relative",
-              zIndex: 1,
-            }}>
+            <Card
+              hoverable={true}
+              style={{
+                width: 380, height: 380,
+                borderRadius: 28,
+                overflow: "hidden",
+                border: "1px solid rgba(0,229,255,0.20)",
+                animation: "float 5s ease-in-out infinite",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
               <img
                 src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=85&auto=format&fit=crop"
                 alt="Premium refurbished laptop"
@@ -267,9 +232,9 @@ export default function Hero({ setPage }: HeroProps) {
                 border: "1px solid rgba(245,158,11,0.25)",
               }}>
                 <div style={{ color: "#F59E0B", fontSize: 12, fontWeight: 700 }}>★ 4.8 / 5 Rating</div>
-                <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>1000+ Reviews</div>
+                <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>100+ Reviews</div>
               </div>
-            </div>
+            </Card>
           </div>
         )}
       </div>

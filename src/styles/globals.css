@@ -9,49 +9,50 @@
 
 /* ─── Design Tokens ──────────────────────────────────────── */
 :root {
-  /* Backgrounds — deep navy, NOT pure black */
-  --bg:         #0d1117;
-  --bg-1:       #131a24;
-  --bg-2:       #1a2235;
-  --bg-3:       #243047;
-  --bg-footer:  #0a0f18;
+  /* Backgrounds — deep tech voids */
+  --bg:         #040712;
+  --bg-1:       #0A0F1E;
+  --bg-2:       #0F1528;
+  --bg-3:       #19223B;
+  --bg-footer:  #03050B;
 
-  /* Borders — blue-tinted */
-  --border:     rgba(56,150,240,0.10);
+  /* Borders — cyan/blue tinted */
+  --border:     rgba(56,189,248,0.06);
   --border-hi:  rgba(56,189,248,0.22);
+  --border-glow: rgba(56,189,248,0.40);
 
-  /* Text — soft warm white, not pure white */
-  --text:       #E8EDF5;
-  --text-2:     #8B9BBE;
-  --text-3:     #4A5568;
+  /* Text — high contrast soft white */
+  --text:       #F3F6FA;
+  --text-2:     #A5B4CD;
+  --text-3:     #52607A;
 
   /* Accent colors */
-  --accent:     #38BDF8;
-  --accent-2:   #3B82F6;
-  --accent-3:   #22D3EE;
-  --accent-indigo: #6366F1;
-  --gold:       #F59E0B;
-  --red:        #F43F5E;
+  --accent:     #00E5FF; /* Neo cyan */
+  --accent-2:   #2979FF; /* Cyber blue */
+  --accent-3:   #00B0FF;
+  --accent-indigo: #7C4DFF;
+  --gold:       #FFD600;
+  --red:        #FF1744;
 
   /* Radii */
-  --r-sm:       10px;
-  --r-md:       18px;
-  --r-lg:       24px;
-  --r-xl:       32px;
+  --r-sm:       12px;
+  --r-md:       20px;
+  --r-lg:       28px;
+  --r-xl:       36px;
 
-  /* Shadows */
-  --shadow-sm:  0 2px 8px rgba(0,0,0,0.5);
-  --shadow-md:  0 8px 32px rgba(0,0,0,0.55);
-  --shadow-lg:  0 24px 64px rgba(0,0,0,0.65);
-  --shadow-glow: 0 0 40px rgba(56,189,248,0.18);
-  --shadow-indigo: 0 0 40px rgba(99,102,241,0.15);
+  /* Shadows & Glows */
+  --shadow-sm:  0 4px 12px rgba(0,0,0,0.6);
+  --shadow-md:  0 12px 48px rgba(0,0,0,0.7);
+  --shadow-lg:  0 32px 80px rgba(0,0,0,0.85);
+  --shadow-glow: 0 0 30px rgba(0,229,255,0.18), 0 0 60px rgba(41,121,255,0.08);
+  --shadow-indigo: 0 0 30px rgba(124,77,255,0.15);
 
-  /* Layout */
+  /* Layout & transitions */
   --nav-h:      52px;
-  --section-pad: 100px;
-  --section-pad-m: 60px;
+  --section-pad: 120px;
+  --section-pad-m: 80px;
   --max-w:      1200px;
-  --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+  --transition: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ─── Base ───────────────────────────────────────────────── */

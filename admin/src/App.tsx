@@ -42,8 +42,10 @@ interface Product {
   description?: string;
   boxContents?: string;
   processor: string;
-  ram: "8GB" | "16GB" | "32GB";
+  ram: string;
+  availableRams?: string[];
   storage: string;
+  availableStorages?: string[];
   badge: "Best Seller" | "Gaming" | "Value Deal" | "Top Rated";
   stock?: number;
   deviceType?: "Laptop" | "Desktop";
@@ -449,8 +451,10 @@ export default function App() {
       description: productForm.description || '',
       boxContents: productForm.boxContents || '',
       processor: productForm.processor || 'Intel Core i5',
-      ram: productForm.ram as "8GB" | "16GB" | "32GB" || '8GB',
+      ram: productForm.ram || '8GB',
+      availableRams: (productForm.ram || '8GB').split(',').map(s => s.trim()).filter(Boolean),
       storage: productForm.storage || '256GB SSD',
+      availableStorages: (productForm.storage || '256GB SSD').split(',').map(s => s.trim()).filter(Boolean),
       badge: productForm.badge as "Best Seller" | "Gaming" | "Value Deal" | "Top Rated" || 'Top Rated',
       stock: productForm.stock !== undefined ? productForm.stock : 1,
     };
@@ -1788,24 +1792,27 @@ export default function App() {
               </div>
 
               <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>RAM Size</label>
-                <select
-                  value={productForm.ram} onChange={e => setProductForm({ ...productForm, ram: e.target.value as any })}
-                  className="form-input" style={{ background: '#0d1117' }}
-                >
-                  <option value="8GB">8GB RAM</option>
-                  <option value="16GB">16GB RAM</option>
-                  <option value="32GB">32GB RAM</option>
-                </select>
+                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>RAM Size(s)</label>
+                <input
+                  type="text" placeholder="e.g. 8GB, 16GB (separate multiple with commas)"
+                  value={productForm.ram || ''} onChange={e => setProductForm({ ...productForm, ram: e.target.value })}
+                  className="form-input"
+                />
+                <span style={{ display: 'block', color: '#38BDF8', fontSize: 10, marginTop: 4, fontWeight: 600 }}>
+                  * Enter multiple separated by commas (e.g. 8GB, 16GB) to enable selectors on storefront.
+                </span>
               </div>
 
               <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Storage Size</label>
+                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Storage Size(s)</label>
                 <input
-                  type="text" placeholder="e.g. 512GB SSD"
-                  value={productForm.storage} onChange={e => setProductForm({ ...productForm, storage: e.target.value })}
+                  type="text" placeholder="e.g. 256GB SSD, 512GB SSD"
+                  value={productForm.storage || ''} onChange={e => setProductForm({ ...productForm, storage: e.target.value })}
                   className="form-input"
                 />
+                <span style={{ display: 'block', color: '#38BDF8', fontSize: 10, marginTop: 4, fontWeight: 600 }}>
+                  * Enter multiple separated by commas (e.g. 256GB SSD, 512GB SSD) to enable selectors on storefront.
+                </span>
               </div>
 
               <div style={{ gridColumn: 'span 2' }}>

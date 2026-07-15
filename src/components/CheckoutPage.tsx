@@ -402,7 +402,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
                 <CreditCard size={20} color={COLORS.green} /> Payment Method
               </h2>
               {PAYMENT_OPTIONS.map(({ val, label, icon }) => (
-                <label key={val} style={{ display: "flex", alignItems: "center", gap: 14, background: payment === val ? "rgba(59,130,246,0.12)" : COLORS.background, border: `1px solid ${payment === val ? COLORS.green : COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, cursor: "pointer" }}>
+                <label key={val} style={{ display: "flex", alignItems: "center", gap: 14, background: payment === val ? "rgba(56,189,248,0.06)" : COLORS.background, border: `1px solid ${payment === val ? COLORS.green : COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, cursor: "pointer" }}>
                   <input type="radio" name="payment" value={val} checked={payment === val} onChange={() => setPayment(val)} style={{ accentColor: COLORS.green }} />
                   <span style={{ color: payment === val ? COLORS.green : COLORS.muted }}>{icon}</span>
                   <span style={{ color: COLORS.text, fontWeight: 600 }}>{label}</span>

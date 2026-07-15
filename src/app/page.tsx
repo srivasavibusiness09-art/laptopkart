@@ -24,6 +24,7 @@ import {
   LoginPage,
   WhyRefurbishedPage,
   WriteBlogPage,
+  BlogDetail,
   AccessoriesPage,
 } from "@/components/OtherPages";
 
@@ -39,6 +40,7 @@ export default function App() {
   const [showLanding, setShowLanding] = useState(true);
   const [page, setPage] = useState("home");
   const [listingCategory, setListingCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<number[]>([]);
@@ -176,6 +178,8 @@ export default function App() {
     } else {
       if (pageStr === "listing") {
         setListingCategory("All");
+      } else {
+        setSearchQuery("");
       }
     }
 
@@ -406,6 +410,13 @@ export default function App() {
         cart={cart}
         wishlist={wishlist}
         user={user}
+        onSearch={(q) => {
+          setSearchQuery(q);
+          if (q.trim()) {
+            handleNavigate("listing");
+          }
+        }}
+        searchQuery={searchQuery}
       />
 
       {page === "home" && (
@@ -431,6 +442,8 @@ export default function App() {
           onWishlist={handleWishlist}
           wishlist={wishlist}
           initialCategory={listingCategory}
+          initialSearch={searchQuery}
+          onSearchChange={setSearchQuery}
         />
       )}
       {page === "product" && (
@@ -461,8 +474,12 @@ export default function App() {
       )}
       {page === "compare" && <ComparePage productsList={productsList} />}
       {page === "about" && <AboutPage />}
-      {page === "blog" && <BlogPage user={user} setPage={handleNavigate} />}
-      {page === "contact" && <ContactPage />}
+      {page.startsWith("blog-") && user && (
+        <BlogDetail postId={page.replace("blog-", "")} setPage={handleNavigate} />
+      )}
+      {page === "blog" && user && (
+        <BlogPage user={user} setPage={handleNavigate} />
+      )}{page === "contact" && <ContactPage />}
       {page === "login" && <LoginPage setPage={handleNavigate} onLogin={handleLogin} triggerAlert={triggerStoreAlert} />}
       {page === "profile" && user && (
         <ProfilePage user={user} setUser={setUser} setPage={handleNavigate} triggerAlert={triggerStoreAlert} />

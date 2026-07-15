@@ -6,6 +6,9 @@ import { COLORS } from "@/data/products";
 import type { Product } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import { useIsMobile } from "@/lib/hooks";
+import Card from "./common/Card";
+import Button from "./common/Button";
+import Dropdown from "./common/Dropdown";
 
 interface ProductListingProps {
   products: Product[];
@@ -14,6 +17,8 @@ interface ProductListingProps {
   onWishlist: (id: number) => void;
   wishlist: number[];
   initialCategory?: string;
+  initialSearch?: string;
+  onSearchChange?: (q: string) => void;
 }
 
 const filterConfig = [
@@ -34,13 +39,20 @@ const sortOptions = [
   { label: "Biggest Discount", value: "discount" },
 ];
 
-export default function ProductListing({ products, onViewProduct, onAddToCart, onWishlist, wishlist, initialCategory = "All" }: ProductListingProps) {
+export default function ProductListing({
+  products, onViewProduct, onAddToCart, onWishlist, wishlist, initialCategory = "All",
+  initialSearch = "", onSearchChange
+}: ProductListingProps) {
   const [filters, setFilters] = useState<Filters>({ brand: "", ram: "", grade: "", condition: "", priceMax: 200000 });
   const [sort, setSort]       = useState("popular");
-  const [search, setSearch]   = useState("");
+  const [search, setSearch]   = useState(initialSearch);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    setSearch(initialSearch);
+  }, [initialSearch]);
 
   // Reset pagination limit when search or filters change
   useEffect(() => {
@@ -100,10 +112,10 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
                     onClick={() => setFilter(f.key, opt)}
                     style={{
                       display: "flex", justifyContent: "space-between", alignItems: "center",
-                      background: active ? "rgba(56,189,248,0.12)" : "transparent",
-                      border: `1px solid ${active ? "rgba(56,189,248,0.35)" : "rgba(255,255,255,0.07)"}`,
+                      background: active ? "rgba(0, 229, 255, 0.08)" : "transparent",
+                      border: `1px solid ${active ? "rgba(0, 229, 255, 0.35)" : "rgba(255, 255, 255, 0.07)"}`,
                       borderRadius: 10, padding: "9px 14px",
-                      cursor: "pointer", color: active ? COLORS.green : COLORS.muted,
+                      cursor: "pointer", color: active ? "#00E5FF" : COLORS.muted,
                       fontSize: 13, fontWeight: active ? 700 : 400,
                       transition: "all 0.2s", textAlign: "left",
                     }}
@@ -125,14 +137,14 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
           letterSpacing: "0.06em", textTransform: "uppercase",
           marginBottom: 6, fontFamily: "'Sora', sans-serif",
         }}>Max Price</div>
-        <div style={{ color: COLORS.green, fontSize: 20, fontWeight: 800, fontFamily: "'Sora', sans-serif", marginBottom: 10 }}>
+        <div style={{ color: "#00E5FF", fontSize: 20, fontWeight: 800, fontFamily: "'Sora', sans-serif", marginBottom: 10 }}>
           ₹{filters.priceMax.toLocaleString("en-IN")}
         </div>
         <input
           type="range" min={10000} max={200000} step={5000}
           value={filters.priceMax}
           onChange={(e) => setFilters((f) => ({ ...f, priceMax: Number(e.target.value) }))}
-          style={{ width: "100%", accentColor: COLORS.green }}
+          style={{ width: "100%", accentColor: "#00E5FF" }}
         />
         <div style={{ display: "flex", justifyContent: "space-between", color: COLORS.muted, fontSize: 11, marginTop: 4 }}>
           <span>₹10K</span><span>₹2L</span>
@@ -174,7 +186,10 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
               }} />
               <input
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  onSearchChange?.(e.target.value);
+                }}
                 placeholder={`Search ${initialCategory === "Desktops" ? "desktops" : "laptops"}, specs…`}
                 style={{
                   width: "100%", background: COLORS.cardBg,
@@ -188,26 +203,12 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
               />
             </div>
 
-            <div style={{ position: "relative" }}>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                style={{
-                  background: COLORS.cardBg,
-                  border: `1px solid ${COLORS.cardBorder}`,
-                  borderRadius: 12, padding: "11px 40px 11px 14px",
-                  color: COLORS.text, fontSize: 14, outline: "none",
-                  cursor: "pointer", appearance: "none",
-                }}
-              >
-                {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-              <ChevronDown size={14} style={{
-                position: "absolute", right: 12, top: "50%",
-                transform: "translateY(-50%)", color: COLORS.muted,
-                pointerEvents: "none",
-              }} />
-            </div>
+            <Dropdown
+              options={sortOptions}
+              value={sort}
+              onChange={(val) => setSort(val)}
+              style={{ minWidth: 180 }}
+            />
 
             {/* Filter toggle (mobile) */}
             {isMobile && (
@@ -252,12 +253,15 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
         }}>
           {/* Desktop sidebar filters */}
           {!isMobile && (
-            <div style={{
-              background: COLORS.cardBg,
-              border: `1px solid ${COLORS.cardBorder}`,
-              borderRadius: 20, padding: 24,
-              position: "sticky", top: 72,
-            }}>
+            <Card
+              hoverable={false}
+              style={{
+                padding: 24,
+                position: "sticky",
+                top: 72,
+                border: "1px solid rgba(0, 229, 255, 0.12)",
+              }}
+            >
               <div style={{
                 display: "flex", justifyContent: "space-between",
                 alignItems: "center", marginBottom: 24,
@@ -267,7 +271,7 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
                   fontFamily: "'Sora', sans-serif",
                   display: "flex", alignItems: "center", gap: 7,
                 }}>
-                  <SlidersHorizontal size={15} color={COLORS.green} />
+                  <SlidersHorizontal size={15} color="#00E5FF" />
                   Filters
                 </div>
                 {activeCount > 0 && (
@@ -281,7 +285,7 @@ export default function ProductListing({ products, onViewProduct, onAddToCart, o
                 )}
               </div>
               <FilterPanel />
-            </div>
+            </Card>
           )}
 
           {/* Product grid */}

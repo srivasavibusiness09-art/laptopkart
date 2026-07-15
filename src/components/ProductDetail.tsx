@@ -40,6 +40,20 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   const [added, setAdded] = useState(false);
   const isMobile = useIsMobile();
 
+  // RAM configuration options
+  const ramOptions = product?.availableRams && product.availableRams.length > 0
+    ? product.availableRams
+    : (product?.ram ? product.ram.split(",").map(r => r.trim()).filter(Boolean) : []);
+
+  const [selectedRam, setSelectedRam] = useState(ramOptions[0] || "8GB");
+
+  // Storage configuration options
+  const storageOptions = product?.availableStorages && product.availableStorages.length > 0
+    ? product.availableStorages
+    : (product?.storage ? product.storage.split(",").map(s => s.trim()).filter(Boolean) : []);
+
+  const [selectedStorage, setSelectedStorage] = useState(storageOptions[0] || "256GB SSD");
+
   const getAboutText = (name: string, brand: string, cat: string, isBrandNew?: boolean) => {
     if (isBrandNew) {
       return `The brand new ${name} is a high-performance ${cat.toLowerCase()} machine engineered by ${brand} for cutting-edge speed, reliability, and modern efficiency. Factory sealed in its original packaging, this device comes with a full direct manufacturer warranty, ensuring pristine condition, peak battery runtime, and absolute peace of mind.`;
@@ -69,6 +83,17 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
     setActiveImgIdx(0);
     setIsHovered(false);
     setZoomStyle({ transform: "scale(1)", transformOrigin: "center" });
+
+    const options = product?.availableRams && product.availableRams.length > 0
+      ? product.availableRams
+      : (product?.ram ? product.ram.split(",").map(r => r.trim()).filter(Boolean) : []);
+    setSelectedRam(options[0] || "8GB");
+
+    const sOptions = product?.availableStorages && product.availableStorages.length > 0
+      ? product.availableStorages
+      : (product?.storage ? product.storage.split(",").map(s => s.trim()).filter(Boolean) : []);
+    setSelectedStorage(sOptions[0] || "256GB SSD");
+
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }
@@ -89,7 +114,17 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   const related = productsList.filter((p) => p.id !== product.id).slice(0, 4);
 
   const handleAdd = () => {
-    for (let i = 0; i < qty; i++) onAddToCart(product);
+    const customizedProduct = {
+      ...product,
+      ram: selectedRam,
+      storage: selectedStorage,
+      specs: product.specs
+        .replace(/(\d+\s*GB\s*RAM)/i, `${selectedRam} RAM`)
+        .replace(/(\d+\s*GB\s*Memory)/i, `${selectedRam} Memory`)
+        .replace(/(\d+\s*GB\s*SSD)/i, selectedStorage)
+        .replace(/(\d+\s*TB\s*SSD)/i, selectedStorage),
+    };
+    for (let i = 0; i < qty; i++) onAddToCart(customizedProduct);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -124,9 +159,13 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
 
   const specs = [
     ["CPU", product.processor],
-    ["RAM", product.ram],
-    ["Storage", product.storage],
-    ["Specs Detail", product.specs],
+    ["RAM", selectedRam],
+    ["Storage", selectedStorage],
+    ["Specs Detail", product.specs
+      .replace(/(\d+\s*GB\s*RAM)/i, `${selectedRam} RAM`)
+      .replace(/(\d+\s*GB\s*Memory)/i, `${selectedRam} Memory`)
+      .replace(/(\d+\s*GB\s*SSD)/i, selectedStorage)
+      .replace(/(\d+\s*TB\s*SSD)/i, selectedStorage)],
     product.condition === "Brand New"
       ? ["Condition", "100% Brand New (Original Sealed Box)"]
       : ["Cosmetic Quality", `Grade ${product.grade} (Certified Refurbished)`],
@@ -420,6 +459,101 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
           </span>
         </div>
       </div>
+
+      {/* RAM Selection Pills */}
+      {ramOptions.length > 0 && (
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ color: COLORS.muted, fontSize: 11, fontWeight: 700, textTransform: "uppercase", marginBottom: 10, letterSpacing: "0.05em" }}>
+            Select Memory Configuration (RAM)
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {ramOptions.map((ramOpt) => {
+              const isSelected = selectedRam === ramOpt;
+              return (
+                <button
+                  key={ramOpt}
+                  onClick={() => setSelectedRam(ramOpt)}
+                  style={{
+                    background: isSelected ? "rgba(59, 130, 246, 0.08)" : "rgba(255,255,255,0.01)",
+                    border: `1px solid ${isSelected ? "#3B82F6" : "rgba(255,255,255,0.08)"}`,
+                    borderRadius: 12,
+                    padding: "10px 18px",
+                    color: isSelected ? "#3B82F6" : COLORS.text,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease-in-out",
+                    fontFamily: "'Sora', sans-serif",
+                    outline: "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.3)";
+                      e.currentTarget.style.background = "rgba(59, 130, 246, 0.03)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                      e.currentTarget.style.background = "rgba(255,255,255,0.01)";
+                    }
+                  }}
+                >
+                  {ramOpt}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Storage Selection Pills */}
+      {storageOptions.length > 0 && (
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ color: COLORS.muted, fontSize: 11, fontWeight: 700, textTransform: "uppercase", marginBottom: 10, letterSpacing: "0.05em" }}>
+            Select Storage Configuration
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {storageOptions.map((storeOpt) => {
+              const isSelected = selectedStorage === storeOpt;
+              return (
+                <button
+                  key={storeOpt}
+                  onClick={() => setSelectedStorage(storeOpt)}
+                  style={{
+                    background: isSelected ? "rgba(59, 130, 246, 0.08)" : "rgba(255,255,255,0.01)",
+                    border: `1px solid ${isSelected ? "#3B82F6" : "rgba(255,255,255,0.08)"}`,
+                    borderRadius: 12,
+                    padding: "10px 18px",
+                    color: isSelected ? "#3B82F6" : COLORS.text,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease-in-out",
+                    fontFamily: "'Sora', sans-serif",
+                    outline: "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.3)";
+                      e.currentTarget.style.background = "rgba(59, 130, 246, 0.03)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                      e.currentTarget.style.background = "rgba(255,255,255,0.01)";
+                    }
+                  }}
+                >
+                  {storeOpt}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
         <div style={{
           display: "flex", alignItems: "center", gap: 0,

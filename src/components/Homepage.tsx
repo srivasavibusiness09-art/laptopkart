@@ -5,7 +5,8 @@ import {
   Microscope, BadgeDollarSign, ArrowRight, Recycle, Star,
   Laptop,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { COLORS, categories, reviews } from "@/data/products";
 import type { Product } from "@/data/products";
 import Hero from "@/components/Hero";
@@ -13,6 +14,9 @@ import ProductCard from "@/components/ProductCard";
 import { useIsMobile } from "@/lib/hooks";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import Card from "./common/Card";
+import Button from "./common/Button";
+import RatingStars from "./common/RatingStars";
 
 /* ── Trust Strip ──────────────────────────────────────── */
 const trustItems = [
@@ -26,9 +30,11 @@ const trustItems = [
 function TrustStrip() {
   return (
     <div style={{
-      background: COLORS.background,
-      borderTop: "1px solid rgba(56,150,240,0.08)",
-      borderBottom: "1px solid rgba(56,150,240,0.08)",
+      background: "rgba(10, 15, 30, 0.6)",
+      borderTop: "1px solid rgba(0, 229, 255, 0.08)",
+      borderBottom: "1px solid rgba(0, 229, 255, 0.08)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
       padding: "18px 24px",
     }}>
       <div style={{
@@ -58,19 +64,24 @@ function SectionHeader({ eyebrow, title, subtitle }: { eyebrow?: string; title: 
       {eyebrow && (
         <div style={{
           display: "inline-block",
-          color: COLORS.green, fontSize: 12, fontWeight: 700,
+          color: "#00E5FF", fontSize: 11, fontWeight: 800,
           letterSpacing: "0.08em", textTransform: "uppercase",
           marginBottom: 12,
-          background: "rgba(56,189,248,0.08)",
-          padding: "4px 14px", borderRadius: 100,
-          border: "1px solid rgba(56,189,248,0.15)",
+          background: "rgba(0, 229, 255, 0.06)",
+          padding: "5px 14px", borderRadius: 100,
+          border: "1px solid rgba(0, 229, 255, 0.22)",
+          boxShadow: "0 0 15px rgba(0, 229, 255, 0.1)",
         }}>{eyebrow}</div>
       )}
       <h2 style={{
         fontFamily: "'Sora', sans-serif",
         fontSize: "clamp(26px, 4vw, 46px)",
         fontWeight: 800, letterSpacing: "-0.03em",
-        color: COLORS.text, margin: "0 0 12px", lineHeight: 1.1,
+        color: "transparent",
+        backgroundImage: "linear-gradient(135deg, #FFFFFF 30%, #A5B4CD 100%)",
+        backgroundClip: "text",
+        WebkitBackgroundClip: "text",
+        margin: "0 0 12px", lineHeight: 1.1,
       }}>{title}</h2>
       {subtitle && <p style={{ color: COLORS.muted, fontSize: 15, maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>{subtitle}</p>}
     </div>
@@ -176,6 +187,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
 
   // Offer & Contest states
   const [activeSlideIdx, setActiveSlideIdx] = useState(0);
+  const [activeTopPickIdx, setActiveTopPickIdx] = useState(0); // Start with the first card active and centered
 
 
   useEffect(() => {
@@ -500,44 +512,121 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
       {section(
         <>
           <SectionHeader eyebrow="Featured" title="Top Picks For You" subtitle="Handpicked devices with best value and performance" />
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: isMobile
-              ? "repeat(auto-fill,minmax(148px,1fr))"
-              : "repeat(auto-fill,minmax(260px,1fr))",
-            gap: isMobile ? 12 : 20,
-          }}>
-            {products.map((p, i) => (
-              <div key={p.id} style={{ animation: `fadeUp 0.5s ease ${i * 0.06}s both` }}>
-                <ProductCard product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
+          
+          {!isMobile ? (
+            /* Desktop/Laptop Grid Layout */
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+              gap: 20,
+              marginBottom: 40
+            }}>
+              {products.map((p, i) => (
+                <div key={p.id} style={{ animation: `fadeUp 0.5s ease ${i * 0.06}s both` }}>
+                  <ProductCard product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Mobile & Tablet Stacked Deck Carousel Layout */
+            <>
+              <div style={{
+                position: "relative",
+                width: "100%",
+                height: 380,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                overflow: "hidden",
+                padding: "20px 0"
+              }}>
+                <div style={{
+                  position: "relative",
+                  width: "100%",
+                  maxWidth: 800,
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}>
+                  {products.slice(0, 5).map((p, index) => {
+                    const len = 5;
+                    // Compute circular distance offset so stack stays symmetric
+                    let offset = index - activeTopPickIdx;
+                    if (offset > len / 2) offset -= len;
+                    if (offset < -len / 2) offset += len;
+
+                    const isCenter = index === activeTopPickIdx;
+                    const absOffset = Math.abs(offset);
+
+                    if (absOffset > 2) return null;
+
+                    return (
+                      <motion.div
+                        key={p.id}
+                        onClick={() => setActiveTopPickIdx(index)}
+                        animate={{
+                          x: offset * 110,
+                          scale: isCenter ? 1.05 : 0.85,
+                          rotate: offset * 8,
+                          opacity: absOffset > 2 ? 0 : 1,
+                          zIndex: 10 - absOffset,
+                        }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 260,
+                          damping: 25,
+                        }}
+                        style={{
+                          position: "absolute",
+                          width: 180,
+                          height: 320,
+                          cursor: "pointer",
+                          transformOrigin: "center center",
+                        }}
+                      >
+                        <ProductCard product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
-            ))}
-          </div>
-          <div style={{ textAlign: "center", marginTop: 40 }}>
-            <button
+
+              {/* Carousel Dot Selectors (Mobile only) */}
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: 8,
+                marginTop: 20,
+                marginBottom: 28
+              }}>
+                {products.slice(0, 5).map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveTopPickIdx(idx)}
+                    style={{
+                      width: activeTopPickIdx === idx ? 24 : 8,
+                      height: 8,
+                      borderRadius: 4,
+                      border: "none",
+                      background: activeTopPickIdx === idx ? COLORS.green : "rgba(255,255,255,0.2)",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease"
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          <div style={{ textAlign: "center", marginTop: 24 }}>
+            <Button
+              variant="secondary"
+              size="lg"
               onClick={() => setPage("listing")}
-              style={{
-                background: "rgba(56,189,248,0.07)", color: COLORS.text,
-                border: "1px solid rgba(56,189,248,0.18)",
-                borderRadius: 100, padding: "14px 36px",
-                fontSize: 15, fontWeight: 600,
-                cursor: "pointer", fontFamily: "'Sora', sans-serif",
-                display: "inline-flex", alignItems: "center", gap: 8,
-                transition: "all 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                const b = e.currentTarget as HTMLButtonElement;
-                b.style.borderColor = "rgba(56,189,248,0.38)";
-                b.style.background = "rgba(56,189,248,0.12)";
-              }}
-              onMouseLeave={(e) => {
-                const b = e.currentTarget as HTMLButtonElement;
-                b.style.borderColor = "rgba(56,189,248,0.18)";
-                b.style.background = "rgba(56,189,248,0.07)";
-              }}
             >
               View All Laptops <ArrowRight size={15} />
-            </button>
+            </Button>
           </div>
         </>, true
       )}
@@ -584,18 +673,12 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
               <Laptop size={isMobile ? 40 : 64} color={COLORS.green} />
             </div>
           </div>
-          <button style={{
-            background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000",
-            border: "none", borderRadius: 100,
-            padding: "15px 32px", fontSize: 15, fontWeight: 800,
-            cursor: "pointer", fontFamily: "'Sora', sans-serif",
-            display: "flex", alignItems: "center", gap: 8,
-            width: isMobile ? "100%" : "auto", justifyContent: "center",
-            boxShadow: "0 0 40px rgba(56,189,248,0.25)",
-            minHeight: 48,
-          }}>
+          <Button
+            size="lg"
+            style={{ width: isMobile ? "100%" : "auto" }}
+          >
             Exchange Now <ArrowRight size={15} />
-          </button>
+          </Button>
         </div>
       )}
 
@@ -609,26 +692,14 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
             gap: isMobile ? 12 : 20,
           }}>
             {whyItems.map((f, i) => (
-              <div key={f.t} style={{
-                background: COLORS.cardBg,
-                border: `1px solid ${COLORS.cardBorder}`,
-                borderRadius: 20, padding: isMobile ? "20px 14px" : "28px 20px",
-                textAlign: "center",
-                animation: `fadeUp 0.5s ease ${i * 0.08}s both`,
-                transition: "all 0.3s ease",
-                position: "relative", overflow: "hidden",
-              }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLDivElement;
-                  el.style.borderColor = "rgba(56,189,248,0.28)";
-                  el.style.transform = "translateY(-4px)";
-                  el.style.boxShadow = "0 16px 48px rgba(0,0,0,0.3)";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLDivElement;
-                  el.style.borderColor = COLORS.cardBorder;
-                  el.style.transform = "none";
-                  el.style.boxShadow = "none";
+              <Card
+                key={f.t}
+                style={{
+                  padding: isMobile ? "20px 14px" : "28px 20px",
+                  textAlign: "center",
+                  animation: `fadeUp 0.5s ease ${i * 0.08}s both`,
+                  position: "relative",
+                  overflow: "hidden",
                 }}
               >
                 {/* Top accent line */}
@@ -639,7 +710,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>{f.icon}</div>
                 <div style={{ color: COLORS.text, fontWeight: 700, fontSize: isMobile ? 12 : 13, fontFamily: "'Sora', sans-serif", marginBottom: 4 }}>{f.t}</div>
                 <div style={{ color: COLORS.muted, fontSize: isMobile ? 11 : 12 }}>{f.d}</div>
-              </div>
+              </Card>
             ))}
           </div>
         </>, true
@@ -662,23 +733,16 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
 
         return section(
           <>
-            <SectionHeader eyebrow="Reviews" title="1000+ Happy Customers" subtitle="Trusted by students, professionals, and businesses across India" />
+            <SectionHeader eyebrow="Reviews" title="5000+ Happy Customers" subtitle="Trusted by students, professionals, and businesses across India" />
 
             {/* Write a Review Toggle */}
             <div style={{ textAlign: "center", marginBottom: 32 }}>
-              <button
+              <Button
                 onClick={() => setIsWritingReview(!isWritingReview)}
-                style={{
-                  background: isWritingReview ? "rgba(255,255,255,0.06)" : `linear-gradient(135deg, ${COLORS.green}, #38BDF8)`,
-                  color: isWritingReview ? "#fff" : "#000",
-                  border: isWritingReview ? "1px solid rgba(255,255,255,0.12)" : "none",
-                  borderRadius: 12, padding: "10px 24px", fontSize: 13, fontWeight: 800,
-                  cursor: "pointer", fontFamily: "'Sora', sans-serif",
-                  display: "inline-flex", alignItems: "center", gap: 8, transition: "all 0.2s"
-                }}
+                variant={isWritingReview ? "secondary" : "primary"}
               >
                 {isWritingReview ? "Cancel Review" : "Write a Review"}
-              </button>
+              </Button>
             </div>
 
             {/* Submit Success Toast */}
@@ -772,18 +836,13 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                   />
                 </div>
 
-                <button
+                <Button
                   type="submit"
                   disabled={reviewSubmitting}
-                  style={{
-                    background: `linear-gradient(135deg, ${COLORS.green}, #38BDF8)`,
-                    color: "#000", border: "none", borderRadius: 12,
-                    height: 48, fontWeight: 800, fontSize: 14, cursor: "pointer",
-                    fontFamily: "'Sora', sans-serif", display: "flex", alignItems: "center", justifyContent: "center"
-                  }}
+                  style={{ height: 48, width: "100%" }}
                 >
                   {reviewSubmitting ? "Submitting Review..." : "Submit Review"}
-                </button>
+                </Button>
               </form>
             )}
 
@@ -794,23 +853,14 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
               gap: 20,
             }}>
               {displayedReviews.map((r, i) => (
-                <div key={`${r.name}-${i}`} style={{
-                  background: COLORS.cardBg,
-                  border: `1px solid ${COLORS.cardBorder}`,
-                  borderRadius: 20, padding: 24,
-                  animation: `fadeUp 0.5s ease ${i * 0.1}s both`,
-                  transition: "border-color 0.2s",
-                }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(56,189,248,0.22)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.cardBorder; }}
+                <Card
+                  key={`${r.name}-${i}`}
+                  style={{
+                    padding: 24,
+                    animation: `fadeUp 0.5s ease ${i * 0.1}s both`,
+                  }}
                 >
-                  <div style={{ display: "flex", gap: 2, marginBottom: 12 }}>
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} size={13}
-                        fill={s <= r.rating ? "#F59E0B" : "transparent"}
-                        color={s <= r.rating ? "#F59E0B" : "rgba(255,255,255,0.15)"} />
-                    ))}
-                  </div>
+                  <RatingStars rating={r.rating} size={13} style={{ marginBottom: 12 }} />
                   <p style={{ color: COLORS.text, fontSize: 14, lineHeight: 1.7, margin: "0 0 16px" }}>
                     &ldquo;{r.text}&rdquo;
                   </p>
@@ -830,27 +880,19 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                       <div style={{ color: COLORS.muted, fontSize: 12 }}>{r.city}</div>
                     </div>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
 
             {/* Show More toggle button */}
             {combinedReviews.length > 6 && (
               <div style={{ textAlign: "center", marginTop: 36 }}>
-                <button
+                <Button
                   onClick={() => setShowAllReviews(!showAllReviews)}
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    color: "#fff", borderRadius: 12, padding: "10px 28px",
-                    fontSize: 13, fontWeight: 700, cursor: "pointer",
-                    fontFamily: "'Sora', sans-serif", transition: "all 0.2s"
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+                  variant="ghost"
                 >
                   {showAllReviews ? "Show Less Reviews" : `Show More Reviews (${combinedReviews.length - 6} more)`}
-                </button>
+                </Button>
               </div>
             )}
           </>, true
@@ -859,14 +901,15 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
 
       {/* ── Newsletter ───────────────────────────── */}
       {section(
-        <div style={{
-          background: COLORS.cardBg,
-          border: `1px solid ${COLORS.cardBorder}`,
-          borderRadius: 28,
-          padding: isMobile ? "32px 18px" : "60px 48px",
-          textAlign: "center",
-          backgroundImage: "radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 60%), radial-gradient(ellipse at 50% 100%, rgba(56,189,248,0.06) 0%, transparent 60%)",
-        }}>
+        <Card
+          hoverable={false}
+          style={{
+            padding: isMobile ? "32px 18px" : "60px 48px",
+            textAlign: "center",
+            backgroundImage: "radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 60%), radial-gradient(ellipse at 50% 100%, rgba(56,189,248,0.06) 0%, transparent 60%)",
+            border: "1px solid rgba(0, 229, 255, 0.12)",
+          }}
+        >
           <h3 style={{
             fontFamily: "'Sora', sans-serif",
             fontSize: "clamp(22px,3.5vw,38px)", fontWeight: 800,
@@ -884,28 +927,26 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
             <input
               placeholder="Enter your email"
               style={{
-                flex: 1, background: COLORS.background,
-                border: `1px solid ${COLORS.cardBorder}`,
+                flex: 1, background: "rgba(10,15,30,0.6)",
+                border: "1px solid rgba(0,229,255,0.18)",
                 borderRadius: 12, padding: "14px 18px",
                 color: COLORS.text, fontSize: 15, outline: "none",
                 boxSizing: "border-box",
               }}
-              onFocus={(e) => { e.target.style.borderColor = "rgba(56,189,248,0.38)"; }}
-              onBlur={(e) => { e.target.style.borderColor = COLORS.cardBorder; }}
+              onFocus={(e) => { e.target.style.borderColor = "rgba(0,229,255,0.45)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "rgba(0,229,255,0.18)"; }}
             />
-            <button style={{
-              background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000",
-              border: "none", borderRadius: 12,
-              padding: "14px 28px", fontWeight: 800, fontSize: 15,
-              cursor: "pointer", fontFamily: "'Sora', sans-serif",
-              whiteSpace: "nowrap",
-              width: isMobile ? "100%" : "auto",
-              minHeight: 48,
-            }}>
+            <Button
+              size="lg"
+              style={{
+                width: isMobile ? "100%" : "auto",
+                minHeight: 48,
+              }}
+            >
               Subscribe
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       )}
     </main>
   );
