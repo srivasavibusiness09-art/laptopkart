@@ -182,7 +182,6 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   const trustBadges = [
     { icon: <Shield size={14} color={COLORS.green} />, text: product.warranty ?? "1 Year Warranty" },
     { icon: <RefreshCw size={14} color={COLORS.green} />, text: "7 Day Returns" },
-    { icon: <Truck size={14} color={COLORS.green} />, text: "Free Delivery" },
     product.condition === "Brand New"
       ? { icon: <Zap size={14} color={COLORS.green} />, text: "Brand New" }
       : { icon: <BadgeCheck size={14} color={COLORS.green} />, text: "Grade " + product.grade },
@@ -453,9 +452,6 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 100,
           }}>
             You save ₹{(product.mrp - product.price).toLocaleString("en-IN")}
-          </span>
-          <span style={{ color: COLORS.muted, fontSize: 12 }}>
-            EMI* from ₹{Math.round(product.price / 12).toLocaleString("en-IN")}/mo
           </span>
         </div>
       </div>

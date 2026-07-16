@@ -28,19 +28,12 @@ interface CheckoutPageProps {
   user: { uid: string; email: string; name: string };
 }
 
-const STEPS = ["Address", "Delivery", "Payment", "Confirm"] as const;
-
-const DELIVERY_OPTIONS = [
-  { name: "Standard (Free)", time: "3-5 days", price: "₹0", icon: <Truck size={18} /> },
-  { name: "Express", time: "1-2 days", price: "₹199", icon: <Zap size={18} /> },
-  { name: "Same Day", time: "Today", price: "₹399", icon: <MapPin size={18} /> },
-];
+const STEPS = ["Address", "Payment", "Confirm"] as const;
 
 const PAYMENT_OPTIONS = [
   { val: "upi", label: "UPI / PhonePe / GPay", icon: <Smartphone size={20} /> },
   { val: "card", label: "Credit / Debit Card", icon: <CreditCard size={20} /> },
   { val: "netbanking", label: "Net Banking", icon: <Building2 size={20} /> },
-  { val: "emi", label: "EMI*", icon: <CalendarDays size={20} /> },
   { val: "cod", label: "Cash on Delivery", icon: <Banknote size={20} /> },
 ];
 
@@ -120,7 +113,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
 
   const handleNext = async () => {
     // If they choose payment, launch Razorpay Checkout flow
-    if (step === 2) {
+    if (step === 1) {
       setIsProcessing(true);
       let finalOrderId = orderId;
       try {
@@ -164,10 +157,10 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
           }, { merge: true });
 
           setCart([]);
-          setStep(3);
+          setStep(2);
         } catch (e) {
           console.error("Failed to save COD order:", e);
-          setStep(3);
+          setStep(2);
         } finally {
           setIsProcessing(false);
         }
@@ -241,7 +234,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
               }, { merge: true });
 
               setCart([]);
-              setStep(3);
+              setStep(2);
             } catch (err) {
               console.error("Firestore payment write failed:", err);
               alert("Payment was successful, but saving order failed. Please notify customer support.");
@@ -251,48 +244,33 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
           },
           prefill: {
             name: address.name,
-            contact: address.phone,
-            email: "srivasavibusiness09@gmail.com"
+            email: user.email,
+            contact: address.phone
           },
           theme: {
-            color: "#10b981"
-          },
-          modal: {
-            ondismiss: function () {
-              setIsProcessing(false);
-            }
+            color: "#3B82F6"
           }
         };
 
         const rzp = new (window as any).Razorpay(options);
         rzp.open();
-      } catch (err: any) {
-        console.warn("Razorpay API not active. Simulating sandbox checkout.", err);
+      } catch (err) {
+        console.error("Razorpay workflow failed:", err);
+        // Fallback for sandboxed sandbox environments
         try {
-          const newOrder = {
+          const orderRef = doc(db, "orders", finalOrderId);
+          await setDoc(orderRef, {
             orderId: finalOrderId,
             createdAt: new Date().toISOString(),
-            items: cart.map(item => ({
-              id: item.id,
-              name: item.name,
-              price: item.price,
-              qty: item.qty || 1,
-              img: item.img
-            })),
+            items: cart.map(item => ({ id: item.id, name: item.name, price: item.price, qty: item.qty || 1, img: item.img })),
             total,
             address,
-            status: "Paid (Simulated)",
+            status: "Simulated Payment Success",
             paymentMethod: payment,
             email: user.email,
-            uid: user.uid,
-            razorpayOrderId: "order_mock_" + Math.random().toString(36).substring(2, 10),
-            razorpayPaymentId: "pay_mock_" + Math.random().toString(36).substring(2, 10)
-          };
+            uid: user.uid
+          });
 
-          const orderRef = doc(db, "orders", finalOrderId);
-          await setDoc(orderRef, newOrder);
-
-          // Update default address details inside users doc for subsequent orders
           await setDoc(doc(db, "users", user.uid), {
             phone: address.phone,
             street: address.street,
@@ -302,11 +280,11 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
           }, { merge: true });
 
           setCart([]);
-          setStep(3);
+          setStep(2);
         } catch (e) {
           console.error("Firestore sandbox write failed:", e);
           setCart([]);
-          setStep(3);
+          setStep(2);
         } finally {
           setIsProcessing(false);
         }
@@ -372,31 +350,8 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
             </div>
           )}
 
-          {/* Step 1: Delivery */}
+          {/* Step 1: Payment */}
           {step === 1 && (
-            <div>
-              <h2 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
-                <Truck size={20} color={COLORS.green} /> Choose Delivery
-              </h2>
-              {DELIVERY_OPTIONS.map(({ name, time, price, icon }) => (
-                <div key={name} style={{ background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", cursor: "pointer", gap: 12, flexDirection: isMobile ? "column" : "row" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ color: COLORS.green }}>{icon}</span>
-                    <div>
-                      <div style={{ color: COLORS.text, fontWeight: 600 }}>{name}</div>
-                      <div style={{ color: COLORS.muted, fontSize: 13 }}>{time}</div>
-                    </div>
-                  </div>
-                  <span style={{ color: price === "₹0" ? COLORS.green : COLORS.text, fontWeight: 700 }}>
-                    {price === "₹0" ? "FREE" : price}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Step 2: Payment */}
-          {step === 2 && (
             <div>
               <h2 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
                 <CreditCard size={20} color={COLORS.green} /> Payment Method
@@ -411,8 +366,8 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
             </div>
           )}
 
-          {/* Step 3: Success */}
-          {step === 3 && (
+          {/* Step 2: Success */}
+          {step === 2 && (
             <div style={{ textAlign: "center", padding: "40px 0" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
                 <PartyPopper size={80} color={COLORS.green} strokeWidth={1.5} />
@@ -427,7 +382,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
           )}
 
           {/* Nav buttons */}
-          {step < 3 && (
+          {step < 2 && (
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32, gap: 10, flexDirection: isMobile ? "column-reverse" : "row" }}>
               {step > 0 && (
                 <button onClick={() => setStep((s) => s - 1)} style={{ background: "transparent", color: COLORS.muted, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 24px", cursor: "pointer", fontSize: 14, width: isMobile ? "100%" : "auto" }}>
@@ -435,7 +390,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
                 </button>
               )}
               <button onClick={handleNext} style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginLeft: "auto", width: isMobile ? "100%" : "auto" }}>
-                {step === 2 ? "Place Order →" : "Continue →"}
+                {step === 1 ? (isProcessing ? "Processing..." : "Place Order") : "Continue"}
               </button>
             </div>
           )}

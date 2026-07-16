@@ -12,7 +12,7 @@ import type { Product } from "@/data/products";
 import Hero from "@/components/Hero";
 import ProductCard from "@/components/ProductCard";
 import { useIsMobile } from "@/lib/hooks";
-import { collection, doc, setDoc } from "firebase/firestore";
+import { collection, doc, setDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Card from "./common/Card";
 import Button from "./common/Button";
@@ -22,8 +22,6 @@ import RatingStars from "./common/RatingStars";
 const trustItems = [
   { icon: <Shield size={15} color={COLORS.green} />, text: "1 Year Warranty" },
   { icon: <RefreshCw size={15} color={COLORS.green} />, text: "7 Day Replacement*" },
-  { icon: <Truck size={15} color={COLORS.green} />, text: "Free Shipping" },
-  { icon: <CreditCard size={15} color={COLORS.green} />, text: "EMI Available*" },
   { icon: <CheckCircle2 size={15} color={COLORS.green} />, text: "Quality Checked" },
 ];
 
@@ -57,7 +55,7 @@ function TrustStrip() {
 }
 
 /* ── Section header ───────────────────────────────────── */
-function SectionHeader({ eyebrow, title, subtitle }: { eyebrow?: string; title: string; subtitle?: string }) {
+function SectionHeader({ eyebrow, title, subtitle, titleColor }: { eyebrow?: string; title: string; subtitle?: string; titleColor?: string }) {
   const isMobile = useIsMobile();
   return (
     <div style={{ marginBottom: isMobile ? 24 : 48, textAlign: "center" }}>
@@ -77,10 +75,10 @@ function SectionHeader({ eyebrow, title, subtitle }: { eyebrow?: string; title: 
         fontFamily: "'Sora', sans-serif",
         fontSize: "clamp(26px, 4vw, 46px)",
         fontWeight: 800, letterSpacing: "-0.03em",
-        color: "transparent",
-        backgroundImage: "linear-gradient(135deg, #FFFFFF 30%, #A5B4CD 100%)",
-        backgroundClip: "text",
-        WebkitBackgroundClip: "text",
+        color: titleColor || "transparent",
+        backgroundImage: titleColor ? "none" : "linear-gradient(135deg, #FFFFFF 30%, #A5B4CD 100%)",
+        backgroundClip: titleColor ? "unset" : "text",
+        WebkitBackgroundClip: titleColor ? "unset" : "text",
         margin: "0 0 12px", lineHeight: 1.1,
       }}>{title}</h2>
       {subtitle && <p style={{ color: COLORS.muted, fontSize: 15, maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>{subtitle}</p>}
@@ -122,6 +120,48 @@ interface HomepageProps {
 export default function Homepage({ products, banners, setPage, onViewProduct, onAddToCart, onWishlist, wishlist, accessories, customerReviews, user, triggerAlert }: HomepageProps) {
   const isMobile = useIsMobile();
   const [step, setStep] = useState(0);
+
+  // Load Featurable widget script after mount to ensure the DOM div is rendered
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const scriptId = "featurable-widget-script";
+      const existing = document.getElementById(scriptId);
+      if (existing) {
+        existing.remove();
+      }
+      const script = document.createElement("script");
+      script.id = scriptId;
+      script.src = "https://cdn.featurable.com/widget/v2/embed.js";
+      script.defer = true;
+      script.setAttribute("charset", "UTF-8");
+      document.body.appendChild(script);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const [videoSettings, setVideoSettings] = useState<{ title: string; subtitle: string; videoUrl: string; orientation?: 'landscape' | 'portrait' } | null>(null);
+
+  // Subscribe to Promo Video settings in Firestore
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      doc(db, "homepage_settings", "video"),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setVideoSettings({
+            title: data.title || "",
+            subtitle: data.subtitle || "",
+            videoUrl: data.videoUrl || "",
+            orientation: data.orientation || "landscape"
+          });
+        }
+      },
+      (err) => {
+        console.error("Failed to load promo video settings:", err);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
 
   // Review states
   const [showAllReviews, setShowAllReviews] = useState(false);
@@ -220,6 +260,162 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
     <main>
       <Hero setPage={setPage} />
       <TrustStrip />
+
+      {/* ── Promo Video Section ── */}
+      {videoSettings && videoSettings.videoUrl && (
+        <div id="promo-video-section">
+          {section(
+            <>
+              {videoSettings.orientation === 'portrait' ? (
+                /* Portrait Split Layout: Content Left, Video Right */
+                <div style={{
+                  display: "flex",
+                  flexDirection: isMobile ? "column" : "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: isMobile ? 32 : 48
+                }}>
+                  {/* Left Column: Text Content */}
+                  <div style={{ flex: 1.2, textAlign: isMobile ? "center" : "left" }}>
+                    <div style={{
+                      display: "inline-block",
+                      color: "#00E5FF", fontSize: 11, fontWeight: 800,
+                      letterSpacing: "0.08em", textTransform: "uppercase",
+                      marginBottom: 12,
+                      background: "rgba(0, 229, 255, 0.06)",
+                      padding: "5px 14px", borderRadius: 100,
+                      border: "1px solid rgba(0, 229, 255, 0.22)",
+                      boxShadow: "0 0 15px rgba(0, 229, 255, 0.1)",
+                    }}>Introduction</div>
+                    <h2 style={{
+                      fontFamily: "'Sora', sans-serif",
+                      fontSize: "clamp(26px, 4vw, 42px)",
+                      fontWeight: 800, letterSpacing: "-0.03em",
+                      color: "#FFFFFF",
+                      margin: "0 0 16px", lineHeight: 1.1,
+                    }}>
+                      {videoSettings.title || "Explore Laptopkart in Action"}
+                    </h2>
+                    <p style={{
+                      color: COLORS.muted,
+                      fontSize: 16,
+                      lineHeight: 1.6,
+                      marginBottom: 24,
+                      maxWidth: isMobile ? "100%" : 540
+                    }}>
+                      {videoSettings.subtitle || "Watch our certified refurbishment process and see why thousands trust us."}
+                    </p>
+
+                    {/* Highly polished trust bullets */}
+                    <div style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12,
+                      textAlign: "left",
+                      maxWidth: 480,
+                      margin: isMobile ? "0 auto" : "0",
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.05)",
+                      borderRadius: 16,
+                      padding: 20
+                    }}>
+                      {[
+                        "Premium Refurbished Laptops at Best Prices",
+                        "1 Year Warranty on All Laptops",
+                        "Fast and Secure Shipping Across India",
+                        "7 Days Easy Replacement Policy"
+                      ].map((bullet, idx) => (
+                        <div key={idx} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#A5B4CD" }}>
+                          <span style={{ color: "#00E5FF", fontWeight: "bold" }}>✓</span>
+                          <span>{bullet}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Vertical Player */}
+                  <div style={{
+                    flex: 1,
+                    width: "100%",
+                    maxWidth: 320,
+                    aspectRatio: "9/16",
+                    background: COLORS.cardBg,
+                    border: "1px solid rgba(56, 189, 248, 0.18)",
+                    borderRadius: 32,
+                    overflow: "hidden",
+                    boxShadow: "0 25px 60px rgba(0, 0, 0, 0.5)",
+                    position: "relative",
+                    margin: "0 auto"
+                  }}>
+                    {videoSettings.videoUrl.includes("youtube.com") || videoSettings.videoUrl.includes("youtu.be") || videoSettings.videoUrl.includes("vimeo.com") ? (
+                      <iframe
+                        src={videoSettings.videoUrl.includes("youtube.com/watch")
+                          ? `https://www.youtube.com/embed/${videoSettings.videoUrl.match(/[?&]v=([^&#]+)/)?.[1] || ''}`
+                          : videoSettings.videoUrl.includes("youtu.be/")
+                          ? `https://www.youtube.com/embed/${videoSettings.videoUrl.split("youtu.be/")[1]?.split("?")[0] || ''}`
+                          : videoSettings.videoUrl
+                        }
+                        style={{ width: "100%", height: "100%", border: "none" }}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        src={videoSettings.videoUrl}
+                        controls
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Landscape Centered Layout */
+                <>
+                  <SectionHeader
+                    eyebrow="Introduction"
+                    title={videoSettings.title || "Explore Laptopkart in Action"}
+                    subtitle={videoSettings.subtitle || "Watch our certified refurbishment process and see why thousands trust us."}
+                    titleColor="#FFFFFF"
+                  />
+
+                  <div style={{
+                    maxWidth: 800,
+                    margin: "0 auto",
+                    background: COLORS.cardBg,
+                    border: "1px solid rgba(56, 189, 248, 0.15)",
+                    borderRadius: 24,
+                    overflow: "hidden",
+                    boxShadow: "0 20px 50px rgba(0, 0, 0, 0.4)",
+                    position: "relative",
+                    aspectRatio: "16/9"
+                  }}>
+                    {videoSettings.videoUrl.includes("youtube.com") || videoSettings.videoUrl.includes("youtu.be") || videoSettings.videoUrl.includes("vimeo.com") ? (
+                      <iframe
+                        src={videoSettings.videoUrl.includes("youtube.com/watch")
+                          ? `https://www.youtube.com/embed/${videoSettings.videoUrl.match(/[?&]v=([^&#]+)/)?.[1] || ''}`
+                          : videoSettings.videoUrl.includes("youtu.be/")
+                          ? `https://www.youtube.com/embed/${videoSettings.videoUrl.split("youtu.be/")[1]?.split("?")[0] || ''}`
+                          : videoSettings.videoUrl
+                        }
+                        style={{ width: "100%", height: "100%", border: "none" }}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        src={videoSettings.videoUrl}
+                        controls
+                        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
+            </>,
+            true
+          )}
+        </div>
+      )}
 
       {/* ── Offers & Contests Section ── */}
       {banners && banners.length > 0 && (
@@ -509,127 +705,153 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
       )}
 
       {/* ── Top Picks ───────────────────────────── */}
-      {section(
-        <>
-          <SectionHeader eyebrow="Featured" title="Top Picks For You" subtitle="Handpicked devices with best value and performance" />
-          
-          {!isMobile ? (
-            /* Desktop/Laptop Grid Layout */
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-              gap: 20,
-              marginBottom: 40
-            }}>
-              {products.map((p, i) => (
-                <div key={p.id} style={{ animation: `fadeUp 0.5s ease ${i * 0.06}s both` }}>
-                  <ProductCard product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            /* Mobile & Tablet Stacked Deck Carousel Layout */
-            <>
+      {(() => {
+        const latestEightLaptops = [...products]
+          .sort((a, b) => {
+            const idA = Number(a.id);
+            const idB = Number(b.id);
+            if (!isNaN(idA) && !isNaN(idB)) {
+              return idB - idA;
+            }
+            return String(b.id).localeCompare(String(a.id));
+          })
+          .slice(0, 8);
+
+        return section(
+          <>
+            <SectionHeader eyebrow="Featured" title="Top Picks For You" subtitle="Handpicked devices with best value and performance" />
+
+            {!isMobile ? (
+              /* Desktop/Laptop Grid Layout */
               <div style={{
-                position: "relative",
-                width: "100%",
-                height: 380,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                overflow: "hidden",
-                padding: "20px 0"
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                gap: 20,
+                marginBottom: 40
               }}>
+                {latestEightLaptops.map((p, i) => (
+                  <div key={p.id} style={{ animation: `fadeUp 0.5s ease ${i * 0.06}s both` }}>
+                    <ProductCard product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Mobile & Tablet Stacked Deck Carousel Layout */
+              <>
                 <div style={{
                   position: "relative",
                   width: "100%",
-                  maxWidth: 800,
-                  height: "100%",
+                  height: 380,
                   display: "flex",
                   justifyContent: "center",
-                  alignItems: "center"
+                  alignItems: "center",
+                  overflow: "hidden",
+                  padding: "20px 0"
                 }}>
-                  {products.slice(0, 5).map((p, index) => {
-                    const len = 5;
-                    // Compute circular distance offset so stack stays symmetric
-                    let offset = index - activeTopPickIdx;
-                    if (offset > len / 2) offset -= len;
-                    if (offset < -len / 2) offset += len;
+                  <div style={{
+                    position: "relative",
+                    width: "100%",
+                    maxWidth: 800,
+                    height: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center"
+                  }}>
+                    {latestEightLaptops.map((p, index) => {
+                      const len = latestEightLaptops.length;
+                      // Compute circular distance offset so stack stays symmetric
+                      let offset = index - activeTopPickIdx;
+                      if (offset > len / 2) offset -= len;
+                      if (offset < -len / 2) offset += len;
 
-                    const isCenter = index === activeTopPickIdx;
-                    const absOffset = Math.abs(offset);
+                      const isCenter = index === activeTopPickIdx;
+                      const absOffset = Math.abs(offset);
 
-                    if (absOffset > 2) return null;
+                      if (absOffset > 2) return null;
 
-                    return (
-                      <motion.div
-                        key={p.id}
-                        onClick={() => setActiveTopPickIdx(index)}
-                        animate={{
-                          x: offset * 110,
-                          scale: isCenter ? 1.05 : 0.85,
-                          rotate: offset * 8,
-                          opacity: absOffset > 2 ? 0 : 1,
-                          zIndex: 10 - absOffset,
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 260,
-                          damping: 25,
-                        }}
-                        style={{
-                          position: "absolute",
-                          width: 180,
-                          height: 320,
-                          cursor: "pointer",
-                          transformOrigin: "center center",
-                        }}
-                      >
-                        <ProductCard product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
-                      </motion.div>
-                    );
-                  })}
+                      return (
+                        <motion.div
+                          key={p.id}
+                          onClick={() => setActiveTopPickIdx(index)}
+                          drag="x"
+                          dragConstraints={{ left: 0, right: 0 }}
+                          dragElastic={0.6}
+                          onDragEnd={(event, info) => {
+                            const swipeThreshold = 50;
+                            if (info.offset.x < -swipeThreshold) {
+                              // Swiped left -> show next card
+                              setActiveTopPickIdx((prev) => (prev + 1) % len);
+                            } else if (info.offset.x > swipeThreshold) {
+                              // Swiped right -> show previous card
+                              setActiveTopPickIdx((prev) => (prev - 1 + len) % len);
+                            }
+                          }}
+                          animate={{
+                            x: offset * 110,
+                            scale: isCenter ? 1.05 : 0.85,
+                            rotate: offset * 8,
+                            opacity: absOffset > 2 ? 0 : 1,
+                            zIndex: 10 - absOffset,
+                          }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 260,
+                            damping: 25,
+                          }}
+                          style={{
+                            position: "absolute",
+                            width: 180,
+                            height: 320,
+                            cursor: "pointer",
+                            transformOrigin: "center center",
+                          }}
+                        >
+                          <ProductCard product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {/* Carousel Dot Selectors (Mobile only) */}
-              <div style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 8,
-                marginTop: 20,
-                marginBottom: 28
-              }}>
-                {products.slice(0, 5).map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveTopPickIdx(idx)}
-                    style={{
-                      width: activeTopPickIdx === idx ? 24 : 8,
-                      height: 8,
-                      borderRadius: 4,
-                      border: "none",
-                      background: activeTopPickIdx === idx ? COLORS.green : "rgba(255,255,255,0.2)",
-                      cursor: "pointer",
-                      transition: "all 0.3s ease"
-                    }}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+                {/* Carousel Dot Selectors (Mobile only) */}
+                <div style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 8,
+                  margin: "20px 0 28px"
+                }}>
+                  {latestEightLaptops.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveTopPickIdx(idx)}
+                      style={{
+                        width: activeTopPickIdx === idx ? 24 : 8,
+                        height: 8,
+                        borderRadius: 4,
+                        border: "none",
+                        background: activeTopPickIdx === idx ? COLORS.green : "rgba(255,255,255,0.2)",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease"
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
 
-          <div style={{ textAlign: "center", marginTop: 24 }}>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => setPage("listing")}
-            >
-              View All Laptops <ArrowRight size={15} />
-            </Button>
-          </div>
-        </>, true
-      )}
+            <div style={{ textAlign: "center", marginTop: 24 }}>
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => setPage("listing")}
+              >
+                View All Laptops <ArrowRight size={15} />
+              </Button>
+            </div>
+          </>,
+          true
+        );
+      })()}
 
       {/* ── Exchange Banner ──────────────────────── */}
       {section(
@@ -729,11 +951,12 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
           })),
           ...reviews.map(r => ({ ...r, isReal: false }))
         ];
+        const directReviews = combinedReviews.filter(r => r.isReal);
         const displayedReviews = showAllReviews ? combinedReviews : combinedReviews.slice(0, 6);
 
         return section(
           <>
-            <SectionHeader eyebrow="Reviews" title="5000+ Happy Customers" subtitle="Trusted by students, professionals, and businesses across India" />
+            <SectionHeader eyebrow="Reviews" title="What Customer Says" subtitle="Trusted by students, professionals, and businesses across India" titleColor="#FFFFFF" />
 
             {/* Write a Review Toggle */}
             <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -846,53 +1069,56 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
               </form>
             )}
 
-            {/* Reviews Grid */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit,minmax(280px,1fr))",
-              gap: 20,
-            }}>
-              {displayedReviews.map((r, i) => (
-                <Card
-                  key={`${r.name}-${i}`}
-                  style={{
-                    padding: 24,
-                    animation: `fadeUp 0.5s ease ${i * 0.1}s both`,
-                  }}
-                >
-                  <RatingStars rating={r.rating} size={13} style={{ marginBottom: 12 }} />
-                  <p style={{ color: COLORS.text, fontSize: 14, lineHeight: 1.7, margin: "0 0 16px" }}>
-                    &ldquo;{r.text}&rdquo;
-                  </p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{
-                      width: 38, height: 38, borderRadius: "50%",
-                      background: "linear-gradient(135deg, rgba(56,189,248,0.15), rgba(99,102,241,0.15))",
-                      border: "1px solid rgba(56,189,248,0.22)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: COLORS.green, fontWeight: 800, fontSize: 12,
-                      fontFamily: "'Sora', sans-serif",
-                    }}>
-                      {r.avatar}
-                    </div>
-                    <div>
-                      <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 13 }}>{r.name}</div>
-                      <div style={{ color: COLORS.muted, fontSize: 12 }}>{r.city}</div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+            {/* Featurable Embed Widget */}
+            <div style={{ margin: "24px 0", minHeight: 300 }}>
+              <div id="featurable-57997301-33a3-4de6-b3e4-2507f21be404" data-featurable-async></div>
             </div>
 
-            {/* Show More toggle button */}
-            {combinedReviews.length > 6 && (
-              <div style={{ textAlign: "center", marginTop: 36 }}>
-                <Button
-                  onClick={() => setShowAllReviews(!showAllReviews)}
-                  variant="ghost"
-                >
-                  {showAllReviews ? "Show Less Reviews" : `Show More Reviews (${combinedReviews.length - 6} more)`}
-                </Button>
+            {/* Direct Website Customer Reviews */}
+            {directReviews.length > 0 && (
+              <div style={{ marginTop: 48 }}>
+                <h3 style={{
+                  fontFamily: "Sora", color: "#fff", fontSize: 20,
+                  fontWeight: 800, marginBottom: 24, textAlign: "center"
+                }}>
+                  Direct Website Customer Reviews
+                </h3>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit,minmax(280px,1fr))",
+                  gap: 20,
+                }}>
+                  {directReviews.map((r, i) => (
+                    <Card
+                      key={`${r.name}-${i}`}
+                      style={{
+                        padding: 24,
+                        animation: `fadeUp 0.5s ease ${i * 0.1}s both`,
+                      }}
+                    >
+                      <RatingStars rating={r.rating} size={13} style={{ marginBottom: 12 }} />
+                      <p style={{ color: COLORS.text, fontSize: 14, lineHeight: 1.7, margin: "0 0 16px" }}>
+                        &ldquo;{r.text}&rdquo;
+                      </p>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{
+                          width: 38, height: 38, borderRadius: "50%",
+                          background: "linear-gradient(135deg, rgba(56,189,248,0.15), rgba(99,102,241,0.15))",
+                          border: "1px solid rgba(56,189,248,0.22)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: COLORS.green, fontWeight: 800, fontSize: 12,
+                          fontFamily: "'Sora', sans-serif",
+                        }}>
+                          {r.avatar}
+                        </div>
+                        <div>
+                          <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 13 }}>{r.name}</div>
+                          <div style={{ color: COLORS.muted, fontSize: 12 }}>{r.city}</div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </div>
             )}
           </>, true

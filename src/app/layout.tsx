@@ -4,7 +4,7 @@ import "@/styles/globals.css";
 export const metadata: Metadata = {
   title: "Laptopkart — Refurbished Laptops at Best Prices | 1 Year Warranty",
   description:
-    "Buy certified refurbished laptops, MacBooks, and desktops at up to 70% off. Every device passes our rigorous quality checks. 1 Year Warranty | 7-Day Returns* | EMI Available*.",
+    "Buy certified refurbished laptops, MacBooks, and desktops at up to 70% off. Every device passes our rigorous quality checks. 1 Year Warranty | 7-Day Returns*.",
   keywords:
     "refurbished laptops, used laptops, second hand laptops, laptopkart, buy laptop online India",
   openGraph: {

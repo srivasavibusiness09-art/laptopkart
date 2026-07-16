@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, query } from "firebase/firestore";
 import { db } from "./lib/firebase";
-import { uploadProductImage } from "./lib/storage";
+import { uploadProductImage, uploadVideoToCloudinary } from "./lib/storage";
 import {
   LayoutDashboard,
   Laptop,
@@ -17,7 +17,9 @@ import {
   CheckCircle,
   FileText,
   Bell,
-  Truck
+  Truck,
+  BookOpen,
+  Video
 } from 'lucide-react';
 
 // compressImage removed (using storage.ts module)
@@ -178,7 +180,7 @@ export const DEFAULT_BANNERS: Banner[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders' | 'blogs' | 'video'>('overview');
   const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed'>('active');
   const [ordersPage, setOrdersPage] = useState(0);
 
@@ -194,15 +196,18 @@ export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [accessories, setAccessories] = useState<AccessoryProduct[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [blogs, setBlogs] = useState<any[]>([]);
 
   // Search filter states
   const [productSearch, setProductSearch] = useState('');
   const [accessorySearch, setAccessorySearch] = useState('');
+  const [blogSearch, setBlogSearch] = useState('');
 
   // Alerts
   const [alertMsg, setAlertMsg] = useState<{ type: 'success' | 'danger', text: string } | null>(null);
 
   // Modals status
+  const [blogReviewModal, setBlogReviewModal] = useState<{ open: boolean, item?: any }>({ open: false });
   const [productModal, setProductModal] = useState<{ open: boolean, mode: 'add' | 'edit', item?: Product }>({ open: false, mode: 'add' });
   const [accessoryModal, setAccessoryModal] = useState<{ open: boolean, mode: 'add' | 'edit', item?: AccessoryProduct }>({ open: false, mode: 'add' });
   const [bannerModal, setBannerModal] = useState<{ open: boolean }>({ open: false });
@@ -223,8 +228,19 @@ export default function App() {
 
   // Form states - Banner
   const [bannerForm, setBannerForm] = useState<Partial<Banner>>({
-    src: '', badge: 'Offers', title: '', desc: '', target: 'listing'
+    src: '',
+    badge: 'Offers',
+    title: '',
+    desc: '',
+    target: 'listing',
   });
+
+  // Form states - Promo Video
+  const [videoTitle, setVideoTitle] = useState("Explore Laptopkart in Action");
+  const [videoSubtitle, setVideoSubtitle] = useState("Watch our certified refurbishment process and see why thousands trust us.");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoOrientation, setVideoOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   // Live snapshot database listeners for Products, Accessories, Banners, and Orders
   useEffect(() => {
@@ -279,10 +295,46 @@ export default function App() {
       }
     );
 
+    // 4. Subscribe to Blogs
+    const unsubscribeBlogs = onSnapshot(
+      query(collection(db, "blogs")),
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        setBlogs(list);
+      },
+      (error) => {
+        console.error("[Firestore] Blogs read failed:", error.code, error.message);
+        setBlogs([]);
+      }
+    );
+
+    // 5. Fetch Promo Video Settings
+    const unsubscribeVideo = onSnapshot(
+      doc(db, "homepage_settings", "video"),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.title) setVideoTitle(data.title);
+          if (data.subtitle) setVideoSubtitle(data.subtitle);
+          if (data.videoUrl) setVideoUrl(data.videoUrl);
+          if (data.orientation) setVideoOrientation(data.orientation);
+        }
+      },
+      (error) => {
+        console.error("[Firestore] Video settings read failed:", error);
+      }
+    );
+
     return () => {
       unsubscribeProducts();
       unsubscribeAccessories();
       unsubscribeBanners();
+      unsubscribeBlogs();
+      unsubscribeVideo();
     };
   }, []);
 
@@ -352,6 +404,7 @@ export default function App() {
   const handleBannerImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    
     setUploadingBanner(true);
     try {
       const url = await uploadProductImage(files[0]);
@@ -359,12 +412,65 @@ export default function App() {
         ...prev,
         src: url
       }));
-      triggerAlert('success', 'Slide background image uploaded successfully.');
+      triggerAlert('success', 'Banner image uploaded successfully.');
     } catch (err) {
       console.error(err);
-      triggerAlert('danger', 'Error uploading slide image.');
+      triggerAlert('danger', 'Error uploading banner image.');
     } finally {
       setUploadingBanner(false);
+    }
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingVideo(true);
+    try {
+      triggerAlert('success', 'Starting video upload to Cloudinary... Please wait.');
+      const url = await uploadVideoToCloudinary(files[0]);
+      setVideoUrl(url);
+      triggerAlert('success', 'Video uploaded successfully to Cloudinary!');
+    } catch (err: any) {
+      console.error(err);
+      triggerAlert('danger', err.message || 'Error uploading video file.');
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const handleVideoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!videoTitle.trim()) return triggerAlert('danger', 'Please enter a title.');
+    if (!videoUrl.trim()) return triggerAlert('danger', 'Please enter a video URL or upload a file.');
+
+    try {
+      await setDoc(doc(db, "homepage_settings", "video"), {
+        title: videoTitle.trim(),
+        subtitle: videoSubtitle.trim(),
+        videoUrl: videoUrl.trim(),
+        orientation: videoOrientation,
+        updatedAt: new Date().toISOString()
+      });
+      triggerAlert('success', 'Promo video settings updated successfully!');
+    } catch (err) {
+      console.error(err);
+      triggerAlert('danger', 'Error updating video settings.');
+    }
+  };
+
+  const handleVideoDelete = async () => {
+    if (confirm('Are you sure you want to delete the promo video section? This will remove the video from the homepage.')) {
+      try {
+        await deleteDoc(doc(db, "homepage_settings", "video"));
+        setVideoTitle("Explore Laptopkart in Action");
+        setVideoSubtitle("Watch our certified refurbishment process and see why thousands trust us.");
+        setVideoUrl("");
+        setVideoOrientation("landscape");
+        triggerAlert('success', 'Promo video deleted successfully!');
+      } catch (err) {
+        console.error(err);
+        triggerAlert('danger', 'Error deleting promo video.');
+      }
     }
   };
 
@@ -604,24 +710,46 @@ export default function App() {
   };
 
   // Banner CRUD Handlers
-  const handleBannerSubmit = (e: React.FormEvent) => {
+  const handleBannerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const docId = bannerForm.title ? bannerForm.title.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase() : doc(collection(db, "banners")).id;
+
+    if (!bannerForm.title?.trim()) {
+      return triggerAlert('danger', 'Banner title is required');
+    }
+    if (!bannerForm.src?.trim()) {
+      return triggerAlert('danger', 'Please upload or provide a banner image');
+    }
+
+    const docId = bannerForm.title
+      .replace(/[^a-zA-Z0-9]/g, "_")
+      .toLowerCase()
+      .trim() || doc(collection(db, "banners")).id;
 
     const bData: Banner = {
-      src: bannerForm.src || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80&auto=format&fit=crop',
-      badge: bannerForm.badge || 'Contest',
-      title: bannerForm.title || 'Special Promotion',
-      desc: bannerForm.desc || 'Details of contest and reward prizes.',
+      src: bannerForm.src,
+      badge: bannerForm.badge || 'Offers',
+      title: bannerForm.title.trim(),
+      desc: bannerForm.desc?.trim() || '',
       target: bannerForm.target || 'listing',
     };
 
-    setDoc(doc(db, "banners", docId), bData)
-      .then(() => triggerAlert('success', 'Offer banner published successfully!'))
-      .catch(() => triggerAlert('danger', 'Error publishing banner.'));
-
-    setBannerForm({ src: '', badge: 'Offers', title: '', desc: '', target: 'listing' });
-    setBannerModal({ open: false });
+    try {
+      await setDoc(doc(db, "banners", docId), bData);
+      triggerAlert('success', 'Banner published successfully!');
+      
+      // Reset form
+      setBannerForm({
+        src: '',
+        badge: 'Offers',
+        title: '',
+        desc: '',
+        target: 'listing',
+      });
+      setBannerModal({ open: false });
+    } catch (err) {
+      console.error(err);
+      triggerAlert('danger', 'Error publishing banner.');
+    }
   };
 
   const handleBannerDelete = (title: string) => {
@@ -630,6 +758,25 @@ export default function App() {
       deleteDoc(doc(db, "banners", docId))
         .then(() => triggerAlert('success', 'Banner removed successfully!'))
         .catch(() => triggerAlert('danger', 'Error removing banner.'));
+    }
+  };
+
+  const handleBlogDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this blog post?')) {
+      deleteDoc(doc(db, "blogs", id))
+        .then(() => triggerAlert('success', 'Blog post deleted successfully!'))
+        .catch(() => triggerAlert('danger', 'Failed to delete blog post.'));
+    }
+  };
+
+  const handleToggleBlogApproval = async (id: string, currentApproved: boolean) => {
+    try {
+      const isApproved = currentApproved === undefined || currentApproved === true ? false : true;
+      await setDoc(doc(db, "blogs", id), { approved: isApproved }, { merge: true });
+      triggerAlert('success', `Blog status updated successfully!`);
+    } catch (err) {
+      console.error("Error updating blog status:", err);
+      triggerAlert('danger', 'Failed to update blog status.');
     }
   };
 
@@ -642,6 +789,12 @@ export default function App() {
   const filteredAccessories = accessories.filter(a =>
     a.name.toLowerCase().includes(accessorySearch.toLowerCase()) ||
     a.brand.toLowerCase().includes(accessorySearch.toLowerCase())
+  );
+
+  const filteredBlogs = blogs.filter(b =>
+    (b.title || '').toLowerCase().includes(blogSearch.toLowerCase()) ||
+    (b.author || '').toLowerCase().includes(blogSearch.toLowerCase()) ||
+    (b.category || '').toLowerCase().includes(blogSearch.toLowerCase())
   );
 
 
@@ -686,6 +839,8 @@ export default function App() {
             { id: 'accessories', label: 'Accessories', icon: <Keyboard size={18} /> },
             { id: 'banners', label: 'Offers & Contests', icon: <ImageIcon size={18} /> },
             { id: 'orders', label: 'Customer Orders', icon: <FileText size={18} /> },
+            { id: 'blogs', label: 'Tech Blogs', icon: <BookOpen size={18} /> },
+            { id: 'video', label: 'Promo Video', icon: <Video size={18} /> },
           ].map(tab => (
             <button
               key={tab.id}
@@ -1133,7 +1288,16 @@ export default function App() {
               </div>
 
               <button
-                onClick={() => setBannerModal({ open: true })}
+                onClick={() => {
+                  setBannerForm({
+                    src: '',
+                    badge: 'Offers',
+                    title: '',
+                    desc: '',
+                    target: 'listing',
+                  });
+                  setBannerModal({ open: true });
+                }}
                 style={{
                   background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', color: '#000',
                   border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 800,
@@ -1575,6 +1739,278 @@ export default function App() {
             </div>
           );
         })()}
+
+        {/* ── Tab: BLOGS MANAGER ── */}
+        {activeTab === 'blogs' && (
+          <div className="fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+              <div>
+                <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+                  Tech Blogs Moderator
+                </h1>
+                <p style={{ color: '#8B9BBE', fontSize: 15 }}>
+                  Review blog submissions, verify contest authors, and toggle visibility.
+                </p>
+              </div>
+            </div>
+
+            {/* Search Input */}
+            <div style={{ position: 'relative', marginBottom: 24, maxWidth: 400 }}>
+              <Search size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#8B9BBE' }} />
+              <input
+                type="text" placeholder="Search by title, category, or author..."
+                value={blogSearch} onChange={e => setBlogSearch(e.target.value)}
+                className="form-input" style={{ paddingLeft: 44 }}
+              />
+            </div>
+
+            {/* Blogs List Grid Table */}
+            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(56, 189, 248, 0.12)' }}>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Article</th>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Category</th>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Author</th>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Review Status</th>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredBlogs.map((b, idx) => {
+                    const isApproved = b.approved !== false;
+                    return (
+                      <tr key={b.id || idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <td style={{ padding: '18px 24px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <img src={b.coverUrl || 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80'} alt={b.title} style={{ width: 50, height: 35, borderRadius: 6, objectFit: 'cover' }} />
+                            <div>
+                              <div style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{b.title}</div>
+                              <div style={{ color: '#8B9BBE', fontSize: 11, marginTop: 2 }}>{b.readTime || '3 min read'} • {b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-IN') : 'N/A'}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '18px 24px', color: '#fff', fontSize: 13 }}>
+                          {b.category || 'Buying Guide'}
+                        </td>
+                        <td style={{ padding: '18px 24px', color: '#10B981', fontSize: 13, fontWeight: 700 }}>
+                          {b.author || 'Contest Writer'}
+                        </td>
+                        <td style={{ padding: '18px 24px' }}>
+                          <button
+                            onClick={() => handleToggleBlogApproval(b.id, b.approved)}
+                            style={{
+                              background: isApproved ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                              color: isApproved ? '#10B981' : '#EF4444',
+                              border: `1px solid ${isApproved ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`,
+                              borderRadius: 100, padding: '4px 10px', fontSize: 11, fontWeight: 800,
+                              cursor: 'pointer', textTransform: 'uppercase'
+                            }}
+                          >
+                            {isApproved ? 'Approved' : 'Hidden'}
+                          </button>
+                        </td>
+                        <td style={{ padding: '18px 24px', textAlign: 'right' }}>
+                          <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={() => setBlogReviewModal({ open: true, item: b })}
+                              style={{
+                                background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)',
+                                color: '#38BDF8', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700,
+                                cursor: 'pointer', fontFamily: 'Sora'
+                              }}
+                            >
+                              Review
+                            </button>
+                            <button onClick={() => handleBlogDelete(b.id)} style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer' }} title="Delete"><Trash2 size={16} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {filteredBlogs.length === 0 && (
+                    <tr>
+                      <td colSpan={5} style={{ padding: '36px', textAlign: 'center', color: '#8B9BBE', fontSize: 14 }}>
+                        No blogs matched the search query.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab: PROMO VIDEO MANAGER ── */}
+        {activeTab === 'video' && (
+          <div className="fade-in">
+            <div style={{ marginBottom: 32 }}>
+              <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+                Promo Video Manager
+              </h1>
+              <p style={{ color: '#8B9BBE', fontSize: 15 }}>
+                Configure the promotional video shown on the homepage. You can input a direct link or upload a local video.
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr', gap: 32 }}>
+              {/* Form Settings */}
+              <div style={{
+                background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
+                borderRadius: 24, padding: 32, boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+              }}>
+                <form onSubmit={handleVideoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Section Title</label>
+                    <input
+                      type="text" required placeholder="e.g. Explore Laptopkart in Action"
+                      value={videoTitle} onChange={e => setVideoTitle(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Section Subtitle</label>
+                    <input
+                      type="text" placeholder="e.g. Watch our certified refurbishment process and see why thousands trust us."
+                      value={videoSubtitle} onChange={e => setVideoSubtitle(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Video Link / Source URL</label>
+                    <input
+                      type="text" required placeholder="e.g. https://www.youtube.com/watch?v=... or direct Cloudinary link"
+                      value={videoUrl} onChange={e => setVideoUrl(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Video Display Orientation</label>
+                    <select
+                      value={videoOrientation} onChange={e => setVideoOrientation(e.target.value as any)}
+                      className="form-input" style={{ background: '#0d1117', color: '#fff' }}
+                    >
+                      <option value="landscape">Landscape (Horizontal - 16:9)</option>
+                      <option value="portrait">Portrait (Vertical - 9:16)</option>
+                    </select>
+                  </div>
+
+                  {/* Local file upload option */}
+                  <div style={{
+                    border: '1px dashed rgba(56,189,248,0.24)', borderRadius: 16,
+                    padding: 24, background: 'rgba(56,189,248,0.02)', textAlign: 'center'
+                  }}>
+                    <Video size={36} color="#38BDF8" style={{ marginBottom: 12 }} />
+                    <div style={{ color: '#fff', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>Upload Local Video File</div>
+                    <p style={{ color: '#8B9BBE', fontSize: 12, margin: '0 0 16px' }}>Select an mp4 video to host it on Cloudinary automatically.</p>
+                    <input
+                      type="file" accept="video/*" id="admin-video-file-input"
+                      onChange={handleVideoUpload} style={{ display: 'none' }}
+                      disabled={uploadingVideo}
+                    />
+                    <label
+                      htmlFor="admin-video-file-input"
+                      style={{
+                        display: 'inline-block', background: 'rgba(56,189,248,0.12)',
+                        color: '#38BDF8', padding: '10px 20px', borderRadius: 10,
+                        fontSize: 13, fontWeight: 700, cursor: uploadingVideo ? 'not-allowed' : 'pointer',
+                        border: '1px solid rgba(56,189,248,0.2)'
+                      }}
+                    >
+                      {uploadingVideo ? "Uploading video..." : "Choose Local Video"}
+                    </label>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 16, marginTop: 12 }}>
+                    <button
+                      type="submit"
+                      style={{
+                        flex: 1,
+                        background: '#38BDF8', color: '#0d1117', border: 'none',
+                        borderRadius: 12, padding: '14px 24px', fontSize: 15, fontWeight: 800,
+                        cursor: 'pointer', transition: 'all 0.2s',
+                        fontFamily: 'Sora', textTransform: 'uppercase', letterSpacing: '0.03em'
+                      }}
+                    >
+                      Save Changes
+                    </button>
+                    {videoUrl && (
+                      <button
+                        type="button"
+                        onClick={handleVideoDelete}
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444',
+                          border: '1px solid rgba(239, 68, 68, 0.2)',
+                          borderRadius: 12, padding: '14px 24px', fontSize: 15, fontWeight: 800,
+                          cursor: 'pointer', transition: 'all 0.2s',
+                          fontFamily: 'Sora', textTransform: 'uppercase', letterSpacing: '0.03em'
+                        }}
+                      >
+                        Delete Video
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              {/* Video Preview */}
+              <div style={{
+                background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
+                borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column',
+                gap: 16, justifyContent: 'center'
+              }}>
+                <h3 style={{ fontFamily: 'Sora', fontSize: 18, color: '#fff', fontWeight: 800, margin: 0 }}>
+                  Live Preview
+                </h3>
+                {videoUrl ? (
+                  <div style={{
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                    background: '#000',
+                    aspectRatio: videoOrientation === 'portrait' ? '9/16' : '16/9',
+                    maxWidth: videoOrientation === 'portrait' ? '280px' : '100%',
+                    margin: '0 auto',
+                    width: '100%'
+                  }}>
+                    {videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be") || videoUrl.includes("vimeo.com") ? (
+                      <iframe
+                        src={videoUrl.includes("youtube.com/watch")
+                          ? `https://www.youtube.com/embed/${videoUrl.match(/[?&]v=([^&#]+)/)?.[1] || ''}`
+                          : videoUrl.includes("youtu.be/")
+                            ? `https://www.youtube.com/embed/${videoUrl.split("youtu.be/")[1]?.split("?")[0] || ''}`
+                            : videoUrl
+                        }
+                        style={{ width: '100%', height: '100%', border: 'none' }}
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video src={videoUrl} controls style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    )}
+                  </div>
+                ) : (
+                  <div style={{
+                    border: '1px dashed rgba(255,255,255,0.08)', borderRadius: 16,
+                    aspectRatio: videoOrientation === 'portrait' ? '9/16' : '16/9',
+                    maxWidth: videoOrientation === 'portrait' ? '280px' : '100%',
+                    margin: '0 auto',
+                    display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', color: '#8B9BBE', fontSize: 14,
+                    width: '100%'
+                  }}>
+                    No video URL set. Paste a URL or upload a file.
+                  </div>
+                )}
+                <div style={{ textAlign: 'center', marginTop: 8 }}>
+                  <div style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>{videoTitle || "Untitled Section"}</div>
+                  <div style={{ color: '#8B9BBE', fontSize: 13, marginTop: 4 }}>{videoSubtitle || "No subtitle configured"}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       </main>
 
@@ -2261,6 +2697,130 @@ export default function App() {
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Review Blog Post ── */}
+      {blogReviewModal.open && blogReviewModal.item && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+        }}>
+          <div className="fade-in" style={{
+            background: '#131a24', border: '1px solid rgba(56,189,248,0.15)',
+            borderRadius: 24, width: '100%', maxWidth: 700, padding: 32,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+            maxHeight: '90vh', overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontFamily: 'Sora', fontSize: 20, color: '#fff', fontWeight: 800 }}>
+                Review Blog Submission
+              </h2>
+              <button onClick={() => setBlogReviewModal({ open: false })} style={{ background: 'transparent', border: 'none', color: '#8B9BBE', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Cover Image */}
+              <div style={{ height: 240, overflow: 'hidden', borderRadius: 16, position: 'relative' }}>
+                <img
+                  src={blogReviewModal.item.coverUrl || 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80'}
+                  alt={blogReviewModal.item.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+
+              {/* Title & Metadata */}
+              <div>
+                <h3 style={{ fontFamily: 'Sora', fontSize: 22, color: '#fff', fontWeight: 800, margin: '0 0 10px' }}>
+                  {blogReviewModal.item.title}
+                </h3>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', fontSize: 13 }}>
+                  <span style={{ background: 'rgba(56,189,248,0.12)', color: '#38BDF8', padding: '3px 10px', borderRadius: 100, fontWeight: 700, textTransform: 'uppercase', fontSize: 11 }}>
+                    {blogReviewModal.item.category || 'Buying Guide'}
+                  </span>
+                  <span style={{ color: '#8B9BBE' }}>
+                    Written by: <strong style={{ color: '#10B981' }}>{blogReviewModal.item.author || 'Contest Writer'}</strong>
+                  </span>
+                  <span style={{ color: '#8B9BBE' }}>
+                    • {blogReviewModal.item.createdAt ? new Date(blogReviewModal.item.createdAt).toLocaleDateString('en-IN') : 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Content Body */}
+              <div
+                style={{
+                  lineHeight: 1.8,
+                  color: '#d1d5db',
+                  background: 'rgba(0,0,0,0.2)',
+                  padding: 20,
+                  borderRadius: 14,
+                  border: '1px solid rgba(255,255,255,0.04)',
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  fontSize: 14
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: blogReviewModal.item.content
+                    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                    .replace(/### (.*)/g, "<h3>$1</h3>")
+                    .replace(/## (.*)/g, "<h2>$1</h2>")
+                    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+                    .replace(/^> (.*)/gm, "<blockquote>$1</blockquote>")
+                    .replace(/\n/g, "<br/>")
+                }}
+              />
+
+              {/* Actions Footer */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 20 }}>
+                <button
+                  onClick={() => {
+                    handleToggleBlogApproval(blogReviewModal.item.id, blogReviewModal.item.approved);
+                    setBlogReviewModal(prev => ({
+                      ...prev,
+                      item: { ...prev.item, approved: (prev.item.approved === undefined || prev.item.approved === true) ? false : true }
+                    }));
+                  }}
+                  style={{
+                    background: (blogReviewModal.item.approved !== false) ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+                    border: `1px solid ${(blogReviewModal.item.approved !== false) ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)'}`,
+                    color: (blogReviewModal.item.approved !== false) ? '#EF4444' : '#10B981',
+                    borderRadius: 12, padding: '12px 20px', fontSize: 13, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'Sora'
+                  }}
+                >
+                  {(blogReviewModal.item.approved !== false) ? 'Hide / Disapprove Article' : 'Approve & Publish Article'}
+                </button>
+
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    onClick={() => {
+                      handleBlogDelete(blogReviewModal.item.id);
+                      setBlogReviewModal({ open: false });
+                    }}
+                    style={{
+                      background: 'rgba(239,68,68,0.2)', border: 'none',
+                      color: '#EF4444', borderRadius: 12, padding: '12px 20px', fontSize: 13, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'Sora'
+                    }}
+                  >
+                    Delete Post
+                  </button>
+                  <button
+                    onClick={() => setBlogReviewModal({ open: false })}
+                    style={{
+                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                      color: '#8B9BBE', borderRadius: 12, padding: '12px 20px', fontSize: 13, fontWeight: 600,
+                      cursor: 'pointer', fontFamily: 'Sora'
+                    }}
+                  >
+                    Close Review
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

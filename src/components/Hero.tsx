@@ -13,7 +13,7 @@ const stats = [
   { value: "50K+", label: "Devices Sold" },
   { value: "1 Year", label: "Warranty" },
   { value: "Tested", label: "QC Checks" },
-  { value: "4.8★", label: "Rating" },
+  { value: "4.9★", label: "Rating" },
 ];
 
 export default function Hero({ setPage }: HeroProps) {
@@ -149,28 +149,32 @@ export default function Hero({ setPage }: HeroProps) {
           </div>
 
           {/* Stats */}
-          {!isMobile && (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: 14,
-            }}>
-              {stats.map((s, i) => (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+            gap: 14,
+            marginTop: isMobile ? 24 : 0,
+          }}>
+            {stats.map((s, i) => {
+              const isRating = s.label === "Rating";
+              return (
                 <Card
                   key={s.label}
+                  onClick={isRating ? () => window.open("https://www.google.com/search?sca_esv=ce1d5cfef616b7b3&sxsrf=APpeQnuTASXjQwtK9sKHf3ZLeQIyDKcjtw:1784182931333&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_7Fu1hy_kn6p6tOiB4gun8BpQ6luC6cnVUQGJPQVmdN_nCrVrUobwP9phq5L2XR0tDv625Beget30GhGzC91E5a0tXRRiG9KIKQ-nAgJIt-eDFjZfA%3D%3D&q=Sri+Vasavi+Business+Systems+Reviews&sa=X&ved=2ahUKEwiFi9iux9aVAxVzTmwGHcL5KPYQ0bkNegQIExAI&biw=1536&bih=730&dpr=1.25", "_blank") : undefined}
                   style={{
                     background: "rgba(56,189,248,0.02)",
-                    border: "1px solid rgba(56,189,248,0.08)",
+                    border: isRating ? "1px solid rgba(245,158,11,0.25)" : "1px solid rgba(56,189,248,0.08)",
                     borderRadius: 14,
                     padding: "16px 12px",
                     textAlign: "center",
                     animation: `fadeUp 0.6s ease ${i * 0.1}s both`,
+                    cursor: isRating ? "pointer" : "default",
                   }}
                 >
                   <div style={{
                     fontFamily: "'Sora', sans-serif",
                     fontSize: 22, fontWeight: 800,
-                    color: COLORS.green, marginBottom: 3,
+                    color: isRating ? "#F59E0B" : COLORS.green, marginBottom: 3,
                   }}>
                     {s.label === "Devices Sold" ? `${Math.min(count, 5000).toLocaleString("en-IN")}+` : s.value}
                   </div>
@@ -178,9 +182,9 @@ export default function Hero({ setPage }: HeroProps) {
                     {s.label}
                   </div>
                 </Card>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
         </div>
 
         {/* Right: Floating product image */}
@@ -225,13 +229,17 @@ export default function Hero({ setPage }: HeroProps) {
                 <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>Multi-point inspection</div>
               </div>
               {/* Bottom badge */}
-              <div style={{
-                position: "absolute", bottom: 16, left: 16,
-                background: "rgba(13,17,23,0.80)", backdropFilter: "blur(12px)",
-                borderRadius: 12, padding: "10px 14px",
-                border: "1px solid rgba(245,158,11,0.25)",
-              }}>
-                <div style={{ color: "#F59E0B", fontSize: 12, fontWeight: 700 }}>★ 4.8 / 5 Rating</div>
+              <div
+                onClick={() => window.open("https://www.google.com/search?sca_esv=ce1d5cfef616b7b3&sxsrf=APpeQnuTASXjQwtK9sKHf3ZLeQIyDKcjtw:1784182931333&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_7Fu1hy_kn6p6tOiB4gun8BpQ6luC6cnVUQGJPQVmdN_nCrVrUobwP9phq5L2XR0tDv625Beget30GhGzC91E5a0tXRRiG9KIKQ-nAgJIt-eDFjZfA%3D%3D&q=Sri+Vasavi+Business+Systems+Reviews&sa=X&ved=2ahUKEwiFi9iux9aVAxVzTmwGHcL5KPYQ0bkNegQIExAI&biw=1536&bih=730&dpr=1.25", "_blank")}
+                style={{
+                  position: "absolute", bottom: 16, left: 16,
+                  background: "rgba(13,17,23,0.80)", backdropFilter: "blur(12px)",
+                  borderRadius: 12, padding: "10px 14px",
+                  border: "1px solid rgba(245,158,11,0.25)",
+                  cursor: "pointer",
+                }}
+              >
+                <div style={{ color: "#F59E0B", fontSize: 12, fontWeight: 700 }}>★ 4.9 / 5 Rating</div>
                 <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>100+ Reviews</div>
               </div>
             </Card>

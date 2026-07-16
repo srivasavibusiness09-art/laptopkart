@@ -56,3 +56,30 @@ export const uploadProductImage = async (file: File): Promise<string> => {
   const data = await res.json();
   return data.secure_url; // Direct secure CDN URL
 };
+
+export const uploadVideoToCloudinary = async (file: File): Promise<string> => {
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "";
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "";
+
+  if (!cloudName || !uploadPreset || cloudName.includes("YOUR_") || uploadPreset.includes("YOUR_")) {
+    throw new Error("Cloudinary credentials are not configured. Please add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to your env configuration.");
+  }
+
+  const formData = new FormData();
+  formData.append("file", file); // Direct binary upload for video
+  formData.append("upload_preset", uploadPreset);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorBody = await res.text().catch(() => "");
+    console.error("Cloudinary upload failed:", errorBody);
+    throw new Error("Failed to upload video to Cloudinary");
+  }
+
+  const data = await res.json();
+  return data.secure_url;
+};
