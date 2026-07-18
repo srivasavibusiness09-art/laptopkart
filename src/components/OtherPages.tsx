@@ -20,7 +20,7 @@ import {
   BookOpen, Scale, GraduationCap, Gamepad2, Battery,
   Phone, Mail, MessageSquare, MapPin, CheckCircle2,
   Lock, User, Laptop, ShieldCheck, Leaf, Coins, ChevronRight, Star, ShoppingCart, Heart, Keyboard,
-  Eye, EyeOff
+  Eye, EyeOff, BadgeCheck, Shield
 } from "lucide-react";
 import { FaApple, FaGoogle } from "react-icons/fa6";
 
@@ -432,7 +432,7 @@ export function ContactPage() {
             { icon: <Phone size={18} color={COLORS.green} />, label: "Phone", val: "+91 97503 31313", sub: "Call us 10AM - 7PM" },
             { icon: <Mail size={18} color={COLORS.green} />, label: "Email", val: "srivasavibusiness09@gmail.com", sub: "Reply within 24 hours" },
             { icon: <MessageSquare size={18} color={COLORS.green} />, label: "WhatsApp", val: "+91 97503 31313", sub: "Quick replies on chat" },
-            { icon: <MapPin size={18} color={COLORS.green} />, label: "Address", val: "Chennai, Tamil Nadu", sub: "Visit our showroom" }
+            { icon: <MapPin size={18} color={COLORS.green} />, label: "Address", val: "Salem, Tamil Nadu", sub: "Visit our showroom" }
           ].map(({ icon, label, val, sub }) => (
             <div key={label} style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 14, padding: "16px 20px", marginBottom: 12, display: "flex", gap: 16, alignItems: "center" }}>
               <div style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,150,240,0.12)", borderRadius: 12, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -1056,6 +1056,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
         createdAt: new Date().toISOString(),
         readTime: `${Math.max(1, Math.ceil(form.content.split(/\s+/).length / 200))} min read`,
         author: authorName,
+        authorEmail: auth.currentUser?.email || "N/A",
       });
     } catch (err) {
       console.error("Firestore blog write error: ", err);
@@ -1227,16 +1228,23 @@ export function AccessoriesPage({
   onAddToCart,
   onWishlist,
   wishlist,
+  onViewAccessory,
 }: {
   accessories: any[];
   setPage: (p: string) => void;
   onAddToCart: (p: any) => void;
   onWishlist: (id: number) => void;
   wishlist: number[];
+  onViewAccessory?: (item: any) => void;
 }) {
   const isMobile = useIsMobile();
   const [filter, setFilter] = useState<string>("All");
-  const categoriesList = ["All", "Monitors", "Docking Stations", "Mice & Keyboards", "Chargers & Power", "Bags & Sleeves"];
+
+  const baseCategories = ["All", "Monitors", "Docking Stations", "Mice & Keyboards", "Chargers & Power", "Bags & Sleeves"];
+  const dynamicCategories = accessories
+    .map(item => item.category)
+    .filter((cat): cat is string => !!cat && !["All", "Monitors", "Docking Stations", "Mice & Keyboards", "Chargers & Power", "Bags & Sleeves"].includes(cat));
+  const categoriesList = [...baseCategories, ...new Set(dynamicCategories)];
 
   const filteredItems = filter === "All"
     ? accessories
@@ -1327,7 +1335,9 @@ export function AccessoriesPage({
                   borderRadius: 20, overflow: "hidden",
                   display: "flex", flexDirection: "column",
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  cursor: onViewAccessory ? "pointer" : "default",
                 }}
+                onClick={() => onViewAccessory?.(item)}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = "translateY(-6px)";
                   e.currentTarget.style.borderColor = "rgba(56,189,248,0.28)";
@@ -1426,3 +1436,541 @@ export function AccessoriesPage({
   );
 }
 
+export function AccessoryDetailPage({
+  accessory,
+  setPage,
+  onAddToCart,
+  onWishlist,
+  wishlist,
+}: {
+  accessory: any | null;
+  setPage: (p: string) => void;
+  onAddToCart: (p: any) => void;
+  onWishlist: (id: number) => void;
+  wishlist: number[];
+}) {
+  const isMobile = useIsMobile();
+  const [added, setAdded] = useState(false);
+
+  if (!accessory) {
+    return (
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "32px 14px" : "64px 20px", textAlign: "center" }}>
+        <h2 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: 24, fontWeight: 800, marginBottom: 8 }}>
+          Accessory not found
+        </h2>
+        <p style={{ color: COLORS.muted, fontSize: 14, marginBottom: 20 }}>Please go back to the accessories catalog and try again.</p>
+        <button
+          onClick={() => setPage("accessories")}
+          style={{ background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000", border: "none", borderRadius: 12, padding: "10px 18px", fontWeight: 800, cursor: "pointer" }}
+        >
+          Back to Accessories
+        </button>
+      </div>
+    );
+  }
+
+  const isWished = wishlist.includes(accessory.id);
+  const savings = accessory.mrp - accessory.price;
+
+  const handleAdd = () => {
+    onAddToCart(accessory);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1400);
+  };
+
+  return (
+    <main style={{ background: COLORS.darkBg, minHeight: "100vh" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: isMobile ? "16px 18px 44px" : "24px 24px 72px" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 18, flexWrap: "wrap" }}>
+          <button
+            onClick={() => setPage("accessories")}
+            style={{ background: "transparent", border: `1px solid ${COLORS.cardBorder}`, color: COLORS.muted, borderRadius: 100, padding: "8px 14px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}
+          >
+            ← Accessories
+          </button>
+          <span style={{ color: COLORS.muted, fontSize: 12 }}>Accessories</span>
+          <span style={{ color: COLORS.muted, fontSize: 12 }}>/</span>
+          <span style={{ color: COLORS.text, fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 420 }}>
+            {accessory.name}
+          </span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 24 : 44, alignItems: "start" }}>
+          <div style={{ position: "relative" }}>
+            <div style={{ borderRadius: 24, overflow: "hidden", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, aspectRatio: "4/3" }}>
+              <img src={accessory.img} alt={accessory.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+              <span style={{ background: "rgba(56,189,248,0.08)", color: COLORS.green, border: "1px solid rgba(56,189,248,0.15)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700 }}>
+                {accessory.brand}
+              </span>
+              <span style={{ background: "rgba(16,185,129,0.10)", color: "#10B981", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700 }}>
+                {accessory.category}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+              <span style={{ color: COLORS.green, fontSize: 12, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                Accessory Detail
+              </span>
+              <span style={{ color: COLORS.muted, fontSize: 12 }}>Small, clean, same-store design</span>
+            </div>
+
+            <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 26 : 38, fontWeight: 800, color: COLORS.text, lineHeight: 1.12, margin: "0 0 10px" }}>
+              {accessory.name}
+            </h1>
+            <p style={{ color: COLORS.muted, fontSize: 14, lineHeight: 1.7, margin: "0 0 16px" }}>
+              {accessory.specs}
+            </p>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 2 }}>
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star key={s} size={14} fill={s <= Math.floor(accessory.rating) ? "#FBBF24" : "transparent"} color={s <= Math.floor(accessory.rating) ? "#FBBF24" : "rgba(255,255,255,0.15)"} />
+                ))}
+              </div>
+              <span style={{ color: COLORS.text, fontWeight: 700, fontSize: 14 }}>{accessory.rating}</span>
+              <span style={{ color: COLORS.muted, fontSize: 13 }}>({accessory.reviews} reviews)</span>
+            </div>
+
+            <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 18, padding: "18px 20px", marginBottom: 18 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 10, flexWrap: "wrap" }}>
+                <span style={{ fontFamily: "'Sora', sans-serif", fontSize: 34, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.03em" }}>
+                  ₹{accessory.price.toLocaleString("en-IN")}
+                </span>
+                <span style={{ color: COLORS.muted, fontSize: 15, textDecoration: "line-through", marginBottom: 4 }}>
+                  ₹{accessory.mrp.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <span style={{ background: "rgba(16,185,129,0.12)", color: "#10B981", fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 100 }}>
+                  You save ₹{savings.toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 10, marginBottom: 18 }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <BadgeCheck size={16} color={COLORS.green} style={{ flexShrink: 0, marginTop: 1 }} />
+                <span style={{ color: COLORS.muted, fontSize: 14, lineHeight: 1.5 }}>Verified accessory with matching quality checks and clean retail presentation.</span>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <Shield size={16} color={COLORS.green} style={{ flexShrink: 0, marginTop: 1 }} />
+                <span style={{ color: COLORS.muted, fontSize: 14, lineHeight: 1.5 }}>Compatible for work, home, or mobile setups depending on the product category.</span>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
+              <button
+                onClick={handleAdd}
+                style={{
+                  background: added ? "#10B981" : "linear-gradient(135deg, #3B82F6, #38BDF8)",
+                  color: "#000",
+                  border: "none",
+                  borderRadius: 14,
+                  padding: "12px 18px",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  minWidth: 160,
+                  fontFamily: "'Sora', sans-serif",
+                }}
+              >
+                {added ? "Added!" : "Add to Cart"}
+              </button>
+              <button
+                onClick={() => onWishlist(accessory.id)}
+                style={{
+                  background: isWished ? "rgba(239,68,68,0.12)" : COLORS.cardBg,
+                  color: isWished ? "#EF4444" : COLORS.text,
+                  border: `1px solid ${isWished ? "rgba(239,68,68,0.3)" : COLORS.cardBorder}`,
+                  borderRadius: 14,
+                  padding: "12px 18px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  minWidth: 160,
+                  fontFamily: "'Sora', sans-serif",
+                }}
+              >
+                <Heart size={14} fill={isWished ? "#EF4444" : "transparent"} style={{ display: "inline", marginRight: 8 }} />
+                {isWished ? "Wishlisted" : "Add to Wishlist"}
+              </button>
+            </div>
+
+            <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 18, padding: 18 }}>
+              <div style={{ color: COLORS.muted, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                Key Specs
+              </div>
+              <div style={{ color: COLORS.text, fontSize: 14, lineHeight: 1.7 }}>{accessory.specs}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ─── Shared policy page styles ───────────────────────────────────────────────
+
+const policyWrap: React.CSSProperties = {
+  minHeight: "100vh",
+  background: "#0a0d16",
+  color: "#E8EDF5",
+  fontFamily: "'Inter', sans-serif",
+};
+
+const policyInner: React.CSSProperties = {
+  maxWidth: 820,
+  margin: "0 auto",
+  padding: "60px 24px 80px",
+};
+
+const policyH1: React.CSSProperties = {
+  fontFamily: "'Sora', sans-serif",
+  fontSize: 30,
+  fontWeight: 800,
+  color: "#fff",
+  marginBottom: 6,
+};
+
+const policySubtitle: React.CSSProperties = {
+  color: "#8B9BBE",
+  fontSize: 13,
+  marginBottom: 40,
+};
+
+const policyH2: React.CSSProperties = {
+  fontFamily: "'Sora', sans-serif",
+  fontSize: 17,
+  fontWeight: 700,
+  color: "#38BDF8",
+  marginTop: 36,
+  marginBottom: 10,
+  borderBottom: "1px solid rgba(56,189,248,0.12)",
+  paddingBottom: 8,
+};
+
+const policyP: React.CSSProperties = {
+  color: "#B0BCCE",
+  fontSize: 14,
+  lineHeight: 1.8,
+  marginBottom: 12,
+};
+
+const policyUl: React.CSSProperties = {
+  color: "#B0BCCE",
+  fontSize: 14,
+  lineHeight: 1.8,
+  paddingLeft: 20,
+  marginBottom: 12,
+};
+
+const policyCard: React.CSSProperties = {
+  background: "rgba(56,189,248,0.05)",
+  border: "1px solid rgba(56,189,248,0.15)",
+  borderRadius: 14,
+  padding: "16px 20px",
+  marginBottom: 16,
+};
+
+const policyBadge: React.CSSProperties = {
+  display: "inline-block",
+  background: "rgba(56,189,248,0.1)",
+  color: "#38BDF8",
+  border: "1px solid rgba(56,189,248,0.25)",
+  borderRadius: 100,
+  padding: "3px 12px",
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: "0.05em",
+  textTransform: "uppercase",
+  marginBottom: 20,
+};
+
+// ─── Privacy Policy ───────────────────────────────────────────────────────────
+
+export function PrivacyPolicyPage({ setPage }: { setPage: (p: string) => void }) {
+  return (
+    <div style={policyWrap}>
+      <div style={policyInner}>
+        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "#8B9BBE", cursor: "pointer", fontSize: 13, marginBottom: 28, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
+          ← Back to Home
+        </button>
+        <span style={policyBadge}>Legal</span>
+        <h1 style={policyH1}>Privacy Policy</h1>
+        <p style={policySubtitle}>Last Updated: July 2026 &nbsp;·&nbsp; Laptopkart, Salem, Tamil Nadu</p>
+
+        <h2 style={policyH2}>Introduction</h2>
+        <p style={policyP}>Laptopkart ("we", "our", or "us") is committed to protecting your personal information and your right to privacy. This Privacy Policy explains what information we collect, how we use it, and what rights you have in relation to it.</p>
+        <p style={policyP}>By using our website or making a purchase, you agree to the terms of this Privacy Policy.</p>
+
+        <h2 style={policyH2}>Information We Collect</h2>
+        <p style={policyP}><strong style={{ color: "#E8EDF5" }}>Personal information you provide:</strong></p>
+        <ul style={policyUl}>
+          <li>Full name, email address, phone number</li>
+          <li>Shipping and billing address</li>
+          <li>Payment details (processed securely via Razorpay — we do not store card/UPI/banking credentials)</li>
+        </ul>
+        <p style={policyP}><strong style={{ color: "#E8EDF5" }}>Information collected automatically:</strong></p>
+        <ul style={policyUl}>
+          <li>IP address and location data</li>
+          <li>Browser type and device information</li>
+          <li>Pages visited and time spent on site</li>
+          <li>Cookies and similar tracking technologies</li>
+        </ul>
+        <p style={policyP}><strong style={{ color: "#E8EDF5" }}>Information from third parties:</strong><br />When you sign in via Google or Apple, we receive your name and email from those providers as per their respective privacy policies.</p>
+
+        <h2 style={policyH2}>How We Use Your Information</h2>
+        <ul style={policyUl}>
+          <li>Process and fulfill your orders</li>
+          <li>Send order confirmation, shipping, and delivery notifications</li>
+          <li>Handle returns, refunds, and warranty claims</li>
+          <li>Provide customer support</li>
+          <li>Send promotional emails and offers (you can opt out anytime)</li>
+          <li>Improve our website experience and product offerings</li>
+          <li>Comply with legal obligations</li>
+        </ul>
+
+        <h2 style={policyH2}>Payment Processing</h2>
+        <div style={policyCard}>
+          <p style={{ ...policyP, marginBottom: 0 }}>All payments on Laptopkart are processed securely through <strong style={{ color: "#38BDF8" }}>Razorpay Payment Gateway</strong>. We do not store your credit card, debit card, or UPI credentials on our servers. Razorpay's handling of your payment data is governed by Razorpay's Privacy Policy.</p>
+        </div>
+
+        <h2 style={policyH2}>Sharing of Information</h2>
+        <p style={policyP}>We do not sell or rent your personal data to third parties. We may share data only with:</p>
+        <ul style={policyUl}>
+          <li><strong style={{ color: "#E8EDF5" }}>Razorpay</strong> – for payment processing</li>
+          <li><strong style={{ color: "#E8EDF5" }}>Shipping Partners</strong> – (BlueDart, DTDC, ST Courier, etc.) for order delivery</li>
+          <li><strong style={{ color: "#E8EDF5" }}>Legal Authorities</strong> – when required by law or to protect our rights</li>
+        </ul>
+
+        <h2 style={policyH2}>Cookies</h2>
+        <p style={policyP}>Our website uses cookies to enhance your browsing experience. You can disable cookies in your browser settings, but some features may not work correctly.</p>
+
+        <h2 style={policyH2}>Data Retention</h2>
+        <p style={policyP}>We retain your personal data for as long as your account is active, or as needed to fulfill the purposes described in this policy, or as required by law.</p>
+
+        <h2 style={policyH2}>Your Rights</h2>
+        <ul style={policyUl}>
+          <li>Access, correct, or delete your personal information</li>
+          <li>Withdraw consent for marketing communications</li>
+          <li>Request a copy of your data</li>
+        </ul>
+        <p style={policyP}>To exercise these rights, contact us at <strong style={{ color: "#38BDF8" }}>srivasavibusiness09@gmail.com</strong>.</p>
+
+        <h2 style={policyH2}>Contact</h2>
+        <div style={policyCard}>
+          <p style={{ ...policyP, marginBottom: 4 }}><strong style={{ color: "#E8EDF5" }}>Laptopkart</strong></p>
+          <p style={{ ...policyP, marginBottom: 4 }}>Salem, Tamil Nadu, India</p>
+          <p style={{ ...policyP, marginBottom: 4 }}>📧 srivasavibusiness09@gmail.com</p>
+          <p style={{ ...policyP, marginBottom: 0 }}>📞 +91 97503 31313</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Refund & Return Policy ───────────────────────────────────────────────────
+
+export function RefundPolicyPage({ setPage }: { setPage: (p: string) => void }) {
+  const tableStyle: React.CSSProperties = {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginBottom: 16,
+    fontSize: 13,
+  };
+  const thStyle: React.CSSProperties = {
+    background: "rgba(56,189,248,0.08)",
+    color: "#38BDF8",
+    padding: "10px 16px",
+    textAlign: "left",
+    fontWeight: 700,
+    border: "1px solid rgba(56,189,248,0.15)",
+  };
+  const tdStyle: React.CSSProperties = {
+    color: "#B0BCCE",
+    padding: "10px 16px",
+    border: "1px solid rgba(255,255,255,0.06)",
+  };
+
+  return (
+    <div style={policyWrap}>
+      <div style={policyInner}>
+        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "#8B9BBE", cursor: "pointer", fontSize: 13, marginBottom: 28, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
+          ← Back to Home
+        </button>
+        <span style={policyBadge}>Legal</span>
+        <h1 style={policyH1}>Refund & Return Policy</h1>
+        <p style={policySubtitle}>Last Updated: July 2026 &nbsp;·&nbsp; Laptopkart, Salem, Tamil Nadu</p>
+
+        <h2 style={policyH2}>Overview</h2>
+        <p style={policyP}>At Laptopkart, we stand behind the quality of every refurbished device we sell. All our products are thoroughly tested, graded, and quality-checked before dispatch. Please read this policy carefully before placing an order.</p>
+
+        <h2 style={policyH2}>Eligibility for Returns</h2>
+        <p style={policyP}>You may request a return or replacement within <strong style={{ color: "#10B981" }}>7 days of delivery</strong> if:</p>
+        <ul style={policyUl}>
+          <li>The product received is <strong style={{ color: "#E8EDF5" }}>physically damaged</strong> or has a manufacturing defect</li>
+          <li>The product is <strong style={{ color: "#E8EDF5" }}>not as described</strong> (wrong model, specification mismatch)</li>
+          <li>The product is <strong style={{ color: "#E8EDF5" }}>Dead on Arrival (DOA)</strong> — does not power on or function at all</li>
+        </ul>
+
+        <p style={policyP}><strong style={{ color: "#EF4444" }}>Non-returnable conditions:</strong></p>
+        <ul style={policyUl}>
+          <li>Products returned after 7 days from delivery date</li>
+          <li>Physical damage caused by the customer after delivery (drops, liquid damage)</li>
+          <li>Products with broken or tampered warranty stickers or seals</li>
+          <li>Accessories (chargers, bags, peripherals) unless sealed and unopened</li>
+          <li>Software-related issues (virus, OS reinstall, driver errors) not related to hardware</li>
+        </ul>
+
+        <h2 style={policyH2}>How to Initiate a Return</h2>
+        {[
+          ["Step 1", "Email srivasavibusiness09@gmail.com or WhatsApp +91 97503 31313 within 7 days of delivery"],
+          ["Step 2", "Provide your Order ID, a brief description of the issue, and clear photos or a video of the defect"],
+          ["Step 3", "Our team will review your request within 24–48 hours"],
+          ["Step 4", "If approved, we will arrange a free reverse pickup from your address"],
+        ].map(([step, desc]) => (
+          <div key={step} style={{ ...policyCard, display: "flex", gap: 16, alignItems: "flex-start", marginBottom: 10 }}>
+            <span style={{ background: "rgba(56,189,248,0.15)", color: "#38BDF8", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 800, whiteSpace: "nowrap", flexShrink: 0 }}>{step}</span>
+            <p style={{ ...policyP, marginBottom: 0 }}>{desc}</p>
+          </div>
+        ))}
+
+        <h2 style={policyH2}>Refund Timeline</h2>
+        <p style={policyP}>Once the returned product is received and inspected:</p>
+        <ul style={policyUl}>
+          <li><strong style={{ color: "#10B981" }}>Defect confirmed:</strong> Full refund to original payment method within 5–7 business days</li>
+          <li><strong style={{ color: "#F59E0B" }}>Product found working:</strong> No refund; product returned to customer</li>
+          <li><strong style={{ color: "#8B9BBE" }}>Minor issues:</strong> Partial refund may be issued at our discretion</li>
+        </ul>
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Payment Method</th>
+              <th style={thStyle}>Refund Timeline</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              ["UPI / Net Banking", "3–5 business days"],
+              ["Credit / Debit Card", "5–7 business days"],
+              ["Razorpay Payment Link", "5–7 business days"],
+              ["Cash on Delivery (COD)", "5–7 business days via bank transfer"],
+            ].map(([method, time]) => (
+              <tr key={method}>
+                <td style={tdStyle}>{method}</td>
+                <td style={tdStyle}>{time}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <h2 style={policyH2}>Warranty</h2>
+        <div style={policyCard}>
+          <p style={{ ...policyP, marginBottom: 0 }}>All refurbished products sold on Laptopkart come with a <strong style={{ color: "#10B981" }}>minimum 1-year warranty</strong> (unless stated otherwise in the product listing). Warranty covers hardware defects and component failures under normal usage. It does not cover physical damage caused by the customer.</p>
+        </div>
+
+        <h2 style={policyH2}>Cancellations</h2>
+        <ul style={policyUl}>
+          <li>Orders can be cancelled <strong style={{ color: "#E8EDF5" }}>before dispatch</strong> free of charge</li>
+          <li>Once dispatched, orders cannot be cancelled; follow the return process after delivery</li>
+          <li>To cancel, contact us immediately at srivasavibusiness09@gmail.com or +91 97503 31313</li>
+        </ul>
+
+        <h2 style={policyH2}>Contact for Returns & Refunds</h2>
+        <div style={policyCard}>
+          <p style={{ ...policyP, marginBottom: 4 }}>📧 srivasavibusiness09@gmail.com</p>
+          <p style={{ ...policyP, marginBottom: 0 }}>📞 +91 97503 31313 &nbsp;(10 AM – 7 PM, Mon–Sat)</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Terms of Use ─────────────────────────────────────────────────────────────
+
+export function TermsOfUsePage({ setPage }: { setPage: (p: string) => void }) {
+  return (
+    <div style={policyWrap}>
+      <div style={policyInner}>
+        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "#8B9BBE", cursor: "pointer", fontSize: 13, marginBottom: 28, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
+          ← Back to Home
+        </button>
+        <span style={policyBadge}>Legal</span>
+        <h1 style={policyH1}>Terms of Use</h1>
+        <p style={policySubtitle}>Last Updated: July 2026 &nbsp;·&nbsp; Laptopkart, Salem, Tamil Nadu</p>
+
+        <h2 style={policyH2}>Acceptance of Terms</h2>
+        <p style={policyP}>By accessing or using the Laptopkart website or purchasing any product, you agree to be bound by these Terms of Use. If you do not agree, please do not use our website.</p>
+
+        <h2 style={policyH2}>About Laptopkart</h2>
+        <div style={policyCard}>
+          <p style={{ ...policyP, marginBottom: 4 }}><strong style={{ color: "#E8EDF5" }}>Laptopkart</strong> — Refurbished Laptops, Desktops & Accessories</p>
+          <p style={{ ...policyP, marginBottom: 4 }}>Salem, Tamil Nadu, India</p>
+          <p style={{ ...policyP, marginBottom: 4 }}>📧 srivasavibusiness09@gmail.com</p>
+          <p style={{ ...policyP, marginBottom: 0 }}>📞 +91 97503 31313</p>
+        </div>
+
+        <h2 style={policyH2}>Use of the Website</h2>
+        <p style={policyP}>You agree to use the site only for lawful purposes. You must not:</p>
+        <ul style={policyUl}>
+          <li>Use the website for any fraudulent or illegal purpose</li>
+          <li>Submit false or misleading information during registration or checkout</li>
+          <li>Attempt to gain unauthorized access to any portion of the website</li>
+          <li>Reproduce, copy, or resell any content from our website without written permission</li>
+        </ul>
+        <p style={policyP}>We reserve the right to restrict or terminate access to any user who violates these terms.</p>
+
+        <h2 style={policyH2}>Account Registration</h2>
+        <p style={policyP}>When you create an account on Laptopkart, you are responsible for:</p>
+        <ul style={policyUl}>
+          <li>Maintaining the confidentiality of your login credentials</li>
+          <li>All activities that occur under your account</li>
+          <li>Providing accurate and up-to-date information</li>
+        </ul>
+        <p style={policyP}>You must notify us immediately of any unauthorized use of your account.</p>
+
+        <h2 style={policyH2}>Product Listings & Pricing</h2>
+        <ul style={policyUl}>
+          <li>All products listed are subject to availability</li>
+          <li>Prices may change without prior notice</li>
+          <li>We reserve the right to cancel orders if a product is mispriced or out of stock</li>
+          <li>Refurbished product grades (A, B, C) are defined in each product listing</li>
+        </ul>
+
+        <h2 style={policyH2}>Payment Terms</h2>
+        <div style={policyCard}>
+          <p style={{ ...policyP, marginBottom: 0 }}>All payments are processed through <strong style={{ color: "#38BDF8" }}>Razorpay</strong>, a secure third-party payment gateway. By making a payment, you agree to Razorpay's Terms of Service and Privacy Policy. Laptopkart does not store any sensitive payment information (card numbers, CVV, banking credentials).</p>
+        </div>
+
+        <h2 style={policyH2}>Intellectual Property</h2>
+        <p style={policyP}>All content on this website — including logos, graphics, text, product images, and design — is the property of Laptopkart and is protected by applicable copyright and trademark laws. Unauthorized use of any content is prohibited.</p>
+
+        <h2 style={policyH2}>Limitation of Liability</h2>
+        <p style={policyP}>To the maximum extent permitted by law, Laptopkart shall not be liable for:</p>
+        <ul style={policyUl}>
+          <li>Indirect or consequential damages arising from your use of the site</li>
+          <li>Loss of data, revenue, or profits</li>
+          <li>Errors or interruptions in site availability</li>
+        </ul>
+        <p style={policyP}>Our total liability to you for any claim shall not exceed the amount paid for the specific product in question.</p>
+
+        <h2 style={policyH2}>Governing Law & Disputes</h2>
+        <p style={policyP}>These Terms of Use shall be governed by the laws of India. Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the courts located in <strong style={{ color: "#E8EDF5" }}>Salem, Tamil Nadu</strong>.</p>
+        <p style={policyP}>In the event of any dispute, we encourage you to first contact us directly at srivasavibusiness09@gmail.com. We will make every effort to resolve disputes amicably.</p>
+
+        <h2 style={policyH2}>Amendments</h2>
+        <p style={policyP}>We reserve the right to update these Terms of Use at any time. Continued use of the website after changes are posted constitutes your acceptance of the revised terms.</p>
+
+        <h2 style={policyH2}>Contact Us</h2>
+        <div style={policyCard}>
+          <p style={{ ...policyP, marginBottom: 4 }}><strong style={{ color: "#E8EDF5" }}>Laptopkart</strong></p>
+          <p style={{ ...policyP, marginBottom: 4 }}>Salem, Tamil Nadu, India</p>
+          <p style={{ ...policyP, marginBottom: 4 }}>📧 srivasavibusiness09@gmail.com</p>
+          <p style={{ ...policyP, marginBottom: 0 }}>📞 +91 97503 31313 &nbsp;(10 AM – 7 PM, Mon–Sat)</p>
+        </div>
+      </div>
+    </div>
+  );
+}

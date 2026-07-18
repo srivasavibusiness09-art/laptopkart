@@ -242,6 +242,7 @@ export default function App() {
   const [accessoryForm, setAccessoryForm] = useState<Partial<AccessoryProduct>>({
     name: '', category: 'Monitors', price: 0, mrp: 0, brand: 'Dell', specs: '', img: ''
   });
+  const [showCustomCategoryInput, setShowCustomCategoryInput] = useState(false);
 
   // Form states - Banner
   const [bannerForm, setBannerForm] = useState<Partial<Banner>>({
@@ -882,6 +883,12 @@ export default function App() {
 
   const handleAccessoryEdit = (item: AccessoryProduct) => {
     setAccessoryForm({ ...item });
+    const predefinedAccessoryCategories = ['Monitors', 'Docking Stations', 'Mice & Keyboards', 'Chargers & Power', 'Bags & Sleeves'];
+    if (!predefinedAccessoryCategories.includes(item.category || '')) {
+      setShowCustomCategoryInput(true);
+    } else {
+      setShowCustomCategoryInput(false);
+    }
     setAccessoryModal({ open: true, mode: 'edit', item });
   };
 
@@ -1395,6 +1402,7 @@ export default function App() {
                   setAccessoryForm({
                     name: '', category: 'Monitors', price: 0, mrp: 0, brand: 'Dell', specs: '', img: ''
                   });
+                  setShowCustomCategoryInput(false);
                   setAccessoryModal({ open: true, mode: 'add' });
                 }}
                 style={{
@@ -1993,7 +2001,10 @@ export default function App() {
                           {b.category || 'Buying Guide'}
                         </td>
                         <td style={{ padding: '18px 24px', color: '#10B981', fontSize: 13, fontWeight: 700 }}>
-                          {b.author || 'Contest Writer'}
+                          <div>{b.author || 'Contest Writer'}</div>
+                          {b.authorEmail && (
+                            <div style={{ color: '#8B9BBE', fontSize: 11, fontWeight: 400, marginTop: 2 }}>{b.authorEmail}</div>
+                          )}
                         </td>
                         <td style={{ padding: '18px 24px' }}>
                           <button
@@ -2792,13 +2803,35 @@ export default function App() {
                 <div>
                   <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Category</label>
                   <select
-                    value={accessoryForm.category} onChange={e => setAccessoryForm({ ...accessoryForm, category: e.target.value })}
+                    value={['Monitors', 'Docking Stations', 'Mice & Keyboards', 'Chargers & Power', 'Bags & Sleeves'].includes(accessoryForm.category || '') ? (accessoryForm.category || '') : 'Other'}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === 'Other') {
+                        setShowCustomCategoryInput(true);
+                        setAccessoryForm({ ...accessoryForm, category: '' });
+                      } else {
+                        setShowCustomCategoryInput(false);
+                        setAccessoryForm({ ...accessoryForm, category: val });
+                      }
+                    }}
                     className="form-input" style={{ background: '#0d1117' }}
                   >
-                    {['Monitors', 'Docking Stations', 'Mice & Keyboards', 'Chargers & Power', 'Bags & Sleeves'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    {['Monitors', 'Docking Stations', 'Mice & Keyboards', 'Chargers & Power', 'Bags & Sleeves', 'Other'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </div>
               </div>
+
+              {showCustomCategoryInput && (
+                <div>
+                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Category Name</label>
+                  <input
+                    type="text" required placeholder="e.g. Adapters or Cooling Pads"
+                    value={accessoryForm.category || ''}
+                    onChange={e => setAccessoryForm({ ...accessoryForm, category: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
@@ -3093,6 +3126,7 @@ export default function App() {
                   </span>
                   <span style={{ color: '#8B9BBE' }}>
                     Written by: <strong style={{ color: '#10B981' }}>{blogReviewModal.item.author || 'Contest Writer'}</strong>
+                    {blogReviewModal.item.authorEmail && ` (${blogReviewModal.item.authorEmail})`}
                   </span>
                   <span style={{ color: '#8B9BBE' }}>
                     • {blogReviewModal.item.createdAt ? new Date(blogReviewModal.item.createdAt).toLocaleDateString('en-IN') : 'N/A'}

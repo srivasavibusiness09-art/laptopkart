@@ -26,13 +26,166 @@ import {
   WriteBlogPage,
   BlogDetail,
   AccessoriesPage,
+  PrivacyPolicyPage,
+  RefundPolicyPage,
+  TermsOfUsePage,
 } from "@/components/OtherPages";
+
+import { BadgeCheck, Heart, Shield, Star } from "lucide-react";
 
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface CartItem extends Product {
   qty: number;
+}
+
+function AccessoryDetailPage({
+  accessory,
+  setPage,
+  onAddToCart,
+  onWishlist,
+  wishlist,
+}: {
+  accessory: any | null;
+  setPage: (p: string) => void;
+  onAddToCart: (p: any) => void;
+  onWishlist: (id: number) => void;
+  wishlist: number[];
+}) {
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+  if (!accessory) {
+    return (
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "32px 14px" : "64px 20px", textAlign: "center" }}>
+        <h2 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: 24, fontWeight: 800, marginBottom: 8 }}>
+          Accessory not found
+        </h2>
+        <p style={{ color: COLORS.muted, fontSize: 14, marginBottom: 20 }}>Please go back to the accessories catalog and try again.</p>
+        <button
+          onClick={() => setPage("accessories")}
+          style={{ background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000", border: "none", borderRadius: 12, padding: "10px 18px", fontWeight: 800, cursor: "pointer" }}
+        >
+          Back to Accessories
+        </button>
+      </div>
+    );
+  }
+
+  const isWished = wishlist.includes(accessory.id);
+  const savings = accessory.mrp - accessory.price;
+
+  return (
+    <main style={{ background: COLORS.darkBg, minHeight: "100vh" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: isMobile ? "16px 18px 44px" : "24px 24px 72px" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 18, flexWrap: "wrap" }}>
+          <button
+            onClick={() => setPage("accessories")}
+            style={{ background: "transparent", border: `1px solid ${COLORS.cardBorder}`, color: COLORS.muted, borderRadius: 100, padding: "8px 14px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}
+          >
+            ← Accessories
+          </button>
+          <span style={{ color: COLORS.muted, fontSize: 12 }}>Accessories</span>
+          <span style={{ color: COLORS.muted, fontSize: 12 }}>/</span>
+          <span style={{ color: COLORS.text, fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 420 }}>
+            {accessory.name}
+          </span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 24 : 44, alignItems: "start" }}>
+          <div style={{ position: "relative" }}>
+            <div style={{ borderRadius: 24, overflow: "hidden", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, aspectRatio: "4/3" }}>
+              <img src={accessory.img} alt={accessory.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+              <span style={{ background: "rgba(56,189,248,0.08)", color: COLORS.green, border: "1px solid rgba(56,189,248,0.15)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700 }}>
+                {accessory.brand}
+              </span>
+              <span style={{ background: "rgba(16,185,129,0.10)", color: "#10B981", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700 }}>
+                {accessory.category}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+              <span style={{ color: COLORS.green, fontSize: 12, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                Accessory Detail
+              </span>
+              <span style={{ color: COLORS.muted, fontSize: 12 }}>Small, clean, same-store design</span>
+            </div>
+
+            <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 26 : 38, fontWeight: 800, color: COLORS.text, lineHeight: 1.12, margin: "0 0 10px" }}>
+              {accessory.name}
+            </h1>
+            <p style={{ color: COLORS.muted, fontSize: 14, lineHeight: 1.7, margin: "0 0 16px" }}>
+              {accessory.specs}
+            </p>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 2 }}>
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star key={s} size={14} fill={s <= Math.floor(accessory.rating) ? "#FBBF24" : "transparent"} color={s <= Math.floor(accessory.rating) ? "#FBBF24" : "rgba(255,255,255,0.15)"} />
+                ))}
+              </div>
+              <span style={{ color: COLORS.text, fontWeight: 700, fontSize: 14 }}>{accessory.rating}</span>
+              <span style={{ color: COLORS.muted, fontSize: 13 }}>({accessory.reviews} reviews)</span>
+            </div>
+
+            <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 18, padding: "18px 20px", marginBottom: 18 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 10, flexWrap: "wrap" }}>
+                <span style={{ fontFamily: "'Sora', sans-serif", fontSize: 34, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.03em" }}>
+                  ₹{accessory.price.toLocaleString("en-IN")}
+                </span>
+                <span style={{ color: COLORS.muted, fontSize: 15, textDecoration: "line-through", marginBottom: 4 }}>
+                  ₹{accessory.mrp.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <span style={{ background: "rgba(16,185,129,0.12)", color: "#10B981", fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 100 }}>
+                  You save ₹{savings.toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 10, marginBottom: 18 }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <BadgeCheck size={16} color={COLORS.green} style={{ flexShrink: 0, marginTop: 1 }} />
+                <span style={{ color: COLORS.muted, fontSize: 14, lineHeight: 1.5 }}>Verified accessory with matching quality checks and clean retail presentation.</span>
+              </div>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <Shield size={16} color={COLORS.green} style={{ flexShrink: 0, marginTop: 1 }} />
+                <span style={{ color: COLORS.muted, fontSize: 14, lineHeight: 1.5 }}>Compatible for work, home, or mobile setups depending on the product category.</span>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
+              <button
+                onClick={() => onAddToCart(accessory)}
+                style={{ background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000", border: "none", borderRadius: 14, padding: "12px 18px", fontWeight: 800, cursor: "pointer", minWidth: 160, fontFamily: "'Sora', sans-serif" }}
+              >
+                Add to Cart
+              </button>
+              <button
+                onClick={() => onWishlist(accessory.id)}
+                style={{ background: isWished ? "rgba(239,68,68,0.12)" : COLORS.cardBg, color: isWished ? "#EF4444" : COLORS.text, border: `1px solid ${isWished ? "rgba(239,68,68,0.3)" : COLORS.cardBorder}`, borderRadius: 14, padding: "12px 18px", fontWeight: 700, cursor: "pointer", minWidth: 160, fontFamily: "'Sora', sans-serif" }}
+              >
+                <Heart size={14} fill={isWished ? "#EF4444" : "transparent"} style={{ display: "inline", marginRight: 8 }} />
+                {isWished ? "Wishlisted" : "Add to Wishlist"}
+              </button>
+            </div>
+
+            <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 18, padding: 18 }}>
+              <div style={{ color: COLORS.muted, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                Key Specs
+              </div>
+              <div style={{ color: COLORS.text, fontSize: 14, lineHeight: 1.7 }}>{accessory.specs}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
 }
 
 export default function App() {
@@ -45,6 +198,7 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<number[]>([]);
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
+  const [viewAccessory, setViewAccessory] = useState<any | null>(null);
 
   /* Dynamic Admin Data States (hydrated from Firestore) */
   const [productsList, setProductsList] = useState<Product[]>(products);
@@ -378,6 +532,8 @@ export default function App() {
         handleNavigate("checkout");
       } else if (pendingAction.type === "profile") {
         handleNavigate("profile");
+      } else if (pendingAction.type === "write-blog") {
+        handleNavigate("write-blog");
       }
       setPendingAction(null);
     } else {
@@ -388,6 +544,11 @@ export default function App() {
   const handleViewProduct = (product: Product) => {
     setViewProduct(product);
     handleNavigate("product");
+  };
+
+  const handleViewAccessory = (accessory: any) => {
+    setViewAccessory(accessory);
+    handleNavigate("accessory-detail");
   };
 
   /* ── Landing experience ─────────────────────────────── */
@@ -474,10 +635,10 @@ export default function App() {
       )}
       {page === "compare" && <ComparePage productsList={productsList} />}
       {page === "about" && <AboutPage />}
-      {page.startsWith("blog-") && user && (
+      {page.startsWith("blog-") && (
         <BlogDetail postId={page.replace("blog-", "")} setPage={handleNavigate} />
       )}
-      {page === "blog" && user && (
+      {page === "blog" && (
         <BlogPage user={user} setPage={handleNavigate} />
       )}{page === "contact" && <ContactPage />}
       {page === "login" && <LoginPage setPage={handleNavigate} onLogin={handleLogin} triggerAlert={triggerStoreAlert} />}
@@ -488,9 +649,22 @@ export default function App() {
       {page === "write-blog" && user && (
         <WriteBlogPage setPage={handleNavigate} />
       )}
+      {page === "privacy-policy" && <PrivacyPolicyPage setPage={handleNavigate} />}
+      {page === "refund-policy" && <RefundPolicyPage setPage={handleNavigate} />}
+      {page === "terms-of-use" && <TermsOfUsePage setPage={handleNavigate} />}
       {page === "accessories" && (
         <AccessoriesPage
           accessories={accessories}
+          setPage={handleNavigate}
+          onAddToCart={handleAddToCart}
+          onWishlist={handleWishlist}
+          wishlist={wishlist}
+          onViewAccessory={handleViewAccessory}
+        />
+      )}
+      {page === "accessory-detail" && (
+        <AccessoryDetailPage
+          accessory={viewAccessory}
           setPage={handleNavigate}
           onAddToCart={handleAddToCart}
           onWishlist={handleWishlist}

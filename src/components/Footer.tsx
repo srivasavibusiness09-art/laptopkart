@@ -217,14 +217,18 @@ export default function Footer({ setPage }: FooterProps) {
           </div>
           {!isMobile && (
             <div style={{ display: "flex", gap: 20 }}>
-              {["Privacy Policy", "Terms of Use", "Refund Policy"].map((l) => (
-                <span key={l} style={{
+              {([
+                ["Privacy Policy", "privacy-policy"],
+                ["Terms of Use", "terms-of-use"],
+                ["Refund Policy", "refund-policy"],
+              ] as [string, string][]).map(([label, page]) => (
+                <span key={label} onClick={() => setPage(page)} style={{
                   color: COLORS.muted, fontSize: 12, cursor: "pointer",
                   transition: "color 0.15s",
                 }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLSpanElement).style.color = COLORS.text; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLSpanElement).style.color = COLORS.muted; }}
-                >{l}</span>
+                >{label}</span>
               ))}
             </div>
           )}

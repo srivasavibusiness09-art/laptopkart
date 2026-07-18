@@ -17,6 +17,7 @@ import { db } from "@/lib/firebase";
 import Card from "./common/Card";
 import Button from "./common/Button";
 import RatingStars from "./common/RatingStars";
+import Script from "next/script";
 
 /* ── Trust Strip ──────────────────────────────────────── */
 const trustItems = [
@@ -123,20 +124,24 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
 
   // Load Featurable widget script after mount to ensure the DOM div is rendered
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const scriptId = "featurable-widget-script";
-      const existing = document.getElementById(scriptId);
-      if (existing) {
-        existing.remove();
-      }
-      const script = document.createElement("script");
-      script.id = scriptId;
-      script.src = "https://cdn.featurable.com/widget/v2/embed.js";
-      script.defer = true;
-      script.setAttribute("charset", "UTF-8");
-      document.body.appendChild(script);
-    }, 600);
-    return () => clearTimeout(timer);
+    const scriptId = "featurable-widget-script";
+
+    if (document.getElementById(scriptId)) {
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = scriptId;
+    script.src = "https://cdn.featurable.com/widget/v2/embed.js";
+    script.defer = true;
+    script.charset = "UTF-8";
+
+    document.body.appendChild(script);
+
+    return () => {
+      // Optional: remove only if you really want to unload it
+      // document.getElementById(scriptId)?.remove();
+    };
   }, []);
 
   const [videoSettings, setVideoSettings] = useState<{ title: string; subtitle: string; videoUrl: string; orientation?: 'landscape' | 'portrait' } | null>(null);
@@ -352,8 +357,8 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                         src={videoSettings.videoUrl.includes("youtube.com/watch")
                           ? `https://www.youtube.com/embed/${videoSettings.videoUrl.match(/[?&]v=([^&#]+)/)?.[1] || ''}`
                           : videoSettings.videoUrl.includes("youtu.be/")
-                          ? `https://www.youtube.com/embed/${videoSettings.videoUrl.split("youtu.be/")[1]?.split("?")[0] || ''}`
-                          : videoSettings.videoUrl
+                            ? `https://www.youtube.com/embed/${videoSettings.videoUrl.split("youtu.be/")[1]?.split("?")[0] || ''}`
+                            : videoSettings.videoUrl
                         }
                         style={{ width: "100%", height: "100%", border: "none" }}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -394,8 +399,8 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                         src={videoSettings.videoUrl.includes("youtube.com/watch")
                           ? `https://www.youtube.com/embed/${videoSettings.videoUrl.match(/[?&]v=([^&#]+)/)?.[1] || ''}`
                           : videoSettings.videoUrl.includes("youtu.be/")
-                          ? `https://www.youtube.com/embed/${videoSettings.videoUrl.split("youtu.be/")[1]?.split("?")[0] || ''}`
-                          : videoSettings.videoUrl
+                            ? `https://www.youtube.com/embed/${videoSettings.videoUrl.split("youtu.be/")[1]?.split("?")[0] || ''}`
+                            : videoSettings.videoUrl
                         }
                         style={{ width: "100%", height: "100%", border: "none" }}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
