@@ -5,8 +5,8 @@ export async function POST(req: Request) {
   try {
     const { amount, currency } = await req.json();
 
-    const key_id = process.env.RAZORPAY_KEY_ID;
-    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    const key_id = process.env.RAZORPAY_KEY_ID?.trim();
+    const key_secret = process.env.RAZORPAY_KEY_SECRET?.trim();
 
     // Local testing fallback if keys are not configured yet
     if (!key_id || !key_secret || key_id.includes("YOUR_") || key_secret.includes("YOUR_")) {

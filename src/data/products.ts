@@ -41,6 +41,9 @@ export type Product = {
   badge: "Best Seller" | "Gaming" | "Value Deal" | "Top Rated";
   stock?: number;
   deviceType?: "Laptop" | "Desktop";
+  amazon_url?: string;
+  flipkart_url?: string;
+  croma_url?: string;
 };
 
 export const products: Product[] = [

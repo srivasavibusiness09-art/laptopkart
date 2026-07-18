@@ -110,20 +110,41 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
 
   if (!product) return null;
 
+  const parseOptionOffset = (optionStr: string) => {
+    if (!optionStr) return { label: "", offset: 0 };
+    const match = optionStr.match(/\(\s*([+-])\s*₹?\s*([0-9,]+)\s*\)/);
+    if (match) {
+      const sign = match[1] === '-' ? -1 : 1;
+      const value = parseInt(match[2].replace(/,/g, ""), 10);
+      const label = optionStr.replace(/\s*\(\s*[+-]\s*₹?\s*[0-9,]+\s*\)/, "").trim();
+      return { label, offset: sign * value };
+    }
+    return { label: optionStr.trim(), offset: 0 };
+  };
+
   const isWished = wishlist.includes(product.id);
   const related = productsList.filter((p) => p.id !== product.id).slice(0, 4);
 
+  const ramParsedSelected = parseOptionOffset(selectedRam);
+  const storageParsedSelected = parseOptionOffset(selectedStorage);
+
+  const activePrice = product.price + ramParsedSelected.offset + storageParsedSelected.offset;
+  const activeMrp = product.mrp + ramParsedSelected.offset + storageParsedSelected.offset;
+
+  const customizedProduct = {
+    ...product,
+    price: activePrice,
+    mrp: activeMrp,
+    ram: ramParsedSelected.label,
+    storage: storageParsedSelected.label,
+    specs: product.specs
+      .replace(/(\d+\s*GB\s*RAM)/i, `${ramParsedSelected.label} RAM`)
+      .replace(/(\d+\s*GB\s*Memory)/i, `${ramParsedSelected.label} Memory`)
+      .replace(/(\d+\s*GB\s*SSD)/i, storageParsedSelected.label)
+      .replace(/(\d+\s*TB\s*SSD)/i, storageParsedSelected.label),
+  };
+
   const handleAdd = () => {
-    const customizedProduct = {
-      ...product,
-      ram: selectedRam,
-      storage: selectedStorage,
-      specs: product.specs
-        .replace(/(\d+\s*GB\s*RAM)/i, `${selectedRam} RAM`)
-        .replace(/(\d+\s*GB\s*Memory)/i, `${selectedRam} Memory`)
-        .replace(/(\d+\s*GB\s*SSD)/i, selectedStorage)
-        .replace(/(\d+\s*TB\s*SSD)/i, selectedStorage),
-    };
     for (let i = 0; i < qty; i++) onAddToCart(customizedProduct);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
@@ -159,13 +180,13 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
 
   const specs = [
     ["CPU", product.processor],
-    ["RAM", selectedRam],
-    ["Storage", selectedStorage],
+    ["RAM", ramParsedSelected.label],
+    ["Storage", storageParsedSelected.label],
     ["Specs Detail", product.specs
-      .replace(/(\d+\s*GB\s*RAM)/i, `${selectedRam} RAM`)
-      .replace(/(\d+\s*GB\s*Memory)/i, `${selectedRam} Memory`)
-      .replace(/(\d+\s*GB\s*SSD)/i, selectedStorage)
-      .replace(/(\d+\s*TB\s*SSD)/i, selectedStorage)],
+      .replace(/(\d+\s*GB\s*RAM)/i, `${ramParsedSelected.label} RAM`)
+      .replace(/(\d+\s*GB\s*Memory)/i, `${ramParsedSelected.label} Memory`)
+      .replace(/(\d+\s*GB\s*SSD)/i, storageParsedSelected.label)
+      .replace(/(\d+\s*TB\s*SSD)/i, storageParsedSelected.label)],
     product.condition === "Brand New"
       ? ["Condition", "100% Brand New (Original Sealed Box)"]
       : ["Cosmetic Quality", `Grade ${product.grade} (Certified Refurbished)`],
@@ -440,10 +461,10 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             fontSize: 40, fontWeight: 800,
             color: COLORS.text, letterSpacing: "-0.03em",
           }}>
-            ₹{product.price.toLocaleString("en-IN")}
+            ₹{activePrice.toLocaleString("en-IN")}
           </span>
           <span style={{ color: COLORS.muted, fontSize: 16, textDecoration: "line-through", marginBottom: 6 }}>
-            ₹{product.mrp.toLocaleString("en-IN")}
+            ₹{activeMrp.toLocaleString("en-IN")}
           </span>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -451,12 +472,11 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             background: "rgba(16,185,129,0.12)", color: "#10B981",
             fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 100,
           }}>
-            You save ₹{(product.mrp - product.price).toLocaleString("en-IN")}
+            You save ₹{(activeMrp - activePrice).toLocaleString("en-IN")}
           </span>
         </div>
       </div>
 
-      {/* RAM Selection Pills */}
       {ramOptions.length > 0 && (
         <div style={{ marginBottom: 22 }}>
           <div style={{ color: COLORS.muted, fontSize: 11, fontWeight: 700, textTransform: "uppercase", marginBottom: 10, letterSpacing: "0.05em" }}>
@@ -465,6 +485,8 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {ramOptions.map((ramOpt) => {
               const isSelected = selectedRam === ramOpt;
+              const { label: displayLabel, offset } = parseOptionOffset(ramOpt);
+              const optionFullPrice = product.price + storageParsedSelected.offset + offset;
               return (
                 <button
                   key={ramOpt}
@@ -495,7 +517,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
                     }
                   }}
                 >
-                  {ramOpt}
+                  {displayLabel} (₹{optionFullPrice.toLocaleString('en-IN')})
                 </button>
               );
             })}
@@ -512,6 +534,8 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {storageOptions.map((storeOpt) => {
               const isSelected = selectedStorage === storeOpt;
+              const { label: displayLabel, offset } = parseOptionOffset(storeOpt);
+              const optionFullPrice = product.price + ramParsedSelected.offset + offset;
               return (
                 <button
                   key={storeOpt}
@@ -542,7 +566,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
                     }
                   }}
                 >
-                  {storeOpt}
+                  {displayLabel} (₹{optionFullPrice.toLocaleString('en-IN')})
                 </button>
               );
             })}
@@ -617,7 +641,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
       <button
         onClick={() => {
           for (let i = 0; i < qty; i++) {
-            onAddToCart(product);
+            onAddToCart(customizedProduct);
           }
           setPage("checkout");
         }}

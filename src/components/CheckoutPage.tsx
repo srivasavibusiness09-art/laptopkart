@@ -188,7 +188,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
         }
 
         const razorpayOrder = await res.json();
-        const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder";
+         const keyId = (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder").trim();
 
         const options = {
           key: keyId,
@@ -199,7 +199,23 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
           order_id: razorpayOrder.id,
           handler: async function (response: any) {
             try {
-              // Write paid order directly to Firestore
+              // Verify the payment signature on the backend
+              const verifyRes = await fetch("/api/verify-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature
+                })
+              });
+
+              if (!verifyRes.ok) {
+                const errorData = await verifyRes.json();
+                throw new Error(errorData.error || "Payment signature verification failed.");
+              }
+
+              // Write paid order directly to Firestore after successful verification
               const newOrder = {
                 orderId: finalOrderId,
                 createdAt: new Date().toISOString(),
@@ -216,9 +232,9 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
                 paymentMethod: payment,
                 email: user.email,
                 uid: user.uid,
-                razorpayOrderId: response.razorpay_order_id || razorpayOrder.id,
-                razorpayPaymentId: response.razorpay_payment_id || "pay_mock_123",
-                razorpaySignature: response.razorpay_signature || "sig_mock_123"
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature
               };
 
               const orderRef = doc(db, "orders", finalOrderId);
@@ -235,9 +251,9 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
 
               setCart([]);
               setStep(2);
-            } catch (err) {
-              console.error("Firestore payment write failed:", err);
-              alert("Payment was successful, but saving order failed. Please notify customer support.");
+            } catch (err: any) {
+              console.error("Payment verification or Firestore save failed:", err);
+              alert(err.message || "Payment was successful, but saving order failed. Please notify customer support.");
             } finally {
               setIsProcessing(false);
             }

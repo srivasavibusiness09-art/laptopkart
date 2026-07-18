@@ -51,6 +51,9 @@ interface Product {
   badge: "Best Seller" | "Gaming" | "Value Deal" | "Top Rated";
   stock?: number;
   deviceType?: "Laptop" | "Desktop";
+  amazon_url?: string;
+  flipkart_url?: string;
+  croma_url?: string;
 }
 
 interface AccessoryProduct {
@@ -217,9 +220,23 @@ export default function App() {
     name: '', brand: 'Dell', category: 'Business', price: 0, mrp: 0,
     condition: 'Refurbished', grade: 'A+', warranty: '1 Year Warranty',
     specs: '', img: '', processor: '', ram: '8GB', storage: '256GB SSD', badge: 'Top Rated', stock: 1,
-    deviceType: 'Laptop'
+    deviceType: 'Laptop', amazon_url: '', flipkart_url: '', croma_url: ''
   });
   const [galleryLinksText, setGalleryLinksText] = useState("");
+  const [modalTab, setModalTab] = useState<'basic' | 'specs' | 'media'>('basic');
+  const [selectedRamOptions, setSelectedRamOptions] = useState<{ [key: string]: { enabled: boolean; offset: number } }>({
+    '8GB': { enabled: true, offset: 0 },
+    '16GB': { enabled: false, offset: 0 },
+    '32GB': { enabled: false, offset: 0 },
+    '64GB': { enabled: false, offset: 0 },
+  });
+  const [selectedStorageOptions, setSelectedStorageOptions] = useState<{ [key: string]: { enabled: boolean; offset: number } }>({
+    '128GB SSD': { enabled: false, offset: 0 },
+    '256GB SSD': { enabled: true, offset: 0 },
+    '512GB SSD': { enabled: false, offset: 0 },
+    '1TB SSD': { enabled: false, offset: 0 },
+    '2TB SSD': { enabled: false, offset: 0 },
+  });
 
   // Form states - Accessory
   const [accessoryForm, setAccessoryForm] = useState<Partial<AccessoryProduct>>({
@@ -529,6 +546,103 @@ export default function App() {
     return () => unsubscribeOrders();
   }, []);
 
+  const handleAutoFillSpecs = () => {
+    const name = productForm.name || "";
+    if (!name.trim()) {
+      triggerAlert('danger', 'Please enter a Product Name first to auto-fill.');
+      return;
+    }
+
+    const update: Partial<Product> = { ...productForm };
+
+    // 1. Detect Brand
+    const brands = ['Dell', 'HP', 'Lenovo', 'Apple', 'Asus', 'Acer'];
+    for (const brand of brands) {
+      if (new RegExp('\\b' + brand + '\\b', 'i').test(name)) {
+        update.brand = brand;
+        break;
+      }
+    }
+
+    // 2. Detect Processor
+    let processor = 'Intel Core i5';
+    if (/i3/i.test(name)) processor = 'Intel Core i3';
+    else if (/i5/i.test(name)) processor = 'Intel Core i5';
+    else if (/i7/i.test(name)) processor = 'Intel Core i7';
+    else if (/i9/i.test(name)) processor = 'Intel Core i9';
+    else if (/m1/i.test(name)) processor = 'Apple M1';
+    else if (/m2/i.test(name)) processor = 'Apple M2';
+    else if (/m3/i.test(name)) processor = 'Apple M3';
+    else if (/ryzen\s*3/i.test(name)) processor = 'AMD Ryzen 3';
+    else if (/ryzen\s*5/i.test(name)) processor = 'AMD Ryzen 5';
+    else if (/ryzen\s*7/i.test(name)) processor = 'AMD Ryzen 7';
+    else if (/ryzen\s*9/i.test(name)) processor = 'AMD Ryzen 9';
+    else if (/celeron/i.test(name)) processor = 'Intel Celeron';
+    else if (/pentium/i.test(name)) processor = 'Intel Pentium';
+    
+    // Detect Gen if available
+    const genMatch = name.match(/(\d+)(?:th|rd|nd|st)\s*Gen/i);
+    if (genMatch) {
+      processor += ` ${genMatch[1]}th Gen`;
+    }
+    update.processor = processor;
+
+    // 3. Detect RAM
+    let ramSize = '8GB';
+    const ramMatch = name.match(/\b(\d+)\s*(?:GB|G)\b/i);
+    if (ramMatch) {
+      ramSize = `${ramMatch[1]}GB`;
+    }
+    
+    // 4. Detect Storage
+    let storageSize = '256GB SSD';
+    const ssdMatch = name.match(/\b(\d+)\s*(?:GB|TB)\s*(?:SSD|HDD|NVMe)?\b/i);
+    if (ssdMatch) {
+      const rawNum = parseInt(ssdMatch[1], 10);
+      const isTb = /TB/i.test(ssdMatch[0]) || (rawNum === 1 || rawNum === 2);
+      const unit = isTb ? 'TB' : 'GB';
+      const type = /HDD/i.test(name) ? 'HDD' : 'SSD';
+      // Make sure it doesn't match the RAM size
+      if (rawNum !== parseInt(ramSize, 10)) {
+        storageSize = `${rawNum}${unit} ${type}`;
+      }
+    }
+    
+    // Update checkboxes/offsets
+    const newRamOptions = { ...selectedRamOptions };
+    Object.keys(newRamOptions).forEach(k => {
+      newRamOptions[k] = { enabled: k === ramSize, offset: 0 };
+    });
+    setSelectedRamOptions(newRamOptions);
+
+    const newStorageOptions = { ...selectedStorageOptions };
+    Object.keys(newStorageOptions).forEach(k => {
+      newStorageOptions[k] = { enabled: k === storageSize, offset: 0 };
+    });
+    setSelectedStorageOptions(newStorageOptions);
+
+    // 5. Specs Tagline
+    update.specs = `${processor} • ${ramSize} RAM • ${storageSize}`;
+
+    // 6. Defaults based on Condition
+    const isRefurbished = update.condition !== 'Brand New';
+    update.warranty = isRefurbished ? '6 Months Warranty' : '1 Year Brand Warranty';
+    update.boxContents = isRefurbished 
+       ? 'Refurbished Laptop, Compatible Power Charger Adapter, Bubble wrap packing box'
+       : 'Original Sealed Box Brand New Laptop, Original OEM Charger Adapter, Power cord, Manuals';
+    
+    // Grade detection for refurbished
+    if (isRefurbished) {
+      if (/a\+/i.test(name)) update.grade = 'A+';
+      else if (/grade\s*a/i.test(name) || /\ba\b/i.test(name)) update.grade = 'A';
+      else if (/b\+/i.test(name)) update.grade = 'B+';
+      else update.grade = 'A+'; // Default
+    }
+
+    setProductForm(update);
+    triggerAlert('success', `⚡ Auto-filled details successfully: ${update.brand} ${processor} / ${ramSize} / ${storageSize}`);
+  };
+
   // Product CRUD Handlers
   const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -537,6 +651,22 @@ export default function App() {
     const discount = mrp > 0 ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
     const docId = productModal.mode === 'edit' ? String(productModal.item!.id) : doc(collection(db, "products")).id;
+
+    // Build RAM string
+    const ramString = Object.entries(selectedRamOptions)
+      .filter(([_, opt]) => opt.enabled)
+      .map(([size, opt]) => {
+        return opt.offset !== 0 ? `${size} (+${opt.offset})` : size;
+      })
+      .join(', ') || '8GB';
+
+    // Build Storage string
+    const storageString = Object.entries(selectedStorageOptions)
+      .filter(([_, opt]) => opt.enabled)
+      .map(([size, opt]) => {
+        return opt.offset !== 0 ? `${size} (+${opt.offset})` : size;
+      })
+      .join(', ') || '256GB SSD';
 
     const pData: Product = {
       id: docId as any,
@@ -557,12 +687,15 @@ export default function App() {
       description: productForm.description || '',
       boxContents: productForm.boxContents || '',
       processor: productForm.processor || 'Intel Core i5',
-      ram: productForm.ram || '8GB',
-      availableRams: (productForm.ram || '8GB').split(',').map(s => s.trim()).filter(Boolean),
-      storage: productForm.storage || '256GB SSD',
-      availableStorages: (productForm.storage || '256GB SSD').split(',').map(s => s.trim()).filter(Boolean),
+      ram: ramString,
+      availableRams: ramString.split(',').map(s => s.trim()).filter(Boolean),
+      storage: storageString,
+      availableStorages: storageString.split(',').map(s => s.trim()).filter(Boolean),
       badge: productForm.badge as "Best Seller" | "Gaming" | "Value Deal" | "Top Rated" || 'Top Rated',
       stock: productForm.stock !== undefined ? productForm.stock : 1,
+      amazon_url: productForm.amazon_url || '',
+      flipkart_url: productForm.flipkart_url || '',
+      croma_url: productForm.croma_url || '',
     };
 
     if (productForm.condition === 'Refurbished') {
@@ -584,6 +717,55 @@ export default function App() {
   const handleProductEdit = (item: Product) => {
     setProductForm({ ...item });
     setGalleryLinksText(item.images?.join(', ') || '');
+    setModalTab('basic');
+
+    // Parse RAM options: e.g. "8GB, 16GB (+5000)"
+    const ramMap: { [key: string]: { enabled: boolean; offset: number } } = {
+      '8GB': { enabled: false, offset: 0 },
+      '16GB': { enabled: false, offset: 0 },
+      '32GB': { enabled: false, offset: 0 },
+      '64GB': { enabled: false, offset: 0 },
+    };
+    if (item.ram) {
+      item.ram.split(',').forEach(opt => {
+        const match = opt.match(/\(\s*([+-]?)\s*([0-9]+)\s*\)/);
+        const size = opt.replace(/\s*\(\s*[+-]?\s*[0-9]+\s*\)/, '').trim();
+        if (size) {
+          let offset = 0;
+          if (match) {
+            offset = parseInt(match[2], 10);
+            if (match[1] === '-') offset = -offset;
+          }
+          ramMap[size] = { enabled: true, offset };
+        }
+      });
+    }
+    setSelectedRamOptions(ramMap);
+
+    // Parse Storage options: e.g. "256GB SSD, 512GB SSD (+4000)"
+    const storageMap: { [key: string]: { enabled: boolean; offset: number } } = {
+      '128GB SSD': { enabled: false, offset: 0 },
+      '256GB SSD': { enabled: false, offset: 0 },
+      '512GB SSD': { enabled: false, offset: 0 },
+      '1TB SSD': { enabled: false, offset: 0 },
+      '2TB SSD': { enabled: false, offset: 0 },
+    };
+    if (item.storage) {
+      item.storage.split(',').forEach(opt => {
+        const match = opt.match(/\(\s*([+-]?)\s*([0-9]+)\s*\)/);
+        const size = opt.replace(/\s*\(\s*[+-]?\s*[0-9]+\s*\)/, '').trim();
+        if (size) {
+          let offset = 0;
+          if (match) {
+            offset = parseInt(match[2], 10);
+            if (match[1] === '-') offset = -offset;
+          }
+          storageMap[size] = { enabled: true, offset };
+        }
+      });
+    }
+    setSelectedStorageOptions(storageMap);
+
     setProductModal({ open: true, mode: 'edit', item });
   };
 
@@ -620,6 +802,8 @@ export default function App() {
         trackingUrl = `https://www.indiapost.gov.in/VAS/Pages/trackconsignment.aspx`;
       } else if (lowerPartner.includes('shiprocket')) {
         trackingUrl = `https://shiprocket.co/tracking/${cleanAwb}`;
+      } else if (lowerPartner.includes('st courier') || lowerPartner.includes('stcourier')) {
+        trackingUrl = `https://stcourier.com/`;
       } else {
         trackingUrl = `https://www.google.com/search?q=track+package+${cleanAwb}`;
       }
@@ -1098,6 +1282,20 @@ export default function App() {
                     deviceType: 'Laptop'
                   });
                   setGalleryLinksText('');
+                  setSelectedRamOptions({
+                    '8GB': { enabled: true, offset: 0 },
+                    '16GB': { enabled: false, offset: 0 },
+                    '32GB': { enabled: false, offset: 0 },
+                    '64GB': { enabled: false, offset: 0 },
+                  });
+                  setSelectedStorageOptions({
+                    '128GB SSD': { enabled: false, offset: 0 },
+                    '256GB SSD': { enabled: true, offset: 0 },
+                    '512GB SSD': { enabled: false, offset: 0 },
+                    '1TB SSD': { enabled: false, offset: 0 },
+                    '2TB SSD': { enabled: false, offset: 0 },
+                  });
+                  setModalTab('basic');
                   setProductModal({ open: true, mode: 'add' });
                 }}
                 style={{
@@ -1570,6 +1768,7 @@ export default function App() {
                                   <option value="Delhivery">Delhivery</option>
                                   <option value="DTDC">DTDC</option>
                                   <option value="BlueDart">BlueDart</option>
+                                  <option value="ST Courier">ST Courier</option>
                                   <option value="SpeedPost">India Post (Speed Post)</option>
                                   <option value="Shiprocket">Shiprocket</option>
                                   <option value="Custom">Custom Courier</option>
@@ -2036,349 +2235,501 @@ export default function App() {
 
             <form onSubmit={handleProductSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Product Name</label>
-                <input
-                  type="text" required placeholder="e.g. Dell Latitude 5400"
-                  value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Brand</label>
-                <select
-                  value={productForm.brand} onChange={e => setProductForm({ ...productForm, brand: e.target.value })}
-                  className="form-input" style={{ background: '#0d1117' }}
-                >
-                  {['Dell', 'HP', 'Lenovo', 'Apple', 'Asus', 'Acer'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Device Type</label>
-                <select
-                  value={productForm.deviceType || 'Laptop'}
-                  onChange={e => {
-                    const type = e.target.value as any;
-                    setProductForm({
-                      ...productForm,
-                      deviceType: type,
-                      category: type === 'Desktop' ? 'Desktops' : 'Business'
-                    });
-                  }}
-                  className="form-input" style={{ background: '#0d1117' }}
-                >
-                  <option value="Laptop">Laptop</option>
-                  <option value="Desktop">Desktop</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Category</label>
-                <select
-                  value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })}
-                  className="form-input" style={{ background: '#0d1117' }}
-                >
-                  {productForm.deviceType === 'Desktop'
-                    ? ['Desktops', 'Workstations', 'Gaming'].map(opt => <option key={opt} value={opt}>{opt}</option>)
-                    : ['Business', 'Gaming', 'MacBooks', 'Ultrabooks', 'Workstations'].map(opt => <option key={opt} value={opt}>{opt}</option>)
-                  }
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Condition</label>
-                <select
-                  value={productForm.condition} onChange={e => setProductForm({ ...productForm, condition: e.target.value as any })}
-                  className="form-input" style={{ background: '#0d1117' }}
-                >
-                  <option value="Refurbished">Refurbished</option>
-                  <option value="Brand New">Brand New</option>
-                </select>
-              </div>
-
-              {productForm.condition === 'Refurbished' && (
-                <div>
-                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Quality Grade</label>
-                  <select
-                    value={productForm.grade} onChange={e => setProductForm({ ...productForm, grade: e.target.value as any })}
-                    className="form-input" style={{ background: '#0d1117' }}
+              {/* Form Navigation Tabs */}
+              <div style={{
+                display: 'flex', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.06)',
+                paddingBottom: 16, marginBottom: 12, gridColumn: 'span 2'
+              }}>
+                {(['basic', 'specs', 'media'] as const).map(tab => (
+                  <button
+                    key={tab} type="button"
+                    onClick={() => setModalTab(tab)}
+                    style={{
+                      background: modalTab === tab ? 'rgba(56,189,248,0.1)' : 'transparent',
+                      border: `1px solid ${modalTab === tab ? 'rgba(56,189,248,0.25)' : 'transparent'}`,
+                      borderRadius: 12, padding: '10px 20px',
+                      color: modalTab === tab ? '#38BDF8' : '#8B9BBE',
+                      fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                      fontFamily: 'Sora'
+                    }}
                   >
-                    <option value="A+">Grade A+</option>
-                    <option value="A">Grade A</option>
-                    <option value="B+">Grade B+</option>
-                  </select>
-                </div>
+                    {tab === 'basic' && '📦 Basic Details'}
+                    {tab === 'specs' && '⚙️ Specs & Upgrades'}
+                    {tab === 'media' && '🔗 Media & Retail Links'}
+                  </button>
+                ))}
+              </div>
+
+              {modalTab === 'basic' && (
+                <>
+                  <div style={{ gridColumn: 'span 2', display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Product Name</label>
+                      <input
+                        type="text" required placeholder="e.g. Dell Latitude 5400"
+                        value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })}
+                        className="form-input"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAutoFillSpecs}
+                      style={{
+                        background: 'linear-gradient(135deg, #10B981, #059669)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 12,
+                        height: 44,
+                        padding: '0 16px',
+                        fontSize: 12,
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        fontFamily: 'Sora',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6
+                      }}
+                    >
+                      <Sparkles size={14} /> ⚡ Auto-Fill Details
+                    </button>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Brand</label>
+                    <select
+                      value={productForm.brand} onChange={e => setProductForm({ ...productForm, brand: e.target.value })}
+                      className="form-input" style={{ background: '#0d1117' }}
+                    >
+                      {['Dell', 'HP', 'Lenovo', 'Apple', 'Asus', 'Acer'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Device Type</label>
+                    <select
+                      value={productForm.deviceType || 'Laptop'}
+                      onChange={e => {
+                        const type = e.target.value as any;
+                        setProductForm({
+                          ...productForm,
+                          deviceType: type,
+                          category: type === 'Desktop' ? 'Desktops' : 'Business'
+                        });
+                      }}
+                      className="form-input" style={{ background: '#0d1117' }}
+                    >
+                      <option value="Laptop">Laptop</option>
+                      <option value="Desktop">Desktop</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Category</label>
+                    <select
+                      value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })}
+                      className="form-input" style={{ background: '#0d1117' }}
+                    >
+                      {productForm.deviceType === 'Desktop'
+                        ? ['Desktops', 'Workstations', 'Gaming'].map(opt => <option key={opt} value={opt}>{opt}</option>)
+                        : ['Business', 'Gaming', 'MacBooks', 'Ultrabooks', 'Workstations'].map(opt => <option key={opt} value={opt}>{opt}</option>)
+                      }
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Condition</label>
+                    <select
+                      value={productForm.condition} onChange={e => setProductForm({ ...productForm, condition: e.target.value as any })}
+                      className="form-input" style={{ background: '#0d1117' }}
+                    >
+                      <option value="Refurbished">Refurbished</option>
+                      <option value="Brand New">Brand New</option>
+                    </select>
+                  </div>
+
+                  {productForm.condition === 'Refurbished' && (
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Quality Grade</label>
+                      <select
+                        value={productForm.grade} onChange={e => setProductForm({ ...productForm, grade: e.target.value as any })}
+                        className="form-input" style={{ background: '#0d1117' }}
+                      >
+                        <option value="A+">Grade A+</option>
+                        <option value="A">Grade A</option>
+                        <option value="B+">Grade B+</option>
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Product Badge</label>
+                    <select
+                      value={productForm.badge} onChange={e => setProductForm({ ...productForm, badge: e.target.value as any })}
+                      className="form-input" style={{ background: '#0d1117' }}
+                    >
+                      {['Best Seller', 'Gaming', 'Value Deal', 'Top Rated'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Listing Price (₹)</label>
+                    <input
+                      type="number" required placeholder="e.g. 29999"
+                      value={productForm.price || ''} onChange={e => setProductForm({ ...productForm, price: Number(e.target.value) })}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Original MRP (₹)</label>
+                    <input
+                      type="number" required placeholder="e.g. 59999"
+                      value={productForm.mrp || ''} onChange={e => setProductForm({ ...productForm, mrp: Number(e.target.value) })}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Warranty Duration</label>
+                    <input
+                      type="text" placeholder="e.g. 1 Year Warranty"
+                      value={productForm.warranty} onChange={e => setProductForm({ ...productForm, warranty: e.target.value })}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Stock Quantity</label>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: 'rgba(13, 17, 23, 0.7)',
+                      border: '1px solid rgba(56, 189, 248, 0.15)',
+                      borderRadius: 12,
+                      overflow: 'hidden',
+                      height: 44
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => setProductForm(prev => ({ ...prev, stock: Math.max(0, (prev.stock === undefined ? 1 : prev.stock) - 1) }))}
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: 'none',
+                          color: '#8B9BBE',
+                          width: 44,
+                          height: '100%',
+                          cursor: 'pointer',
+                          fontSize: 20,
+                          fontWeight: 'bold',
+                          transition: 'background 0.2s',
+                          outline: 'none'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                      >−</button>
+                      <input
+                        type="number"
+                        min="0"
+                        required
+                        value={productForm.stock === undefined ? 1 : productForm.stock}
+                        onChange={e => setProductForm({ ...productForm, stock: Math.max(0, Number(e.target.value)) })}
+                        style={{
+                          flex: 1,
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#fff',
+                          textAlign: 'center',
+                          fontWeight: 700,
+                          fontSize: 14,
+                          outline: 'none',
+                          width: '100%',
+                          padding: 0
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setProductForm(prev => ({ ...prev, stock: (prev.stock === undefined ? 1 : prev.stock) + 1 }))}
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: 'none',
+                          color: '#8B9BBE',
+                          width: 44,
+                          height: '100%',
+                          cursor: 'pointer',
+                          fontSize: 20,
+                          fontWeight: 'bold',
+                          transition: 'background 0.2s',
+                          outline: 'none'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)'}
+                      >+</button>
+                    </div>
+                  </div>
+                </>
               )}
 
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Product Badge</label>
-                <select
-                  value={productForm.badge} onChange={e => setProductForm({ ...productForm, badge: e.target.value as any })}
-                  className="form-input" style={{ background: '#0d1117' }}
-                >
-                  {['Best Seller', 'Gaming', 'Value Deal', 'Top Rated'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Listing Price (₹)</label>
-                <input
-                  type="number" required placeholder="e.g. 29999"
-                  value={productForm.price || ''} onChange={e => setProductForm({ ...productForm, price: Number(e.target.value) })}
-                  className="form-input"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Original MRP (₹)</label>
-                <input
-                  type="number" required placeholder="e.g. 59999"
-                  value={productForm.mrp || ''} onChange={e => setProductForm({ ...productForm, mrp: Number(e.target.value) })}
-                  className="form-input"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Warranty Duration</label>
-                <input
-                  type="text" placeholder="e.g. 1 Year Warranty"
-                  value={productForm.warranty} onChange={e => setProductForm({ ...productForm, warranty: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Stock Quantity</label>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  background: 'rgba(13, 17, 23, 0.7)',
-                  border: '1px solid rgba(56, 189, 248, 0.15)',
-                  borderRadius: 12,
-                  overflow: 'hidden',
-                  height: 44
-                }}>
-                  <button
-                    type="button"
-                    onClick={() => setProductForm(prev => ({ ...prev, stock: Math.max(0, (prev.stock === undefined ? 1 : prev.stock) - 1) }))}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      border: 'none',
-                      color: '#8B9BBE',
-                      width: 44,
-                      height: '100%',
-                      cursor: 'pointer',
-                      fontSize: 20,
-                      fontWeight: 'bold',
-                      transition: 'background 0.2s',
-                      outline: 'none'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                  >−</button>
-                  <input
-                    type="number"
-                    min="0"
-                    required
-                    value={productForm.stock === undefined ? 1 : productForm.stock}
-                    onChange={e => setProductForm({ ...productForm, stock: Math.max(0, Number(e.target.value)) })}
-                    style={{
-                      flex: 1,
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#fff',
-                      textAlign: 'center',
-                      fontWeight: 700,
-                      fontSize: 14,
-                      outline: 'none',
-                      width: '100%',
-                      padding: 0
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setProductForm(prev => ({ ...prev, stock: (prev.stock === undefined ? 1 : prev.stock) + 1 }))}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      border: 'none',
-                      color: '#8B9BBE',
-                      width: 44,
-                      height: '100%',
-                      cursor: 'pointer',
-                      fontSize: 20,
-                      fontWeight: 'bold',
-                      transition: 'background 0.2s',
-                      outline: 'none'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)'}
-                  >+</button>
-                </div>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Processor Details</label>
-                <input
-                  type="text" placeholder="e.g. Intel Core i5 8265U"
-                  value={productForm.processor} onChange={e => setProductForm({ ...productForm, processor: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>RAM Size(s)</label>
-                <input
-                  type="text" placeholder="e.g. 8GB, 16GB (separate multiple with commas)"
-                  value={productForm.ram || ''} onChange={e => setProductForm({ ...productForm, ram: e.target.value })}
-                  className="form-input"
-                />
-                <span style={{ display: 'block', color: '#38BDF8', fontSize: 10, marginTop: 4, fontWeight: 600 }}>
-                  * Enter multiple separated by commas (e.g. 8GB, 16GB) to enable selectors on storefront.
-                </span>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Storage Size(s)</label>
-                <input
-                  type="text" placeholder="e.g. 256GB SSD, 512GB SSD"
-                  value={productForm.storage || ''} onChange={e => setProductForm({ ...productForm, storage: e.target.value })}
-                  className="form-input"
-                />
-                <span style={{ display: 'block', color: '#38BDF8', fontSize: 10, marginTop: 4, fontWeight: 600 }}>
-                  * Enter multiple separated by commas (e.g. 256GB SSD, 512GB SSD) to enable selectors on storefront.
-                </span>
-              </div>
-
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Specifications Tagline</label>
-                <input
-                  type="text" placeholder="e.g. Intel i5 8th Gen • 16GB RAM • 512GB SSD"
-                  value={productForm.specs} onChange={e => setProductForm({ ...productForm, specs: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Description (Optional, overrides auto-template)</label>
-                <textarea
-                  placeholder="e.g. This laptop features high performance with dual channel RAM..."
-                  value={productForm.description || ''} onChange={e => setProductForm({ ...productForm, description: e.target.value })}
-                  className="form-input" style={{ minHeight: 70, resize: 'vertical' }}
-                />
-              </div>
-
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Box Contents (Optional, comma-separated)</label>
-                <input
-                  type="text" placeholder="e.g. Refurbished Grade A+ Laptop, Original Power Adapter, Certification Booklet"
-                  value={productForm.boxContents || ''} onChange={e => setProductForm({ ...productForm, boxContents: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-
-              <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>
-                  Product Images Gallery (Max 5, Drag & Drop or Click to Select)
-                </label>
-
-                {/* Previews Grid */}
-                {(productForm.images && productForm.images.length > 0) && (
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-                    {productForm.images.map((imgUrl, i) => (
-                      <div key={i} style={{ position: 'relative', width: 90, height: 68, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
-                        <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveProductImage(i)}
-                          style={{
-                            position: 'absolute', top: 4, right: 4,
-                            background: '#EF4444', color: '#fff', border: 'none',
-                            borderRadius: '50%', width: 18, height: 18,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            cursor: 'pointer', fontSize: 10, fontWeight: 'bold',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                          }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
+              {modalTab === 'specs' && (
+                <>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Processor Details</label>
+                    <input
+                      type="text" placeholder="e.g. Intel Core i5 8265U"
+                      value={productForm.processor} onChange={e => setProductForm({ ...productForm, processor: e.target.value })}
+                      className="form-input"
+                    />
                   </div>
-                )}
 
-                <div
-                  onClick={() => document.getElementById('product-file-input')?.click()}
-                  style={{
-                    background: 'rgba(26, 34, 53, 0.4)',
-                    border: '2px dashed rgba(56,189,248,0.25)',
-                    borderRadius: 16,
-                    padding: '24px 20px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = '#38BDF8';
-                    e.currentTarget.style.background = 'rgba(56,189,248,0.04)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'rgba(56,189,248,0.25)';
-                    e.currentTarget.style.background = 'rgba(26, 34, 53, 0.4)';
-                  }}
-                >
-                  <ImageIcon size={30} color="#38BDF8" style={{ marginBottom: 8 }} />
-                  <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Browse local computer files</div>
-                  <div style={{ color: '#8B9BBE', fontSize: 11 }}>Supports up to 5 images • Auto compressed</div>
-                  <input
-                    id="product-file-input"
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleProductImageUpload}
-                    disabled={(productForm.images?.length || 0) >= 5}
-                    style={{ display: 'none' }}
-                  />
-                </div>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Specifications Tagline</label>
+                    <input
+                      type="text" placeholder="e.g. Intel i5 8th Gen • 16GB RAM • 512GB SSD"
+                      value={productForm.specs} onChange={e => setProductForm({ ...productForm, specs: e.target.value })}
+                      className="form-input"
+                    />
+                  </div>
 
-                <span style={{ color: '#8B9BBE', fontSize: 11 }}>
-                  {(productForm.images?.length || 0)}/5 images uploaded. {(productForm.images?.length || 0) >= 5 ? "Max image limit reached." : ""}
-                </span>
+                  {/* RAM Custom Visual Toggle & Offset Input */}
+                  <div style={{ gridColumn: 'span 2', background: '#0d1117', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 18, padding: 18 }}>
+                    <label style={{ display: 'block', color: '#38BDF8', fontSize: 12, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase' }}>Memory Configuration (RAM Options)</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                      {Object.entries(selectedRamOptions).map(([size, opt]) => (
+                        <div key={size} style={{
+                          background: opt.enabled ? 'rgba(56,189,248,0.03)' : 'rgba(255,255,255,0.01)',
+                          border: `1px solid ${opt.enabled ? 'rgba(56,189,248,0.3)' : 'rgba(255,255,255,0.05)'}`,
+                          borderRadius: 14, padding: 12, transition: 'all 0.2s'
+                        }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedRamOptions(prev => ({
+                                ...prev,
+                                [size]: { ...prev[size], enabled: !prev[size].enabled }
+                              }));
+                            }}
+                            style={{
+                              width: '100%', textTransform: 'none', background: 'transparent', border: 'none',
+                              color: opt.enabled ? '#38BDF8' : '#8B9BBE', display: 'flex', alignItems: 'center',
+                              justifyContent: 'space-between', cursor: 'pointer', outline: 'none', padding: 0
+                            }}
+                          >
+                            <span style={{ fontSize: 13, fontWeight: 700 }}>{size}</span>
+                            <div style={{
+                              width: 14, height: 14, borderRadius: 4,
+                              background: opt.enabled ? '#38BDF8' : 'rgba(255,255,255,0.05)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#000', fontWeight: 'bold'
+                            }}>
+                              {opt.enabled && '✓'}
+                            </div>
+                          </button>
+                          {opt.enabled && (
+                            <div style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8 }}>
+                              <label style={{ display: 'block', color: '#8B9BBE', fontSize: 10, marginBottom: 4 }}>Price Upgrade Cost (₹)</label>
+                              <input
+                                type="number"
+                                placeholder="Upgrade Price addition..."
+                                value={opt.offset || ''}
+                                onChange={e => {
+                                  const val = Number(e.target.value) || 0;
+                                  setSelectedRamOptions(prev => ({
+                                    ...prev,
+                                    [size]: { ...prev[size], offset: val }
+                                  }));
+                                }}
+                                className="form-input"
+                                style={{ height: 34, padding: '4px 8px', fontSize: 12 }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-                <div style={{ marginTop: 10 }}>
-                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter thumbnail URL:</label>
-                  <input
-                    type="text" placeholder="Paste direct image link..."
-                    value={productForm.img} onChange={e => setProductForm({ ...productForm, img: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
+                  {/* Storage Custom Visual Toggle & Offset Input */}
+                  <div style={{ gridColumn: 'span 2', background: '#0d1117', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 18, padding: 18 }}>
+                    <label style={{ display: 'block', color: '#38BDF8', fontSize: 12, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase' }}>Storage Configuration Options</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                      {Object.entries(selectedStorageOptions).map(([size, opt]) => (
+                        <div key={size} style={{
+                          background: opt.enabled ? 'rgba(56,189,248,0.03)' : 'rgba(255,255,255,0.01)',
+                          border: `1px solid ${opt.enabled ? 'rgba(56,189,248,0.3)' : 'rgba(255,255,255,0.05)'}`,
+                          borderRadius: 14, padding: 12, transition: 'all 0.2s'
+                        }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedStorageOptions(prev => ({
+                                ...prev,
+                                [size]: { ...prev[size], enabled: !prev[size].enabled }
+                              }));
+                            }}
+                            style={{
+                              width: '100%', textTransform: 'none', background: 'transparent', border: 'none',
+                              color: opt.enabled ? '#38BDF8' : '#8B9BBE', display: 'flex', alignItems: 'center',
+                              justifyContent: 'space-between', cursor: 'pointer', outline: 'none', padding: 0
+                            }}
+                          >
+                            <span style={{ fontSize: 13, fontWeight: 700 }}>{size}</span>
+                            <div style={{
+                              width: 14, height: 14, borderRadius: 4,
+                              background: opt.enabled ? '#38BDF8' : 'rgba(255,255,255,0.05)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#000', fontWeight: 'bold'
+                            }}>
+                              {opt.enabled && '✓'}
+                            </div>
+                          </button>
+                          {opt.enabled && (
+                            <div style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8 }}>
+                              <label style={{ display: 'block', color: '#8B9BBE', fontSize: 10, marginBottom: 4 }}>Price Upgrade Cost (₹)</label>
+                              <input
+                                type="number"
+                                placeholder="Upgrade Price addition..."
+                                value={opt.offset || ''}
+                                onChange={e => {
+                                  const val = Number(e.target.value) || 0;
+                                  setSelectedStorageOptions(prev => ({
+                                    ...prev,
+                                    [size]: { ...prev[size], offset: val }
+                                  }));
+                                }}
+                                className="form-input"
+                                style={{ height: 34, padding: '4px 8px', fontSize: 12 }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
-                <div style={{ marginTop: 10 }}>
-                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter gallery image URLs (comma-separated):</label>
-                  <textarea
-                    placeholder="Paste direct image links separated by commas... e.g. https://link1.com, https://link2.com"
-                    value={galleryLinksText}
-                    onChange={e => {
-                      const text = e.target.value;
-                      setGalleryLinksText(text);
+              {modalTab === 'media' && (
+                <>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Description (Optional, overrides auto-template)</label>
+                    <textarea
+                      placeholder="e.g. This laptop features high performance with dual channel RAM..."
+                      value={productForm.description || ''} onChange={e => setProductForm({ ...productForm, description: e.target.value })}
+                      className="form-input" style={{ minHeight: 70, resize: 'vertical' }}
+                    />
+                  </div>
 
-                      const urls = text.split(',')
-                        .map(url => url.trim())
-                        .filter(url => url.length > 0);
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Box Contents (Optional, comma-separated)</label>
+                    <input
+                      type="text" placeholder="e.g. Refurbished Grade A+ Laptop, Original Power Adapter, Certification Booklet"
+                      value={productForm.boxContents || ''} onChange={e => setProductForm({ ...productForm, boxContents: e.target.value })}
+                      className="form-input"
+                    />
+                  </div>
 
-                      setProductForm(prev => ({
-                        ...prev,
-                        images: urls,
-                        img: prev.img ? prev.img : (urls[0] || '')
-                      }));
-                    }}
-                    className="form-input"
-                    style={{ minHeight: 60, resize: 'vertical', background: '#0d1117', color: '#fff', border: '1px solid rgba(56,189,248,0.15)', borderRadius: 10, padding: 10 }}
-                  />
-                </div>
-              </div>
+                  <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>
+                      Product Images Gallery (Max 5, Drag & Drop or Click to Select)
+                    </label>
+
+                    {/* Previews Grid */}
+                    {(productForm.images && productForm.images.length > 0) && (
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
+                        {productForm.images.map((imgUrl, i) => (
+                          <div key={i} style={{ position: 'relative', width: 90, height: 68, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
+                            <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveProductImage(i)}
+                              style={{
+                                position: 'absolute', top: 4, right: 4,
+                                background: '#EF4444', color: '#fff', border: 'none',
+                                borderRadius: '50%', width: 18, height: 18,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer', fontSize: 10, fontWeight: 'bold',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div
+                      onClick={() => document.getElementById('product-file-input')?.click()}
+                      style={{
+                        background: 'rgba(26, 34, 53, 0.4)',
+                        border: '2px dashed rgba(56,189,248,0.25)',
+                        borderRadius: 16,
+                        padding: '24px 20px',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = '#38BDF8';
+                        e.currentTarget.style.background = 'rgba(56,189,248,0.04)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = 'rgba(56,189,248,0.25)';
+                        e.currentTarget.style.background = 'rgba(26, 34, 53, 0.4)';
+                      }}
+                    >
+                      <ImageIcon size={30} color="#38BDF8" style={{ marginBottom: 8 }} />
+                      <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Browse local computer files</div>
+                      <div style={{ color: '#8B9BBE', fontSize: 11 }}>Supports up to 5 images • Auto compressed</div>
+                      <input
+                        id="product-file-input"
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleProductImageUpload}
+                        disabled={(productForm.images?.length || 0) >= 5}
+                        style={{ display: 'none' }}
+                      />
+                    </div>
+
+                    <span style={{ color: '#8B9BBE', fontSize: 11 }}>
+                      {(productForm.images?.length || 0)}/5 images uploaded. {(productForm.images?.length || 0) >= 5 ? "Max image limit reached." : ""}
+                    </span>
+
+                    <div style={{ marginTop: 10 }}>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter thumbnail URL:</label>
+                      <input
+                        type="text" placeholder="Paste direct image link..."
+                        value={productForm.img} onChange={e => setProductForm({ ...productForm, img: e.target.value })}
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div style={{ marginTop: 10 }}>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter gallery image URLs (comma-separated):</label>
+                      <textarea
+                        placeholder="Paste direct image links separated by commas... e.g. https://link1.com, https://link2.com"
+                        value={galleryLinksText}
+                        onChange={e => {
+                          const text = e.target.value;
+                          setGalleryLinksText(text);
+
+                          const urls = text.split(',')
+                            .map(url => url.trim())
+                            .filter(url => url.length > 0);
+
+                          setProductForm(prev => ({
+                            ...prev,
+                            images: urls,
+                            img: prev.img ? prev.img : (urls[0] || '')
+                          }));
+                        }}
+                        className="form-input"
+                        style={{ minHeight: 60, resize: 'vertical', background: '#0d1117', color: '#fff', border: '1px solid rgba(56,189,248,0.15)', borderRadius: 10, padding: 10 }}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div style={{ gridColumn: 'span 2', display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
                 <button

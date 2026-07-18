@@ -28,8 +28,6 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
   const isMobile = useIsMobile();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [livePrices, setLivePrices] = useState<Record<string, { amazon: number | null; flipkart: number | null; croma: number | null }>>({});
-  const [loadingPrices, setLoadingPrices] = useState<Record<string, boolean>>({});
 
   // Automatically sync/initialize selectedIds when productsList is loaded or changed
   useEffect(() => {
@@ -43,40 +41,6 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
   const selected = selectedIds
     .map(id => productsList.find(pr => String(pr.id) === id))
     .filter(Boolean);
-
-  // Load live prices whenever selected products change
-  useEffect(() => {
-    const fetchPrice = async (p: any) => {
-      const pid = String(p.id);
-      if (livePrices[pid] !== undefined || loadingPrices[pid]) return;
-
-      setLoadingPrices(prev => ({ ...prev, [pid]: true }));
-      try {
-        const res = await fetch(`/api/live-price?query=${encodeURIComponent(p.name)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setLivePrices(prev => ({
-            ...prev,
-            [pid]: {
-              amazon: data.amazonPrice,
-              flipkart: data.flipkartPrice,
-              croma: data.cromaPrice
-            }
-          }));
-        }
-      } catch (err) {
-        console.error("Failed to load live price for", p.name, err);
-      } finally {
-        setLoadingPrices(prev => ({ ...prev, [pid]: false }));
-      }
-    };
-
-    selected.forEach(p => {
-      if (p) {
-        fetchPrice(p);
-      }
-    });
-  }, [selectedIds]);
 
   const specs = ["price", "mrp", "discount", "rating", "processor", "ram", "storage", "warranty", "grade"];
   const labels: Record<string, string> = { price: "Price", mrp: "MRP", discount: "Discount %", rating: "Rating", processor: "Processor", ram: "RAM", storage: "Storage", warranty: "Warranty", grade: "Grade" };
@@ -97,8 +61,10 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
 
   return (
     <div style={{ maxWidth: 1400, margin: "0 auto", padding: isMobile ? "20px 12px" : "32px 20px" }}>
-      <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 22 : 28, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>Compare Products</h1>
-      <p style={{ color: COLORS.muted, fontSize: 13, marginBottom: 24 }}>Compare our refurb/brand new prices directly with live online marketplace listings.</p>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 22 : 28, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>Compare Products</h1>
+        <p style={{ color: COLORS.muted, fontSize: 13 }}>Compare product specifications and features side-by-side.</p>
+      </div>
 
       {!isMobile ? (
         /* ── Desktop Comparison Table ── */
@@ -123,72 +89,7 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
                       style={{ marginTop: 8, width: "100%" }}
                     />
 
-                    {/* Online Live Prices Lookup Widget */}
-                    {(() => {
-                      const priceInfo = livePrices[String(p.id)];
-                      const isLoading = loadingPrices[String(p.id)];
-
-                      const getDisplayPrice = (val: number | null | undefined) => {
-                        if (isLoading) return "Checking...";
-                        if (val === undefined || val === null) return "Unavailable";
-                        return `₹${val.toLocaleString('en-IN')}`;
-                      };
-
-                      return (
-                        <div style={{
-                          marginTop: 16,
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 8,
-                          textAlign: "left",
-                          padding: 12,
-                          background: "rgba(255, 255, 255, 0.03)",
-                          borderRadius: 14,
-                          border: "1px solid rgba(255, 255, 255, 0.05)"
-                        }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontSize: 10, fontWeight: 800, color: COLORS.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Live Market Comparison</span>
-                            {isLoading && <span style={{ fontSize: 9, color: COLORS.green, fontWeight: 700 }}>Updating...</span>}
-                          </div>
-
-                          <a
-                            href={`https://www.amazon.in/s?k=${encodeURIComponent(p.name)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: "#FF9900", textDecoration: "none", fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                          >
-                            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                              Amazon India ↗
-                            </span>
-                            <span style={{ fontWeight: 700 }}>{getDisplayPrice(priceInfo?.amazon)}</span>
-                          </a>
-
-                          <a
-                            href={`https://www.flipkart.com/search?q=${encodeURIComponent(p.name)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: "#2874F0", textDecoration: "none", fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                          >
-                            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                              Flipkart ↗
-                            </span>
-                            <span style={{ fontWeight: 700 }}>{getDisplayPrice(priceInfo?.flipkart)}</span>
-                          </a>
-
-                          <a
-                            href={`https://www.croma.com/search/?text=${encodeURIComponent(p.name)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: "#00b990", textDecoration: "none", fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                          >
-                            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                              Croma ↗
-                            </span>
-                            <span style={{ fontWeight: 700 }}>{getDisplayPrice(priceInfo?.croma)}</span>
-                          </a>
-                        </div>
-                      );
-                    })()}
+                    {/* No Live comparison widget */}
                   </th>
                 ))}
               </tr>
@@ -316,71 +217,6 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
           </div>
 
           {/* Live comparison rows (Mobile) */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <h3 style={{ color: COLORS.text, fontSize: 13, fontWeight: 700, margin: "4px 0 0" }}>Online Price Index</h3>
-            <div style={{ display: "flex", gap: 12 }}>
-              {selected.map((p, index) => {
-                const priceInfo = livePrices[String(p.id)];
-                const isLoading = loadingPrices[String(p.id)];
-
-                const getDisplayPrice = (val: number | null | undefined) => {
-                  if (isLoading) return "Checking...";
-                  if (val === undefined || val === null) return "Unavailable";
-                  return `₹${val.toLocaleString('en-IN')}`;
-                };
-
-                return (
-                  <div key={index} style={{
-                    flex: 1,
-                    width: "50%",
-                    background: COLORS.cardBg,
-                    border: `1px solid ${COLORS.cardBorder}`,
-                    borderRadius: 14,
-                    padding: 12,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 6,
-                    boxSizing: "border-box"
-                  }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                      <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.muted }}>Market Prices</span>
-                      {isLoading && <span style={{ fontSize: 8, color: COLORS.green }}>Syncing...</span>}
-                    </div>
-
-                    <a
-                      href={`https://www.amazon.in/s?k=${encodeURIComponent(p.name)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "#FF9900", textDecoration: "none", fontSize: 10, display: "flex", justifyContent: "space-between" }}
-                    >
-                      <span>Amazon ↗</span>
-                      <span style={{ fontWeight: 700 }}>{getDisplayPrice(priceInfo?.amazon)}</span>
-                    </a>
-
-                    <a
-                      href={`https://www.flipkart.com/search?q=${encodeURIComponent(p.name)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "#2874F0", textDecoration: "none", fontSize: 10, display: "flex", justifyContent: "space-between" }}
-                    >
-                      <span>Flipkart ↗</span>
-                      <span style={{ fontWeight: 700 }}>{getDisplayPrice(priceInfo?.flipkart)}</span>
-                    </a>
-
-                    <a
-                      href={`https://www.croma.com/search/?text=${encodeURIComponent(p.name)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "#00b990", textDecoration: "none", fontSize: 10, display: "flex", justifyContent: "space-between" }}
-                    >
-                      <span>Croma ↗</span>
-                      <span style={{ fontWeight: 700 }}>{getDisplayPrice(priceInfo?.croma)}</span>
-                    </a>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </div>
       )}
     </div>
