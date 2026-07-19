@@ -422,7 +422,7 @@ export default function App() {
   const handleBannerImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    
+
     setUploadingBanner(true);
     try {
       const url = await uploadProductImage(files[0]);
@@ -580,7 +580,7 @@ export default function App() {
     else if (/ryzen\s*9/i.test(name)) processor = 'AMD Ryzen 9';
     else if (/celeron/i.test(name)) processor = 'Intel Celeron';
     else if (/pentium/i.test(name)) processor = 'Intel Pentium';
-    
+
     // Detect Gen if available
     const genMatch = name.match(/(\d+)(?:th|rd|nd|st)\s*Gen/i);
     if (genMatch) {
@@ -594,7 +594,7 @@ export default function App() {
     if (ramMatch) {
       ramSize = `${ramMatch[1]}GB`;
     }
-    
+
     // 4. Detect Storage
     let storageSize = '256GB SSD';
     const ssdMatch = name.match(/\b(\d+)\s*(?:GB|TB)\s*(?:SSD|HDD|NVMe)?\b/i);
@@ -608,7 +608,7 @@ export default function App() {
         storageSize = `${rawNum}${unit} ${type}`;
       }
     }
-    
+
     // Update checkboxes/offsets
     const newRamOptions = { ...selectedRamOptions };
     Object.keys(newRamOptions).forEach(k => {
@@ -628,10 +628,10 @@ export default function App() {
     // 6. Defaults based on Condition
     const isRefurbished = update.condition !== 'Brand New';
     update.warranty = isRefurbished ? '6 Months Warranty' : '1 Year Brand Warranty';
-    update.boxContents = isRefurbished 
-       ? 'Refurbished Laptop, Compatible Power Charger Adapter, Bubble wrap packing box'
-       : 'Original Sealed Box Brand New Laptop, Original OEM Charger Adapter, Power cord, Manuals';
-    
+    update.boxContents = isRefurbished
+      ? 'Refurbished Laptop, Compatible Power Charger Adapter, Bubble wrap packing box'
+      : 'Original Sealed Box Brand New Laptop, Original OEM Charger Adapter, Power cord, Manuals';
+
     // Grade detection for refurbished
     if (isRefurbished) {
       if (/a\+/i.test(name)) update.grade = 'A+';
@@ -927,7 +927,7 @@ export default function App() {
     try {
       await setDoc(doc(db, "banners", docId), bData);
       triggerAlert('success', 'Banner published successfully!');
-      
+
       // Reset form
       setBannerForm({
         src: '',
@@ -1175,7 +1175,7 @@ export default function App() {
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981' }} />
                     <div>
                       <span style={{ fontSize: 13, color: '#fff', fontWeight: 600, display: 'block' }}>Accessories Filter Category Set:</span>
-                      <span style={{ fontSize: 12, color: '#8B9BBE' }}>Monitors, Docks, Keyboards, Power, Bags</span>
+                      <span style={{ fontSize: 12, color: '#8B9BBE' }}>Monitors, Docks, Keyboards, Power, Bags, Mouse</span>
                     </div>
                   </div>
                 </div>
