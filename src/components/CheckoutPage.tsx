@@ -34,7 +34,6 @@ const PAYMENT_OPTIONS = [
   { val: "upi", label: "UPI / PhonePe / GPay", icon: <Smartphone size={20} /> },
   { val: "card", label: "Credit / Debit Card", icon: <CreditCard size={20} /> },
   { val: "netbanking", label: "Net Banking", icon: <Building2 size={20} /> },
-  { val: "cod", label: "Cash on Delivery", icon: <Banknote size={20} /> },
 ];
 
 interface Address { name: string; phone: string; pincode: string; city: string; state: string; street: string }

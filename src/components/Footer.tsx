@@ -233,7 +233,7 @@ export default function Footer({ setPage }: FooterProps) {
             </div>
           )}
           <div style={{ display: "flex", gap: 6 }}>
-            {["VISA", "MC", "UPI", "COD"].map((p) => (
+            {["VISA", "MC", "UPI"].map((p) => (
               <span key={p} style={{
                 background: "rgba(56,150,240,0.06)",
                 border: "1px solid rgba(56,150,240,0.12)",

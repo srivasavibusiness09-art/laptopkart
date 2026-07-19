@@ -242,32 +242,32 @@ export const products: Product[] = [
 export const categories = [
   {
     name: "Business Laptops",
-    icon: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=200&q=80&auto=format&fit=crop",
+    icon: "https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     count: "120+ items",
   },
   {
     name: "Gaming Laptops",
-    icon: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=200&q=80&auto=format&fit=crop",
+    icon: "https://images.unsplash.com/photo-1623934199716-dc28818a6ec7?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     count: "60+ items",
   },
   {
     name: "MacBooks",
-    icon: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=200&q=80&auto=format&fit=crop",
+    icon: "https://images.unsplash.com/photo-1637607698787-a2183b680e5f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     count: "40+ items",
   },
   {
     name: "Ultrabooks",
-    icon: "https://images.unsplash.com/photo-1516387938699-a93567ec168e?w=200&q=80&auto=format&fit=crop",
+    icon: "https://images.unsplash.com/photo-1593642634524-b40b5baae6bb?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     count: "55+ items",
   },
   {
     name: "Workstations",
-    icon: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&q=80&auto=format&fit=crop",
+    icon: "https://images.unsplash.com/photo-1629118938047-0f28bbe5af7a?q=80&w=1333&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     count: "35+ items",
   },
   {
     name: "Accessories",
-    icon: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200&q=80&auto=format&fit=crop",
+    icon: "https://images.unsplash.com/photo-1596207891316-23851be3cc20?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     count: "80+ items",
   },
 ] as const;

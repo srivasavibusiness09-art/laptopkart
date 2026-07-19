@@ -191,8 +191,9 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                     borderRadius: 8,
                     padding: "6px 26px 6px 10px",
                     color: COLORS.text,
-                    fontSize: 12,
+                    fontSize: isMobile ? 16 : 12,
                     outline: "none",
+                    WebkitAppearance: "none",
                     height: 34,
                     boxSizing: "border-box",
                   }}

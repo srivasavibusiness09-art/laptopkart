@@ -238,7 +238,7 @@ export function AboutPage() {
           <p style={{ color: COLORS.muted, fontSize: 16, lineHeight: 1.8 }}>Today, we&apos;ve sold over 50,000 devices across India, with every single device undergoing our rigorous multi-point quality check.</p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          {[["50K+", "Devices Sold"], ["4.9★", "Avg Rating"], ["1 Year", "Warranty"], ["99.2%", "Satisfaction"]].map(([v, l]) => (
+          {[["5K+", "Devices Sold"], ["4.9★", "Avg Rating"], ["1 Year", "Warranty"], ["99.2%", "Satisfaction"]].map(([v, l]) => (
             <div key={l} style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 16, padding: "24px 20px", textAlign: "center" }}>
               <div style={{ color: COLORS.green, fontSize: 28, fontWeight: 800, fontFamily: "'Sora', sans-serif" }}>{v}</div>
               <div style={{ color: COLORS.muted, fontSize: 13, marginTop: 6 }}>{l}</div>
@@ -423,7 +423,17 @@ export function ContactPage() {
                 <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} rows={4}
                   style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: COLORS.text, fontSize: 14, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
               </div>
-              <button onClick={() => setSent(true)} style={{ width: "100%", background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 12, padding: "14px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>Send Message →</button>
+              <button 
+                onClick={() => {
+                  if (!form.name || !form.message) return alert("Please fill in your name and message.");
+                  const text = `*New Inquiry from Laptopkart*%0A%0A*Name:* ${encodeURIComponent(form.name)}%0A*Email:* ${encodeURIComponent(form.email)}%0A*Phone:* ${encodeURIComponent(form.phone)}%0A*Message:* ${encodeURIComponent(form.message)}`;
+                  window.open(`https://wa.me/919750331313?text=${text}`, "_blank");
+                  setSent(true);
+                }} 
+                style={{ width: "100%", background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 12, padding: "14px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+              >
+                Send Message →
+              </button>
             </>
           )}
         </div>
@@ -1856,7 +1866,6 @@ export function RefundPolicyPage({ setPage }: { setPage: (p: string) => void }) 
               ["UPI / Net Banking", "3–5 business days"],
               ["Credit / Debit Card", "5–7 business days"],
               ["Razorpay Payment Link", "5–7 business days"],
-              ["Cash on Delivery (COD)", "5–7 business days via bank transfer"],
             ].map(([method, time]) => (
               <tr key={method}>
                 <td style={tdStyle}>{method}</td>
