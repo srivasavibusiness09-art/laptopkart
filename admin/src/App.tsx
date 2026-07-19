@@ -985,6 +985,7 @@ export default function App() {
   const filteredBlogs = blogs.filter(b =>
     (b.title || '').toLowerCase().includes(blogSearch.toLowerCase()) ||
     (b.author || '').toLowerCase().includes(blogSearch.toLowerCase()) ||
+    (b.authorEmail || '').toLowerCase().includes(blogSearch.toLowerCase()) ||
     (b.category || '').toLowerCase().includes(blogSearch.toLowerCase())
   );
 
