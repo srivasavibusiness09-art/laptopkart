@@ -8,7 +8,7 @@ import { useIsMobile } from "@/lib/hooks";
 const FRICTION = 0.88;   // velocity decay per frame (lower = more damping)
 const LERP_FACTOR = 0.095;  // display catches up to target (lower = smoother / more lag)
 const SENSITIVITY = 0.022;  // wheel delta → frame units
-const TOUCH_SENS = 0.045;  // touch delta → frame units
+const TOUCH_SENS = 0.065;  // touch delta → frame units (increased for more responsive mobile swipe)
 
 /* ── Scene text definitions ─────────────────────────────── */
 const scenes = [
@@ -69,6 +69,11 @@ export default function LandingPage({ onEnterStore }: Props) {
     const paint = () => {
       const ctx = canvas.getContext("2d");
       if (!ctx || !img.naturalWidth) return;
+
+      // Enable hardware image smoothing options
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "medium";
+
       const cw = canvas.width, ch = canvas.height;
       const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
       const w = img.naturalWidth * scale;
@@ -135,7 +140,13 @@ export default function LandingPage({ onEnterStore }: Props) {
     const resize = () => {
       const c = canvasRef.current;
       if (!c) return;
-      const dpr = devicePixelRatio || 1;
+
+      // Cap DPR to 1.5 on mobile to avoid fill-rate GPU bottleneck
+      let dpr = window.devicePixelRatio || 1;
+      if (isMobile && dpr > 1.5) {
+        dpr = 1.5;
+      }
+
       c.width = innerWidth * dpr;
       c.height = innerHeight * dpr;
       drawFrame(clamp(Math.round(displayRef.current) + 1, 1, totalFrames));
