@@ -86,9 +86,9 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
       }}>
         <div style={{
           maxWidth: 1360, margin: "0 auto",
-          padding: "0 20px",
+          padding: isMobile ? "0 10px" : "0 20px",
           display: "flex", alignItems: "center",
-          height: 60, gap: 16,
+          height: 60, gap: isMobile ? 8 : 16,
         }}>
           {/* Logo */}
           <div
@@ -168,7 +168,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                 display: "flex",
                 alignItems: "center",
                 position: "relative",
-                width: isMobile ? 120 : 260,
+                width: isMobile ? 110 : 260,
                 height: 34,
                 transition: "width 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
               }}>

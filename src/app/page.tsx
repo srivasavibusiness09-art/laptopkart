@@ -564,6 +564,7 @@ export default function App() {
         background: COLORS.darkBg,
         minHeight: "100vh",
         color: COLORS.text,
+        overflowX: "hidden",
       }}
     >
       <Navbar

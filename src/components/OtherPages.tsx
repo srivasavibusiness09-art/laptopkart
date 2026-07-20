@@ -394,7 +394,7 @@ export function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [sent, setSent] = useState(false);
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "28px 14px" : "48px 20px" }}>
+    <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", padding: isMobile ? "28px 14px" : "48px 20px", boxSizing: "border-box" }}>
       <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 26 : 30, fontWeight: 800, color: COLORS.text, margin: "0 0 8px" }}>Contact Us</h2>
       <p style={{ color: COLORS.muted, fontSize: 15, marginBottom: 32 }}>We&apos;re here to help. Reach out anytime!</p>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 20 : 40 }}>
