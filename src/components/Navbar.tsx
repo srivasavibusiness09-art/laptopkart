@@ -169,6 +169,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                 alignItems: "center",
                 position: "relative",
                 width: isMobile ? 120 : 260,
+                height: 34,
                 transition: "width 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
               }}>
                 <input
@@ -192,6 +193,8 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                     padding: "6px 26px 6px 10px",
                     color: COLORS.text,
                     fontSize: isMobile ? 16 : 12,
+                    lineHeight: "20px",
+                    margin: 0,
                     outline: "none",
                     WebkitAppearance: "none",
                     height: 34,
@@ -206,7 +209,9 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                   }}
                   style={{
                     position: "absolute",
-                    right: 6,
+                    right: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
                     background: "transparent",
                     border: "none",
                     color: COLORS.muted,
