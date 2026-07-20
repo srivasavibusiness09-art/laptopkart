@@ -394,11 +394,11 @@ export function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [sent, setSent] = useState(false);
   return (
-    <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", padding: isMobile ? "28px 14px" : "48px 20px", boxSizing: "border-box" }}>
+    <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", padding: isMobile ? "32px 20px" : "48px 24px", boxSizing: "border-box" }}>
       <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 26 : 30, fontWeight: 800, color: COLORS.text, margin: "0 0 8px" }}>Contact Us</h2>
       <p style={{ color: COLORS.muted, fontSize: 15, marginBottom: 32 }}>We&apos;re here to help. Reach out anytime!</p>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 20 : 40 }}>
-        <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 20, padding: isMobile ? 20 : 32, boxSizing: "border-box" }}>
+        <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 24, padding: isMobile ? 22 : 32, boxSizing: "border-box" }}>
           {sent ? (
             <div style={{ textAlign: "center", padding: "40px 0" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
@@ -412,16 +412,16 @@ export function ContactPage() {
             <>
               <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, marginBottom: 24 }}>Send a Message</h3>
               {[["Full Name", "name", "text"], ["Email", "email", "email"], ["Phone", "phone", "tel"]].map(([label, key, type]) => (
-                <div key={key} style={{ marginBottom: 16 }}>
+                <div key={key} style={{ marginBottom: 20 }}>
                   <label style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6, display: "block" }}>{label}</label>
                   <input type={type} value={form[key as keyof typeof form]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                    style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                    style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "14px 16px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
                 </div>
               ))}
-              <div style={{ marginBottom: 20 }}>
+              <div style={{ marginBottom: 24 }}>
                 <label style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6, display: "block" }}>Message</label>
                 <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} rows={4}
-                  style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "12px 14px", color: COLORS.text, fontSize: 14, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+                  style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "14px 16px", color: COLORS.text, fontSize: 14, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
               </div>
               <button 
                 onClick={() => {
@@ -430,7 +430,7 @@ export function ContactPage() {
                   window.open(`https://wa.me/919750331313?text=${text}`, "_blank");
                   setSent(true);
                 }} 
-                style={{ width: "100%", background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 12, padding: "14px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+                style={{ width: "100%", background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 14, padding: "16px 0", fontWeight: 700, fontSize: 16, cursor: "pointer" }}
               >
                 Send Message →
               </button>
