@@ -19,7 +19,9 @@ import {
   Bell,
   Truck,
   BookOpen,
-  Video
+  Video,
+  Mail,
+  Send
 } from 'lucide-react';
 
 // compressImage removed (using storage.ts module)
@@ -183,7 +185,7 @@ export const DEFAULT_BANNERS: Banner[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders' | 'blogs' | 'video'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders' | 'blogs' | 'video' | 'subscribers'>('overview');
   const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed'>('active');
   const [ordersPage, setOrdersPage] = useState(0);
 
@@ -200,6 +202,7 @@ export default function App() {
   const [accessories, setAccessories] = useState<AccessoryProduct[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [blogs, setBlogs] = useState<any[]>([]);
+  const [subscribers, setSubscribers] = useState<any[]>([]);
 
   // Search filter states
   const [productSearch, setProductSearch] = useState('');
@@ -213,6 +216,12 @@ export default function App() {
   const [blogReviewModal, setBlogReviewModal] = useState<{ open: boolean, item?: any }>({ open: false });
   const [productModal, setProductModal] = useState<{ open: boolean, mode: 'add' | 'edit', item?: Product }>({ open: false, mode: 'add' });
   const [accessoryModal, setAccessoryModal] = useState<{ open: boolean, mode: 'add' | 'edit', item?: AccessoryProduct }>({ open: false, mode: 'add' });
+  const [subscribersSearch, setSubscribersSearch] = useState('');
+
+  // Newsletter broadcast states
+  const [broadcastSubject, setBroadcastSubject] = useState('');
+  const [broadcastBody, setBroadcastBody] = useState('');
+  const [sendingBroadcast, setSendingBroadcast] = useState(false);
   const [bannerModal, setBannerModal] = useState<{ open: boolean }>({ open: false });
 
   // Form states - Product
@@ -347,12 +356,29 @@ export default function App() {
       }
     );
 
+    // 6. Subscribe to Newsletter Subscribers
+    const unsubscribeSubscribers = onSnapshot(
+      query(collection(db, "subscribers")),
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        list.sort((a, b) => new Date(b.subscribedAt || 0).getTime() - new Date(a.subscribedAt || 0).getTime());
+        setSubscribers(list);
+      },
+      (error) => {
+        console.error("[Firestore] Subscribers read failed:", error);
+      }
+    );
+
     return () => {
       unsubscribeProducts();
       unsubscribeAccessories();
       unsubscribeBanners();
       unsubscribeBlogs();
       unsubscribeVideo();
+      unsubscribeSubscribers();
     };
   }, []);
 
@@ -989,7 +1015,72 @@ export default function App() {
     (b.category || '').toLowerCase().includes(blogSearch.toLowerCase())
   );
 
+  // Newsletter Actions
+  const handleSubscriberDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to remove this subscriber email?")) return;
+    try {
+      await deleteDoc(doc(db, "subscribers", id));
+      triggerAlert('success', 'Subscriber removed successfully.');
+    } catch (err) {
+      console.error("Delete subscriber failed:", err);
+      triggerAlert('danger', 'Failed to remove subscriber.');
+    }
+  };
 
+  const handleBccMailto = () => {
+    if (subscribers.length === 0) {
+      return triggerAlert('danger', 'No subscribers available to email.');
+    }
+    const bccList = subscribers.map(s => s.email).join(',');
+    const subject = encodeURIComponent(broadcastSubject || "Special Offers from Laptopkart!");
+    const body = encodeURIComponent(broadcastBody || "");
+    const url = `mailto:srivasavibusiness09@gmail.com?bcc=${bccList}&subject=${subject}&body=${body}`;
+    window.open(url, "_blank");
+  };
+
+  const handleCopyEmails = () => {
+    if (subscribers.length === 0) {
+      return triggerAlert('danger', 'No email addresses to copy.');
+    }
+    const emailList = subscribers.map(s => s.email).join(', ');
+    navigator.clipboard.writeText(emailList);
+    triggerAlert('success', 'All subscriber email addresses copied!');
+  };
+
+  const handleSendAutomatedBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (subscribers.length === 0) {
+      return triggerAlert('danger', 'No subscribers to broadcast to.');
+    }
+    if (!broadcastSubject.trim() || !broadcastBody.trim()) {
+      return triggerAlert('danger', 'Please enter a Subject and Message Body.');
+    }
+
+    setSendingBroadcast(true);
+    try {
+      const res = await fetch("/api/send-newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: broadcastSubject,
+          body: broadcastBody
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        triggerAlert('success', 'Newsletter email broadcast sent successfully!');
+        setBroadcastSubject('');
+        setBroadcastBody('');
+      } else {
+        triggerAlert('danger', `Broadcast failed: ${data.message || 'Unknown backend error'}`);
+      }
+    } catch (err) {
+      console.error("Automated broadcast failed:", err);
+      triggerAlert('danger', 'Automated email service is currently unavailable.');
+    } finally {
+      setSendingBroadcast(false);
+    }
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0d1117' }}>
@@ -1033,6 +1124,7 @@ export default function App() {
             { id: 'orders', label: 'Customer Orders', icon: <FileText size={18} /> },
             { id: 'blogs', label: 'Tech Blogs', icon: <BookOpen size={18} /> },
             { id: 'video', label: 'Promo Video', icon: <Video size={18} /> },
+            { id: 'subscribers', label: 'Newsletter', icon: <Mail size={18} /> },
           ].map(tab => (
             <button
               key={tab.id}
@@ -2218,6 +2310,152 @@ export default function App() {
                   <div style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>{videoTitle || "Untitled Section"}</div>
                   <div style={{ color: '#8B9BBE', fontSize: 13, marginTop: 4 }}>{videoSubtitle || "No subtitle configured"}</div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab: NEWSLETTER SUBSCRIBERS ── */}
+        {activeTab === 'subscribers' && (
+          <div className="fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+              <div>
+                <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+                  Newsletter Subscribers
+                </h1>
+                <p style={{ color: '#8B9BBE', fontSize: 15 }}>
+                  Manage subscriber email lists and compose newsletter broadcasts.
+                </p>
+              </div>
+
+              <button
+                onClick={handleCopyEmails}
+                style={{
+                  background: 'rgba(56,189,248,0.1)', color: '#38BDF8',
+                  border: '1px solid rgba(56,189,248,0.25)', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 800,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Sora'
+                }}
+              >
+                Copy All Emails
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1.2fr', gap: 32 }}>
+              {/* Left Column: Subscribers Registry */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ position: 'relative', maxWidth: 400 }}>
+                  <Search size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#8B9BBE' }} />
+                  <input
+                    type="text" placeholder="Search email registry..."
+                    value={subscribersSearch} onChange={e => setSubscribersSearch(e.target.value)}
+                    className="form-input" style={{ paddingLeft: 44 }}
+                  />
+                </div>
+
+                <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(56, 189, 248, 0.12)' }}>
+                        <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Email Address</th>
+                        <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Subscribed On</th>
+                        <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subscribers
+                        .filter(s => (s.email || '').toLowerCase().includes(subscribersSearch.toLowerCase()))
+                        .map(s => (
+                          <tr key={s.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                            <td style={{ padding: '18px 24px', color: '#fff', fontSize: 14, fontWeight: 600 }}>
+                              {s.email}
+                            </td>
+                            <td style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 13 }}>
+                              {s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                            </td>
+                            <td style={{ padding: '18px 24px', textAlign: 'right' }}>
+                              <button
+                                onClick={() => handleSubscriberDelete(s.id)}
+                                style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer' }}
+                                title="Remove Subscriber"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      }
+                      {subscribers.filter(s => (s.email || '').toLowerCase().includes(subscribersSearch.toLowerCase())).length === 0 && (
+                        <tr>
+                          <td colSpan={3} style={{ padding: '36px', textAlign: 'center', color: '#8B9BBE', fontSize: 14 }}>
+                            No subscribers found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Right Column: Broadcast Composer */}
+              <div style={{
+                background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
+                borderRadius: 24, padding: 28, boxShadow: '0 8px 30px rgba(0,0,0,0.15)', height: 'fit-content'
+              }}>
+                <h3 style={{ fontFamily: 'Sora', color: '#fff', fontSize: 20, fontWeight: 800, margin: '0 0 8px' }}>
+                  Compose Broadcast
+                </h3>
+                <p style={{ color: '#8B9BBE', fontSize: 13, lineHeight: 1.5, marginBottom: 24 }}>
+                  Draft an offer or tech insights update. Open in your local email app (BCC) to send immediately for free, or click Send Automated Email (requires nodemailer API backend).
+                </p>
+
+                <form onSubmit={handleSendAutomatedBroadcast} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Email Subject</label>
+                    <input
+                      type="text" required placeholder="Mega Weekend Offer: Flat 20% Off Refurbished ThinkPads! 🚀"
+                      value={broadcastSubject} onChange={e => setBroadcastSubject(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Message Body (HTML Supported)</label>
+                    <textarea
+                      required placeholder="Write your newsletter text or paste HTML body here..."
+                      value={broadcastBody} onChange={e => setBroadcastBody(e.target.value)}
+                      className="form-input" style={{ minHeight: 180, resize: 'vertical', fontFamily: 'monospace', fontSize: 13 }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 6 }}>
+                    <button
+                      type="button"
+                      onClick={handleBccMailto}
+                      style={{
+                        background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', color: '#000',
+                        border: 'none', borderRadius: 12, padding: '12px 20px', fontSize: 14, fontWeight: 800,
+                        cursor: 'pointer', fontFamily: 'Sora', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                      }}
+                    >
+                      <Send size={15} /> Open in Local Mail App (BCC)
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={sendingBroadcast}
+                      style={{
+                        background: 'rgba(16,185,129,0.1)',
+                        border: '1px solid rgba(16,185,129,0.25)',
+                        color: '#10B981',
+                        borderRadius: 12, padding: '12px 20px', fontSize: 13, fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'Sora', transition: 'all 0.2s',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                      }}
+                    >
+                      {sendingBroadcast ? 'Sending...' : 'Send Automated Email'}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

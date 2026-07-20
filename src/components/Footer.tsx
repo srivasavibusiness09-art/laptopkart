@@ -5,6 +5,8 @@ import { Shield, Phone, Mail, Clock, ArrowRight } from "lucide-react";
 import { FaFacebook, FaInstagram, FaXTwitter, FaYoutube, FaLinkedin } from "react-icons/fa6";
 import { COLORS } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
+import { collection, doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface FooterProps { setPage: (p: string) => void }
 
@@ -22,6 +24,32 @@ const social = [
 
 export default function Footer({ setPage }: FooterProps) {
   const isMobile = useIsMobile();
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanEmail = email.trim();
+    if (!cleanEmail) return;
+
+    setStatus("loading");
+    setErrorMsg("");
+    try {
+      const subscriberId = cleanEmail.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
+      await setDoc(doc(db, "subscribers", subscriberId), {
+        email: cleanEmail,
+        subscribedAt: new Date().toISOString()
+      });
+      setStatus("success");
+      setEmail("");
+      setTimeout(() => setStatus("idle"), 5000);
+    } catch (err) {
+      console.error("Footer subscribe failed:", err);
+      setErrorMsg("Failed to subscribe.");
+      setStatus("error");
+    }
+  };
 
   const getFooterLinkTarget = (link: string): string => {
     const l = link.toLowerCase().trim();
@@ -170,9 +198,13 @@ export default function Footer({ setPage }: FooterProps) {
               <p style={{ color: COLORS.muted, fontSize: 12, marginBottom: 14, lineHeight: 1.6 }}>
                 Get exclusive deals and tech news delivered to you.
               </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <form onSubmit={handleSubscribe} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <input
+                  type="email"
+                  required
                   placeholder="Your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   style={{
                     background: "rgba(56,150,240,0.06)",
                     border: "1px solid rgba(56,150,240,0.12)",
@@ -183,17 +215,31 @@ export default function Footer({ setPage }: FooterProps) {
                   onFocus={(e) => { e.target.style.borderColor = "rgba(56,189,248,0.35)"; }}
                   onBlur={(e) => { e.target.style.borderColor = "rgba(56,150,240,0.12)"; }}
                 />
-                <button style={{
-                  background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000",
-                  border: "none", borderRadius: 8,
-                  padding: "10px 16px", fontWeight: 700,
-                  fontSize: 13, cursor: "pointer",
-                  fontFamily: "'Sora', sans-serif",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                }}>
-                  Subscribe <ArrowRight size={13} />
+                <button
+                  type="submit"
+                  disabled={status === "loading"}
+                  style={{
+                    background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000",
+                    border: "none", borderRadius: 8,
+                    padding: "10px 16px", fontWeight: 700,
+                    fontSize: 13, cursor: "pointer",
+                    fontFamily: "'Sora', sans-serif",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                  }}
+                >
+                  {status === "loading" ? "Subscribing..." : <>Subscribe <ArrowRight size={13} /></>}
                 </button>
-              </div>
+                {status === "success" && (
+                  <span style={{ color: COLORS.green, fontSize: 11, fontWeight: 600, marginTop: 4 }}>
+                    Subscribed successfully!
+                  </span>
+                )}
+                {status === "error" && (
+                  <span style={{ color: "#EF4444", fontSize: 11, fontWeight: 600, marginTop: 4 }}>
+                    {errorMsg || "Failed to subscribe."}
+                  </span>
+                )}
+              </form>
             </div>
           )}
         </div>

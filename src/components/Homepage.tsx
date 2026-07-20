@@ -207,6 +207,38 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
 
+  // Newsletter states
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [subscribing, setSubscribing] = useState(false);
+
+  const handleNewsletterSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = newsletterEmail.trim();
+    if (!email) {
+      return triggerAlert("warning", "Please enter your email address.");
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return triggerAlert("warning", "Please enter a valid email address.");
+    }
+
+    setSubscribing(true);
+    try {
+      const subscriberId = email.toLowerCase().replace(/[^a-z0-9@._-]/g, "_");
+      await setDoc(doc(db, "subscribers", subscriberId), {
+        email: email,
+        subscribedAt: new Date().toISOString()
+      });
+      triggerAlert("success", "Successfully subscribed to our newsletter!");
+      setNewsletterEmail("");
+    } catch (err) {
+      console.error("Newsletter subscription failed:", err);
+      triggerAlert("error", "Subscription failed. Please try again.");
+    } finally {
+      setSubscribing(false);
+    }
+  };
+
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewText.trim()) return triggerAlert("warning", "Please enter review text.");
@@ -1181,11 +1213,18 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
           <p style={{ color: COLORS.muted, margin: "0 0 32px", fontSize: 15, lineHeight: 1.6 }}>
             Exclusive offers, new arrivals, and tech insights — straight to your inbox
           </p>
-          <div style={{
-            display: "flex", maxWidth: 500, margin: "0 auto",
-            gap: 10, flexDirection: isMobile ? "column" : "row",
-          }}>
+          <form
+            onSubmit={handleNewsletterSubscribe}
+            style={{
+              display: "flex", maxWidth: 500, margin: "0 auto",
+              gap: 10, flexDirection: isMobile ? "column" : "row",
+            }}
+          >
             <input
+              type="email"
+              required
+              value={newsletterEmail}
+              onChange={(e) => setNewsletterEmail(e.target.value)}
               placeholder="Enter your email"
               style={{
                 flex: 1, background: "rgba(10,15,30,0.6)",
@@ -1198,15 +1237,17 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
               onBlur={(e) => { e.target.style.borderColor = "rgba(0,229,255,0.18)"; }}
             />
             <Button
+              type="submit"
               size="lg"
+              disabled={subscribing}
               style={{
                 width: isMobile ? "100%" : "auto",
                 minHeight: 48,
               }}
             >
-              Subscribe
+              {subscribing ? "Subscribing..." : "Subscribe"}
             </Button>
-          </div>
+          </form>
         </Card>
       )}
 
