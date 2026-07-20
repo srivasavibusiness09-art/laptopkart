@@ -393,69 +393,203 @@ export function ContactPage() {
   const isMobile = useIsMobile();
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [sent, setSent] = useState(false);
+
+  // Layout spacers depending on screen size
+  const containerPadding = isMobile ? "24px 16px" : "48px 24px";
+  const cardPadding = isMobile ? "20px 16px" : "32px 32px";
+
   return (
-    <div style={{ width: "100%", maxWidth: 900, margin: "0 auto", padding: isMobile ? "32px 20px" : "48px 24px", boxSizing: "border-box" }}>
-      <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 26 : 30, fontWeight: 800, color: COLORS.text, margin: "0 0 8px" }}>Contact Us</h2>
-      <p style={{ color: COLORS.muted, fontSize: 15, marginBottom: 32 }}>We&apos;re here to help. Reach out anytime!</p>
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 20 : 40 }}>
-        <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 20, padding: isMobile ? 18 : 32, width: "100%", maxWidth: isMobile ? 500 : "100%", margin: "0 auto", boxSizing: "border-box", }}>
+    <div style={{ 
+      width: "100%", 
+      maxWidth: 960, 
+      margin: "0 auto", 
+      padding: containerPadding, 
+      boxSizing: "border-box" 
+    }}>
+      <h2 style={{ 
+        fontFamily: "'Sora', sans-serif", 
+        fontSize: isMobile ? 24 : 32, 
+        fontWeight: 800, 
+        color: COLORS.text, 
+        margin: "0 0 8px 0" 
+      }}>
+        Contact Us
+      </h2>
+      <p style={{ 
+        color: COLORS.muted, 
+        fontSize: 14, 
+        margin: "0 0 32px 0",
+        lineHeight: 1.5 
+      }}>
+        We&apos;re here to help. Reach out anytime!
+      </p>
+
+      {/* Flex container layout: stacks on mobile, columns on desktop */}
+      <div style={{ 
+        display: "flex", 
+        flexDirection: isMobile ? "column" : "row", 
+        gap: isMobile ? 24 : 40,
+        width: "100%",
+        boxSizing: "border-box"
+      }}>
+        
+        {/* Form Card (Left Column) */}
+        <div style={{ 
+          flex: 1.2, 
+          width: "100%",
+          background: COLORS.cardBg, 
+          border: `1px solid ${COLORS.cardBorder}`, 
+          borderRadius: 20, 
+          padding: cardPadding, 
+          boxSizing: "border-box" 
+        }}>
           {sent ? (
-            <div style={{ textAlign: "center", padding: "40px 0" }}>
+            <div style={{ textAlign: "center", padding: "32px 0" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-                <CheckCircle2 size={56} color={COLORS.green} />
+                <CheckCircle2 size={48} color={COLORS.green} />
               </div>
-              <h3 style={{ color: COLORS.green, fontFamily: "'Sora', sans-serif", fontWeight: 800 }}>Message Sent!</h3>
-              <p style={{ color: COLORS.muted }}>We&apos;ll get back to you within 24 hours.</p>
-              <button onClick={() => { setSent(false); setForm({ name: "", email: "", phone: "", message: "" }); }} style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer", marginTop: 16 }}>Send Another</button>
+              <h3 style={{ color: COLORS.green, fontFamily: "'Sora', sans-serif", fontWeight: 800, margin: "0 0 8px 0" }}>Message Sent!</h3>
+              <p style={{ color: COLORS.muted, margin: "0 0 16px 0", fontSize: 14 }}>We&apos;ll get back to you within 24 hours.</p>
+              <button 
+                onClick={() => { setSent(false); setForm({ name: "", email: "", phone: "", message: "" }); }} 
+                style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}
+              >
+                Send Another
+              </button>
             </div>
           ) : (
-            <>
-              <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, marginBottom: 24 }}>Send a Message</h3>
-              {[["Full Name", "name", "text"], ["Email", "email", "email"], ["Phone", "phone", "tel"]].map(([label, key, type]) => (
-                <div key={key} style={{ marginBottom: 20 }}>
-                  <label style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6, display: "block" }}>{label}</label>
-                  <input type={type} value={form[key as keyof typeof form]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                    style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "14px 16px", color: COLORS.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%", boxSizing: "border-box" }}>
+              <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, margin: "0 0 6px 0", fontSize: 18 }}>Send a Message</h3>
+              
+              {/* Form Input Fields */}
+              {[
+                { label: "Full Name", key: "name", type: "text", placeholder: "Enter your name" },
+                { label: "Email Address", key: "email", type: "email", placeholder: "Enter your email" },
+                { label: "Phone Number", key: "phone", type: "tel", placeholder: "Enter your phone number" }
+              ].map((field) => (
+                <div key={field.key} style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%", boxSizing: "border-box" }}>
+                  <label style={{ color: COLORS.muted, fontSize: 13, fontWeight: 500 }}>{field.label}</label>
+                  <input 
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    value={form[field.key as keyof typeof form]} 
+                    onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
+                    style={{ 
+                      width: "100%", 
+                      background: COLORS.background, 
+                      border: `1px solid ${COLORS.cardBorder}`, 
+                      borderRadius: 10, 
+                      padding: "12px 14px", 
+                      color: COLORS.text, 
+                      fontSize: 14, 
+                      outline: "none", 
+                      boxSizing: "border-box",
+                      margin: 0
+                    }} 
+                  />
                 </div>
               ))}
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6, display: "block" }}>Message</label>
-                <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} rows={4}
-                  style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "14px 16px", color: COLORS.text, fontSize: 14, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%", boxSizing: "border-box" }}>
+                <label style={{ color: COLORS.muted, fontSize: 13, fontWeight: 500 }}>Message</label>
+                <textarea 
+                  value={form.message} 
+                  placeholder="How can we help you?"
+                  onChange={e => setForm(f => ({ ...f, message: e.target.value }))} 
+                  rows={4}
+                  style={{ 
+                    width: "100%", 
+                    background: COLORS.background, 
+                    border: `1px solid ${COLORS.cardBorder}`, 
+                    borderRadius: 10, 
+                    padding: "12px 14px", 
+                    color: COLORS.text, 
+                    fontSize: 14, 
+                    outline: "none", 
+                    resize: "vertical", 
+                    boxSizing: "border-box",
+                    margin: 0
+                  }} 
+                />
               </div>
-              <button
+
+              <button 
                 onClick={() => {
                   if (!form.name || !form.message) return alert("Please fill in your name and message.");
                   const text = `*New Inquiry from Laptopkart*%0A%0A*Name:* ${encodeURIComponent(form.name)}%0A*Email:* ${encodeURIComponent(form.email)}%0A*Phone:* ${encodeURIComponent(form.phone)}%0A*Message:* ${encodeURIComponent(form.message)}`;
                   window.open(`https://wa.me/919750331313?text=${text}`, "_blank");
                   setSent(true);
+                }} 
+                style={{ 
+                  width: "100%", 
+                  background: COLORS.green, 
+                  color: COLORS.black, 
+                  border: "none", 
+                  borderRadius: 12, 
+                  padding: "14px 0", 
+                  fontWeight: 700, 
+                  fontSize: 15, 
+                  cursor: "pointer",
+                  marginTop: 6
                 }}
-                style={{ width: "100%", background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 14, padding: "16px 0", fontWeight: 700, fontSize: 16, cursor: "pointer" }}
               >
                 Send Message →
               </button>
-            </>
+            </div>
           )}
         </div>
-        <div>
+        
+        {/* Contact Info Details (Right Column) */}
+        <div style={{ 
+          flex: 0.8, 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: 12,
+          width: "100%",
+          boxSizing: "border-box"
+        }}>
           {[
             { icon: <Phone size={18} color={COLORS.green} />, label: "Phone", val: "+91 97503 31313", sub: "Call us 10AM - 7PM" },
             { icon: <Mail size={18} color={COLORS.green} />, label: "Email", val: "srivasavibusiness09@gmail.com", sub: "Reply within 24 hours" },
             { icon: <MessageSquare size={18} color={COLORS.green} />, label: "WhatsApp", val: "+91 97503 31313", sub: "Quick replies on chat" },
             { icon: <MapPin size={18} color={COLORS.green} />, label: "Address", val: "Salem, Tamil Nadu", sub: "Visit our showroom" }
           ].map(({ icon, label, val, sub }) => (
-            <div key={label} style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 14, padding: "16px 20px", marginBottom: 12, display: "flex", gap: 16, alignItems: "center", boxSizing: "border-box" }}>
-              <div style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,150,240,0.12)", borderRadius: 12, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div 
+              key={label} 
+              style={{ 
+                background: COLORS.cardBg, 
+                border: `1px solid ${COLORS.cardBorder}`, 
+                borderRadius: 14, 
+                padding: "14px 18px", 
+                display: "flex", 
+                gap: 14, 
+                alignItems: "center", 
+                boxSizing: "border-box",
+                width: "100%"
+              }}
+            >
+              <div style={{ 
+                background: "rgba(56,189,248,0.06)", 
+                border: "1px solid rgba(56,150,240,0.12)", 
+                borderRadius: 10, 
+                width: 36, 
+                height: 36, 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                flexShrink: 0 
+              }}>
                 {icon}
               </div>
-              <div>
-                <div style={{ color: COLORS.muted, fontSize: 12 }}>{label}</div>
-                <div style={{ color: COLORS.text, fontWeight: 700 }}>{val}</div>
-                <div style={{ color: COLORS.muted, fontSize: 12 }}>{sub}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ color: COLORS.muted, fontSize: 11 }}>{label}</span>
+                <span style={{ color: COLORS.text, fontWeight: 700, fontSize: 13 }}>{val}</span>
+                <span style={{ color: COLORS.muted, fontSize: 11 }}>{sub}</span>
               </div>
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );
