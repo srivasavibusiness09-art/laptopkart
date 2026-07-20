@@ -398,7 +398,7 @@ export function ContactPage() {
       <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 26 : 30, fontWeight: 800, color: COLORS.text, margin: "0 0 8px" }}>Contact Us</h2>
       <p style={{ color: COLORS.muted, fontSize: 15, marginBottom: 32 }}>We&apos;re here to help. Reach out anytime!</p>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 20 : 40 }}>
-        <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 24, padding: isMobile ? 22 : 32, boxSizing: "border-box" }}>
+        <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 20, padding: isMobile ? 18 : 32, width: "100%", maxWidth: isMobile ? 500 : "100%", margin: "0 auto", boxSizing: "border-box", }}>
           {sent ? (
             <div style={{ textAlign: "center", padding: "40px 0" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
@@ -423,13 +423,13 @@ export function ContactPage() {
                 <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} rows={4}
                   style={{ width: "100%", background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 10, padding: "14px 16px", color: COLORS.text, fontSize: 14, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
               </div>
-              <button 
+              <button
                 onClick={() => {
                   if (!form.name || !form.message) return alert("Please fill in your name and message.");
                   const text = `*New Inquiry from Laptopkart*%0A%0A*Name:* ${encodeURIComponent(form.name)}%0A*Email:* ${encodeURIComponent(form.email)}%0A*Phone:* ${encodeURIComponent(form.phone)}%0A*Message:* ${encodeURIComponent(form.message)}`;
                   window.open(`https://wa.me/919750331313?text=${text}`, "_blank");
                   setSent(true);
-                }} 
+                }}
                 style={{ width: "100%", background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 14, padding: "16px 0", fontWeight: 700, fontSize: 16, cursor: "pointer" }}
               >
                 Send Message →
