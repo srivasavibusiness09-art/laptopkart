@@ -10,7 +10,7 @@ import Card from "./common/Card";
 interface HeroProps { setPage: (p: string) => void }
 
 const stats = [
-  { value: "50K+", label: "Devices Sold" },
+  { value: "5K+", label: "Devices Sold" },
   { value: "1 Year", label: "Warranty" },
   { value: "Tested", label: "QC Checks" },
   { value: "4.9★", label: "Rating" },

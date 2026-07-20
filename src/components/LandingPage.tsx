@@ -70,9 +70,9 @@ export default function LandingPage({ onEnterStore }: Props) {
       const ctx = canvas.getContext("2d");
       if (!ctx || !img.naturalWidth) return;
 
-      // Enable hardware image smoothing options
+      // Enable hardware image smoothing options - "low" is significantly cheaper on mobile GPUs
       ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "medium";
+      ctx.imageSmoothingQuality = isMobile ? "low" : "medium";
 
       const cw = canvas.width, ch = canvas.height;
       const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
@@ -99,8 +99,18 @@ export default function LandingPage({ onEnterStore }: Props) {
     setIsLoading(true);
     const loadedSet = new Set<number>();
 
-    const onImgLoad = (index: number) => {
+    const onImgLoad = async (index: number, img: HTMLImageElement) => {
       if (loadedSet.has(index)) return;
+
+      try {
+        if (img.decode) {
+          await img.decode();
+        }
+      } catch (err) {
+        console.warn(`Failed to decode frame ${index}:`, err);
+      }
+
+      // Check to prevent memory-leak state updates if component has unmounted
       loadedSet.add(index);
       count++;
       setLoadedCount(count);
@@ -119,10 +129,10 @@ export default function LandingPage({ onEnterStore }: Props) {
     for (let i = 1; i <= totalFrames; i++) {
       const img = new Image();
       img.src = getSrc(i);
-      img.onload = () => onImgLoad(i - 1);
-      img.onerror = () => onImgLoad(i - 1);
+      img.onload = () => onImgLoad(i - 1, img);
+      img.onerror = () => onImgLoad(i - 1, img);
       if (img.complete && img.naturalWidth) {
-        onImgLoad(i - 1);
+        onImgLoad(i - 1, img);
       }
       arr.push(img);
     }
@@ -141,10 +151,10 @@ export default function LandingPage({ onEnterStore }: Props) {
       const c = canvasRef.current;
       if (!c) return;
 
-      // Cap DPR to 1.5 on mobile to avoid fill-rate GPU bottleneck
+      // Cap DPR to 1.25 on mobile to avoid fill-rate GPU bottleneck
       let dpr = window.devicePixelRatio || 1;
-      if (isMobile && dpr > 1.5) {
-        dpr = 1.5;
+      if (isMobile && dpr > 1.25) {
+        dpr = 1.25;
       }
 
       c.width = innerWidth * dpr;
@@ -171,9 +181,9 @@ export default function LandingPage({ onEnterStore }: Props) {
         totalFrames - 1
       );
 
-      // Lerp display toward target
+      // Lerp display toward target (larger step on mobile for responsive feedback)
       const diff = targetRef.current - displayRef.current;
-      displayRef.current += diff * LERP_FACTOR;
+      displayRef.current += diff * (isMobile ? 0.15 : LERP_FACTOR);
 
       // Snap when close enough
       if (Math.abs(diff) < 0.001) {
@@ -187,7 +197,11 @@ export default function LandingPage({ onEnterStore }: Props) {
       if (f !== lastFrame.current) {
         lastFrame.current = f;
         drawFrame(f);
-        setFrameNum(f); // update UI state
+        
+        // Throttle React renders to 30fps (every 2nd frame) on mobile to keep physics processing fluid
+        if (!isMobile || f % 2 === 0 || f === 1 || f === totalFrames) {
+          setFrameNum(f); // update UI state
+        }
       }
 
       // Auto-navigate at last frame when motion stops
@@ -235,7 +249,7 @@ export default function LandingPage({ onEnterStore }: Props) {
       if (touchY.current === null) return;
       const dy = touchY.current - e.touches[0].clientY;
       touchY.current = e.touches[0].clientY;
-      velRef.current += dy * TOUCH_SENS;
+      velRef.current += dy * (isMobile ? 0.09 : 0.045);
     };
     addEventListener("touchstart", onStart, { passive: true });
     addEventListener("touchmove", onMove, { passive: false });
@@ -243,7 +257,7 @@ export default function LandingPage({ onEnterStore }: Props) {
       removeEventListener("touchstart", onStart);
       removeEventListener("touchmove", onMove);
     };
-  }, []);
+  }, [isMobile]);
 
   /* ── Keyboard ─────────────────────────────────────── */
   useEffect(() => {
