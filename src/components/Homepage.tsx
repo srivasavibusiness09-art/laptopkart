@@ -123,33 +123,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
   const isMobile = useIsMobile();
   const [step, setStep] = useState(0);
 
-  // Exchange Laptop State
-  const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
-  const [exchangeForm, setExchangeForm] = useState({ brand: '', processor: '', ram: '', condition: '' });
-  const [exchangeEstimate, setExchangeEstimate] = useState<number | null>(null);
 
-  const calculateExchangeValue = () => {
-    if (!exchangeForm.brand || !exchangeForm.processor || !exchangeForm.ram || !exchangeForm.condition) return null;
-    let base = 0;
-    if (['Intel Core i7', 'AMD Ryzen 7', 'Apple M-Series'].includes(exchangeForm.processor)) base = 12000;
-    else if (['Intel Core i5', 'AMD Ryzen 5'].includes(exchangeForm.processor)) base = 8000;
-    else if (['Intel Core i3', 'AMD Ryzen 3', 'Older/Other'].includes(exchangeForm.processor)) base = 4000;
-
-    if (exchangeForm.ram === '16GB+') base += 3000;
-    else if (exchangeForm.ram === '8GB') base += 1500;
-
-    if (exchangeForm.condition === 'Dead / Not Working') return 1500; // Flat scrap value
-
-    let multiplier = 1;
-    if (exchangeForm.condition === 'Minor Scratches/Dents') multiplier = 0.75;
-    else if (exchangeForm.condition === 'Major Damage (Broken screen/hinges)') multiplier = 0.40;
-
-    return Math.round(base * multiplier);
-  };
-
-  useEffect(() => {
-    setExchangeEstimate(calculateExchangeValue());
-  }, [exchangeForm]);
 
   // Load Featurable widget script after mount to ensure the DOM div is rendered
   useEffect(() => {
@@ -919,7 +893,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
         );
       })()}
 
-      {/* ── Exchange Banner ──────────────────────── */}
+      {/* ── Exchange & Resell Banner ──────────────────────── */}
       {section(
         <div style={{
           background: COLORS.cardBg,
@@ -938,18 +912,16 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
           <div style={{ position: "relative", zIndex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 7, color: COLORS.muted, fontSize: 13, marginBottom: 10 }}>
               <Recycle size={15} color={COLORS.green} />
-              <span>Eco-friendly Exchange Program</span>
+              <span>Eco-friendly Exchange & Resell Program</span>
             </div>
             <h3 style={{
               fontFamily: "'Sora', sans-serif",
               fontSize: isMobile ? 24 : 38, fontWeight: 800,
               color: COLORS.text, margin: "0 0 10px",
               letterSpacing: "-0.025em",
-            }}>Exchange Your Old Laptop</h3>
+            }}>Exchange or Resell Your Old Laptop</h3>
             <p style={{ color: COLORS.muted, fontSize: 15, margin: 0 }}>
-              Get up to{" "}
-              <span style={{ color: COLORS.green, fontWeight: 800 }}>₹15,000 Off</span>
-              {" "}on your next purchase
+              Get instant price evaluation by submitting your laptop details & photos!
             </p>
           </div>
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
@@ -964,9 +936,9 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
           <Button
             size="lg"
             style={{ width: isMobile ? "100%" : "auto" }}
-            onClick={() => setExchangeModalOpen(true)}
+            onClick={() => setPage("resell")}
           >
-            Exchange Now <ArrowRight size={15} />
+            Resell / Exchange Laptop <ArrowRight size={15} />
           </Button>
         </div>
       )}
@@ -1251,95 +1223,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
         </Card>
       )}
 
-      {/* ── Exchange Modal ──────────────────────── */}
-      <AnimatePresence>
-        {exchangeModalOpen && (
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)" }} onClick={() => setExchangeModalOpen(false)} />
-            <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} style={{ position: "relative", background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 24, width: "100%", maxWidth: 500, padding: isMobile ? 24 : 32, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)" }}>
-              <button onClick={() => setExchangeModalOpen(false)} style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.05)", border: "none", color: COLORS.muted, borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                <X size={16} />
-              </button>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-                <div style={{ background: "rgba(16,185,129,0.1)", padding: 10, borderRadius: 12 }}>
-                  <Recycle size={24} color={COLORS.green} />
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, color: COLORS.text, fontSize: 20, fontWeight: 800 }}>Exchange Calculator</h3>
-                  <div style={{ color: COLORS.muted, fontSize: 13 }}>Find out what your old laptop is worth</div>
-                </div>
-              </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div>
-                  <label style={{ display: "block", color: COLORS.text, fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Laptop Brand</label>
-                  <Dropdown
-                    value={exchangeForm.brand}
-                    onChange={(val) => setExchangeForm(prev => ({ ...prev, brand: val }))}
-                    placeholder="Select Brand"
-                    options={["Dell", "HP", "Lenovo", "Apple", "Asus", "Acer", "Other"].map(b => ({ label: b, value: b }))}
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", color: COLORS.text, fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Processor</label>
-                  <Dropdown
-                    value={exchangeForm.processor}
-                    onChange={(val) => setExchangeForm(prev => ({ ...prev, processor: val }))}
-                    placeholder="Select Processor"
-                    options={["Intel Core i3", "Intel Core i5", "Intel Core i7", "AMD Ryzen 3", "AMD Ryzen 5", "AMD Ryzen 7", "Apple M-Series", "Older/Other"].map(p => ({ label: p, value: p }))}
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", color: COLORS.text, fontSize: 13, fontWeight: 600, marginBottom: 8 }}>RAM Size</label>
-                  <Dropdown
-                    value={exchangeForm.ram}
-                    onChange={(val) => setExchangeForm(prev => ({ ...prev, ram: val }))}
-                    placeholder="Select RAM"
-                    options={["4GB", "8GB", "16GB+"].map(r => ({ label: r, value: r }))}
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", color: COLORS.text, fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Physical Condition</label>
-                  <Dropdown
-                    value={exchangeForm.condition}
-                    onChange={(val) => setExchangeForm(prev => ({ ...prev, condition: val }))}
-                    placeholder="Select Condition"
-                    options={["Flawless (Like New)", "Minor Scratches/Dents", "Major Damage (Broken screen/hinges)", "Dead / Not Working"].map(c => ({ label: c, value: c }))}
-                    style={{ width: "100%" }}
-                  />
-                </div>
-              </div>
-
-              {exchangeEstimate !== null && (
-                <div style={{ marginTop: 24, padding: 20, background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 16, textAlign: "center" }}>
-                  <div style={{ color: COLORS.green, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Estimated Exchange Value</div>
-                  <div style={{ color: COLORS.text, fontSize: 32, fontWeight: 800, fontFamily: "'Sora', sans-serif" }}>₹{exchangeEstimate.toLocaleString()} - ₹{(exchangeEstimate + 1500).toLocaleString()}</div>
-                  <div style={{ color: COLORS.muted, fontSize: 12, marginTop: 8 }}>*Final price subject to physical inspection.</div>
-                </div>
-              )}
-
-              <Button
-                style={{ width: "100%", marginTop: 24 }}
-                size="lg"
-                onClick={() => {
-                  if (exchangeEstimate === null) return;
-                  const text = `*New Laptop Exchange Request*%0A%0A*Brand:* ${exchangeForm.brand}%0A*Processor:* ${exchangeForm.processor}%0A*RAM:* ${exchangeForm.ram}%0A*Condition:* ${exchangeForm.condition}%0A*Estimated Value:* ₹${exchangeEstimate} - ₹${exchangeEstimate + 1500}%0A%0AHi Laptopkart, I would like to exchange my old laptop.`;
-                  window.open(`https://wa.me/919750331313?text=${text}`, "_blank");
-                  setExchangeModalOpen(false);
-                }}
-                disabled={exchangeEstimate === null}
-              >
-                Claim Offer via WhatsApp <ArrowRight size={16} />
-              </Button>
-
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </main>
   );
 }

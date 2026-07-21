@@ -28,7 +28,7 @@ const linkIcons: Record<string, React.ReactNode> = {
 
 const getTarget = (link: string) => ({
   Laptops: "listing:Laptops", Desktops: "listing:Desktops", Accessories: "accessories",
-  About: "about", Blog: "blog", Offers: "listing:Offers", "Resell Laptop": "contact",
+  About: "about", Blog: "blog", Offers: "listing:Offers", "Resell Laptop": "resell",
 } as Record<string, string>)[link] ?? "home";
 
 export default function Navbar({ setPage, cart, wishlist, user, onSearch, searchQuery = "" }: NavbarProps) {

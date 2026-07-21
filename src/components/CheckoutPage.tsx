@@ -12,6 +12,7 @@ import {
   MapPin,
   Truck,
   Zap,
+  X,
 } from "lucide-react";
 import { COLORS } from "@/data/products";
 import type { Product } from "@/data/products";
@@ -50,16 +51,6 @@ const inputStyle = {
   boxSizing: "border-box" as const,
 };
 
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-};
-
 export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutPageProps) {
   const [step, setStep] = useState(0);
   const [address, setAddress] = useState<Address>({ name: "", phone: "", pincode: "", city: "", state: "", street: "" });
@@ -70,6 +61,25 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
   );
   const total = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
   const isMobile = useIsMobile();
+
+  const [phonepeStatus, setPhonepeStatus] = useState<{ status: string; orderId: string } | null>(null);
+
+  // Monitor returned URL parameters from PhonePe redirect callback
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const status = urlParams.get("payment_status");
+      const rOrderId = urlParams.get("orderId");
+      if (status && rOrderId) {
+        setPhonepeStatus({ status, orderId: rOrderId });
+        setOrderId(rOrderId);
+        setStep(2); // Auto-navigate to receipt step
+        if (status === "success") {
+          setCart([]); // Clean state cart on success
+        }
+      }
+    }
+  }, []);
 
   // Pre-fill shipping details from Firestore profile if it exists
   useEffect(() => {
@@ -168,124 +178,28 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
 
       setIsProcessing(true);
       try {
-        const isLoaded = await loadRazorpayScript();
-        if (!isLoaded) {
-          alert("Failed to load Razorpay Payment Gateway. Check internet connection.");
-          setIsProcessing(false);
-          return;
-        }
-
-        // Create transaction payload on backend
-        const res = await fetch("/api/razorpay", {
+        // Trigger server-side PhonePe redirection link generation
+        const res = await fetch("/api/phonepe/initiate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: total, currency: "INR" })
+          body: JSON.stringify({
+            amount: total,
+            orderId: finalOrderId,
+            email: user.email,
+            phone: address.phone,
+            userId: user.uid,
+            address,
+            cart
+          })
         });
 
         if (!res.ok) {
-          throw new Error("Unable to reach Razorpay backend.");
+          throw new Error("Unable to reach PhonePe backend gateway.");
         }
 
-        const razorpayOrder = await res.json();
-         const keyId = (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder").trim();
-
-        const options = {
-          key: keyId,
-          amount: razorpayOrder.amount,
-          currency: razorpayOrder.currency,
-          name: "Laptopkart",
-          description: "Premium Tech & Refurbished Laptops",
-          order_id: razorpayOrder.id,
-          handler: async function (response: any) {
-            try {
-              // Verify the payment signature on the backend
-              const verifyRes = await fetch("/api/verify-payment", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature
-                })
-              });
-
-              if (!verifyRes.ok) {
-                const errorData = await verifyRes.json();
-                throw new Error(errorData.error || "Payment signature verification failed.");
-              }
-
-              // Write paid order directly to Firestore after successful verification
-              const newOrder = {
-                orderId: finalOrderId,
-                createdAt: new Date().toISOString(),
-                items: cart.map(item => ({
-                  id: item.id,
-                  name: item.name,
-                  price: item.price,
-                  qty: item.qty || 1,
-                  img: item.img
-                })),
-                total,
-                address,
-                status: "Paid",
-                paymentMethod: payment,
-                email: user.email,
-                uid: user.uid,
-                razorpayOrderId: response.razorpay_order_id,
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpaySignature: response.razorpay_signature
-              };
-
-              const orderRef = doc(db, "orders", finalOrderId);
-              await setDoc(orderRef, newOrder);
-
-              // Update default address details inside users doc for subsequent orders
-              await setDoc(doc(db, "users", user.uid), {
-                phone: address.phone,
-                street: address.street,
-                city: address.city,
-                state: address.state,
-                pincode: address.pincode
-              }, { merge: true });
-
-              setCart([]);
-              setStep(2);
-            } catch (err: any) {
-              console.error("Payment verification or Firestore save failed:", err);
-              alert(err.message || "Payment was successful, but saving order failed. Please notify customer support.");
-            } finally {
-              setIsProcessing(false);
-            }
-          },
-          prefill: {
-            name: address.name,
-            email: user.email,
-            contact: address.phone
-          },
-          theme: {
-            color: "#3B82F6"
-          }
-        };
-
-        const rzp = new (window as any).Razorpay(options);
-        rzp.open();
-      } catch (err) {
-        console.error("Razorpay workflow failed:", err);
-        // Fallback for sandboxed sandbox environments
-        try {
-          const orderRef = doc(db, "orders", finalOrderId);
-          await setDoc(orderRef, {
-            orderId: finalOrderId,
-            createdAt: new Date().toISOString(),
-            items: cart.map(item => ({ id: item.id, name: item.name, price: item.price, qty: item.qty || 1, img: item.img })),
-            total,
-            address,
-            status: "Simulated Payment Success",
-            paymentMethod: payment,
-            email: user.email,
-            uid: user.uid
-          });
-
+        const data = await res.json();
+        if (data.redirectUrl) {
+          // Update default address details inside users doc for subsequent orders prior to redirection
           await setDoc(doc(db, "users", user.uid), {
             phone: address.phone,
             street: address.street,
@@ -294,15 +208,15 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
             pincode: address.pincode
           }, { merge: true });
 
-          setCart([]);
-          setStep(2);
-        } catch (e) {
-          console.error("Firestore sandbox write failed:", e);
-          setCart([]);
-          setStep(2);
-        } finally {
-          setIsProcessing(false);
+          // Redirect browser location directly to PhonePe hosted pay page
+          window.location.href = data.redirectUrl;
+        } else {
+          throw new Error(data.error || "Failed to retrieve transaction redirection URL.");
         }
+      } catch (err: any) {
+        console.error("PhonePe payment flow initiation failed:", err);
+        alert(err.message || "Failed to initiate payment. Please try again.");
+        setIsProcessing(false);
       }
       return;
     }
@@ -381,19 +295,33 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
             </div>
           )}
 
-          {/* Step 2: Success */}
+          {/* Step 2: Success / Failure */}
           {step === 2 && (
-            <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-                <PartyPopper size={80} color={COLORS.green} strokeWidth={1.5} />
+            phonepeStatus?.status === "failed" || phonepeStatus?.status === "error" ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+                  <X size={80} color="#EF4444" strokeWidth={1.5} />
+                </div>
+                <h2 style={{ color: "#EF4444", fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 28, marginBottom: 12 }}>Payment Failed</h2>
+                <p style={{ color: COLORS.text, fontSize: 16, marginBottom: 8 }}>Transaction for Order #LK-{orderId} was unsuccessful.</p>
+                <p style={{ color: COLORS.muted, marginBottom: 32 }}>Please try checking out again or contact customer support if money was debited.</p>
+                <button onClick={() => { setStep(1); setPhonepeStatus(null); }} style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                  Retry Payment
+                </button>
               </div>
-              <h2 style={{ color: COLORS.green, fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 28, marginBottom: 12 }}>Order Placed!</h2>
-              <p style={{ color: COLORS.text, fontSize: 16, marginBottom: 8 }}>Order #LK-{orderId}</p>
-              <p style={{ color: COLORS.muted, marginBottom: 32 }}>Your refurbished tech is on its way! Estimated delivery: 3-5 business days.</p>
-              <button onClick={() => { setCart([]); setPage("home"); }} style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
-                Continue Shopping
-              </button>
-            </div>
+            ) : (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+                  <PartyPopper size={80} color={COLORS.green} strokeWidth={1.5} />
+                </div>
+                <h2 style={{ color: COLORS.green, fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 28, marginBottom: 12 }}>Order Placed!</h2>
+                <p style={{ color: COLORS.text, fontSize: 16, marginBottom: 8 }}>Order #LK-{orderId}</p>
+                <p style={{ color: COLORS.muted, marginBottom: 32 }}>Your refurbished tech is on its way! Estimated delivery: 3-5 business days.</p>
+                <button onClick={() => { setCart([]); setPage("home"); }} style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                  Continue Shopping
+                </button>
+              </div>
+            )
           )}
 
           {/* Nav buttons */}

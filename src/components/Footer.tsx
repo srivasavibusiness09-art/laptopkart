@@ -61,6 +61,7 @@ export default function Footer({ setPage }: FooterProps) {
     if (l === "about us" || l === "careers" || l === "press" || l === "partners") return "about";
     if (l === "blog") return "blog";
     if (l === "contact") return "contact";
+    if (l === "sell laptop" || l === "resell laptop") return "resell";
     if (l === "track order") return "profile";
     if (l === "warranty" || l === "returns" || l === "faqs" || l === "shipping") return "why-refurbished";
     return "home";
@@ -258,7 +259,7 @@ export default function Footer({ setPage }: FooterProps) {
               © 2026 Laptopkart. All Rights Reserved.
             </div>
             <div style={{ color: COLORS.muted, fontSize: 11, fontWeight: 500 }}>
-              Developed by D²Dev
+              Developed by <a href="https://www.d2devs.co.in/" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.muted, textDecoration: "none", transition: "color 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.color = COLORS.text; }} onMouseLeave={(e) => { e.currentTarget.style.color = COLORS.muted; }}>D²Devs</a>
             </div>
           </div>
           {!isMobile && (

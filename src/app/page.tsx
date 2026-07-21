@@ -16,6 +16,7 @@ import CartPage from "@/components/CartPage";
 import CheckoutPage from "@/components/CheckoutPage";
 import WishlistPage from "@/components/WishlistPage";
 import ProfilePage from "@/components/ProfilePage";
+import SellLaptopPage from "@/components/SellLaptopPage";
 import {
   ComparePage,
   AboutPage,
@@ -434,15 +435,29 @@ export default function App() {
   // Check if user has already entered the store in this session (skips landing on refresh)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const hasVisited = sessionStorage.getItem("laptopkart_has_visited");
-      if (hasVisited === "true") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isCallback = urlParams.has("payment_status");
+
+      if (isCallback) {
         setShowLanding(false);
+        setPage("checkout");
+      } else {
+        const hasVisited = sessionStorage.getItem("laptopkart_has_visited");
+        if (hasVisited === "true") {
+          setShowLanding(false);
+        }
       }
     }
   }, []);
 
   // Redirect guest users away from protected pages safely using useEffect
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("payment_status")) {
+        return; // Bypass auth redirect when displaying payment receipts
+      }
+    }
     if (!user) {
       if (page === "checkout") {
         setPendingAction({ type: "checkout" });
@@ -642,6 +657,7 @@ export default function App() {
       {page === "blog" && (
         <BlogPage user={user} setPage={handleNavigate} />
       )}{page === "contact" && <ContactPage />}
+      {page === "resell" && <SellLaptopPage setPage={handleNavigate} user={user} triggerAlert={triggerStoreAlert} />}
       {page === "login" && <LoginPage setPage={handleNavigate} onLogin={handleLogin} triggerAlert={triggerStoreAlert} />}
       {page === "profile" && user && (
         <ProfilePage user={user} setUser={setUser} setPage={handleNavigate} triggerAlert={triggerStoreAlert} />

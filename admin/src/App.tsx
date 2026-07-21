@@ -21,7 +21,15 @@ import {
   BookOpen,
   Video,
   Mail,
-  Send
+  Send,
+  RefreshCw,
+  Eye,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Maximize2,
+  Cpu,
+  User
 } from 'lucide-react';
 
 // compressImage removed (using storage.ts module)
@@ -185,7 +193,7 @@ export const DEFAULT_BANNERS: Banner[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders' | 'blogs' | 'video' | 'subscribers'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests'>('overview');
   const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed'>('active');
   const [ordersPage, setOrdersPage] = useState(0);
 
@@ -217,6 +225,13 @@ export default function App() {
   const [productModal, setProductModal] = useState<{ open: boolean, mode: 'add' | 'edit', item?: Product }>({ open: false, mode: 'add' });
   const [accessoryModal, setAccessoryModal] = useState<{ open: boolean, mode: 'add' | 'edit', item?: AccessoryProduct }>({ open: false, mode: 'add' });
   const [subscribersSearch, setSubscribersSearch] = useState('');
+  const [sellRequests, setSellRequests] = useState<any[]>([]);
+  const [sellSearch, setSellSearch] = useState('');
+  const [sellStatusFilter, setSellStatusFilter] = useState('all');
+  const [sellDetailModal, setSellDetailModal] = useState<{ open: boolean, item?: any }>({ open: false });
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [zoomScale, setZoomScale] = useState(1);
+  const [rotationDeg, setRotationDeg] = useState(0);
 
   // Newsletter broadcast states
   const [broadcastSubject, setBroadcastSubject] = useState('');
@@ -372,6 +387,22 @@ export default function App() {
       }
     );
 
+    // 7. Subscribe to Sell / Resell Requests
+    const unsubscribeSellRequests = onSnapshot(
+      query(collection(db, "sell_requests")),
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        setSellRequests(list);
+      },
+      (error) => {
+        console.error("[Firestore] Sell requests read failed:", error);
+      }
+    );
+
     return () => {
       unsubscribeProducts();
       unsubscribeAccessories();
@@ -379,6 +410,7 @@ export default function App() {
       unsubscribeBlogs();
       unsubscribeVideo();
       unsubscribeSubscribers();
+      unsubscribeSellRequests();
     };
   }, []);
 
@@ -386,6 +418,59 @@ export default function App() {
     setAlertMsg({ type, text });
     setTimeout(() => setAlertMsg(null), 3000);
   };
+
+  // Push Notifications FCM Setup
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+
+    const setupNotifications = async () => {
+      try {
+        const { getMessaging, getToken, onMessage } = await import('firebase/messaging');
+        const { app } = await import('./lib/firebase');
+        const messaging = getMessaging(app);
+
+        // Request browser permission
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          // Register service worker explicitly first to prevent timeout errors
+          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          
+          // Get registration token
+          const currentToken = await getToken(messaging, {
+            vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+            serviceWorkerRegistration: registration
+          });
+
+          if (currentToken) {
+            console.log('FCM Token registered:', currentToken);
+            // Save token to Firestore 'admin_fcm_tokens'
+            const tokenDocId = currentToken.substring(0, 32); // simple unique key for token
+            await setDoc(doc(db, "admin_fcm_tokens", tokenDocId), {
+              token: currentToken,
+              updatedAt: new Date().toISOString()
+            });
+          } else {
+            console.warn('No registration token available. Request permission to generate one.');
+          }
+        } else {
+          console.warn('Notification permission denied.');
+        }
+
+        // Foreground Message Handler (Lucide alert/toast)
+        onMessage(messaging, (payload) => {
+          console.log('Message received in foreground: ', payload);
+          if (payload.notification) {
+            triggerAlert('success', `[Alert] ${payload.notification.title}: ${payload.notification.body}`);
+          }
+        });
+
+      } catch (error) {
+        console.error('An error occurred while retrieving token/setting up messaging: ', error);
+      }
+    };
+
+    setupNotifications();
+  }, []);
 
   const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -1047,6 +1132,34 @@ export default function App() {
     triggerAlert('success', 'All subscriber email addresses copied!');
   };
 
+  // Sell Requests Actions
+  const handleSellStatusUpdate = async (id: string, newStatus: string) => {
+    try {
+      await setDoc(doc(db, "sell_requests", id), { status: newStatus }, { merge: true });
+      triggerAlert('success', `Status updated to ${newStatus}`);
+      if (sellDetailModal.open && sellDetailModal.item?.id === id) {
+        setSellDetailModal(prev => ({ ...prev, item: { ...prev.item, status: newStatus } }));
+      }
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      triggerAlert('danger', 'Failed to update status.');
+    }
+  };
+
+  const handleSellDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this sell request?")) return;
+    try {
+      await deleteDoc(doc(db, "sell_requests", id));
+      triggerAlert('success', 'Sell request deleted successfully.');
+      if (sellDetailModal.open && sellDetailModal.item?.id === id) {
+        setSellDetailModal({ open: false });
+      }
+    } catch (err) {
+      console.error("Failed to delete sell request:", err);
+      triggerAlert('danger', 'Failed to delete sell request.');
+    }
+  };
+
   const handleSendAutomatedBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     if (subscribers.length === 0) {
@@ -1125,6 +1238,7 @@ export default function App() {
             { id: 'blogs', label: 'Tech Blogs', icon: <BookOpen size={18} /> },
             { id: 'video', label: 'Promo Video', icon: <Video size={18} /> },
             { id: 'subscribers', label: 'Newsletter', icon: <Mail size={18} /> },
+            { id: 'sell_requests', label: 'Sell Requests', icon: <RefreshCw size={18} /> },
           ].map(tab => (
             <button
               key={tab.id}
@@ -2461,6 +2575,209 @@ export default function App() {
           </div>
         )}
 
+        {/* ── Tab: SELL REQUESTS ── */}
+        {activeTab === 'sell_requests' && (
+          <div className="fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
+              <div>
+                <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+                  Sell & Trade-In Requests
+                </h1>
+                <p style={{ color: '#8B9BBE', fontSize: 15 }}>
+                  Review customer submissions for old laptops, hardware configurations, and attached device photos.
+                </p>
+              </div>
+            </div>
+
+            {/* Metrics Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+              <div style={{ background: '#131a24', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 18, padding: 20 }}>
+                <div style={{ color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Total Submissions</div>
+                <div style={{ fontFamily: 'Sora', fontSize: 28, fontWeight: 800, color: '#fff' }}>{sellRequests.length}</div>
+              </div>
+              <div style={{ background: '#131a24', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 18, padding: 20 }}>
+                <div style={{ color: '#F59E0B', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Pending Review</div>
+                <div style={{ fontFamily: 'Sora', fontSize: 28, fontWeight: 800, color: '#F59E0B' }}>
+                  {sellRequests.filter(r => (r.status || 'Pending Review') === 'Pending Review').length}
+                </div>
+              </div>
+              <div style={{ background: '#131a24', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 18, padding: 20 }}>
+                <div style={{ color: '#38BDF8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>In Review</div>
+                <div style={{ fontFamily: 'Sora', fontSize: 28, fontWeight: 800, color: '#38BDF8' }}>
+                  {sellRequests.filter(r => r.status === 'In Review').length}
+                </div>
+              </div>
+              <div style={{ background: '#131a24', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 18, padding: 20 }}>
+                <div style={{ color: '#10B981', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Completed</div>
+                <div style={{ fontFamily: 'Sora', fontSize: 28, fontWeight: 800, color: '#10B981' }}>
+                  {sellRequests.filter(r => r.status === 'Completed').length}
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Bar */}
+            <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ position: 'relative', width: isMobile ? '100%' : 340 }}>
+                <Search size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#8B9BBE' }} />
+                <input
+                  type="text"
+                  placeholder="Search by customer, brand, model..."
+                  value={sellSearch}
+                  onChange={e => setSellSearch(e.target.value)}
+                  className="form-input"
+                  style={{ paddingLeft: 44 }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                {['all', 'Pending Review', 'In Review', 'Completed', 'Rejected'].map(status => (
+                  <button
+                    key={status}
+                    onClick={() => setSellStatusFilter(status)}
+                    style={{
+                      background: sellStatusFilter === status ? 'rgba(56,189,248,0.12)' : 'transparent',
+                      border: `1px solid ${sellStatusFilter === status ? 'rgba(56,189,248,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                      color: sellStatusFilter === status ? '#38BDF8' : '#8B9BBE',
+                      borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                      textTransform: 'capitalize', whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {status === 'all' ? 'All Submissions' : status}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Submissions Table */}
+            <div style={{ background: '#131a24', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(56, 189, 248, 0.12)' }}>
+                    <th style={{ padding: '16px 20px', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>Date & Req ID</th>
+                    <th style={{ padding: '16px 20px', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>Customer Info</th>
+                    <th style={{ padding: '16px 20px', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>Laptop Configuration</th>
+                    <th style={{ padding: '16px 20px', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>Condition</th>
+                    <th style={{ padding: '16px 20px', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>Expected Price</th>
+                    <th style={{ padding: '16px 20px', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>Photos</th>
+                    <th style={{ padding: '16px 20px', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>Status</th>
+                    <th style={{ padding: '16px 20px', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sellRequests
+                    .filter(r => {
+                      const matchSearch =
+                        (r.userName || '').toLowerCase().includes(sellSearch.toLowerCase()) ||
+                        (r.userEmail || '').toLowerCase().includes(sellSearch.toLowerCase()) ||
+                        (r.userPhone || '').toLowerCase().includes(sellSearch.toLowerCase()) ||
+                        (r.brand || '').toLowerCase().includes(sellSearch.toLowerCase()) ||
+                        (r.model || '').toLowerCase().includes(sellSearch.toLowerCase()) ||
+                        (r.requestId || '').toLowerCase().includes(sellSearch.toLowerCase());
+                      const matchStatus = sellStatusFilter === 'all' || (r.status || 'Pending Review') === sellStatusFilter;
+                      return matchSearch && matchStatus;
+                    })
+                    .map(item => {
+                      const imageCount = Array.isArray(item.images) ? item.images.length : 0;
+                      const statusVal = item.status || 'Pending Review';
+                      return (
+                        <tr key={item.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                          <td style={{ padding: '16px 20px' }}>
+                            <div style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>#{item.requestId || item.id.substring(0, 8)}</div>
+                            <div style={{ color: '#8B9BBE', fontSize: 11, marginTop: 2 }}>
+                              {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'N/A'}
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 20px' }}>
+                            <div style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{item.userName || 'Anonymous'}</div>
+                            <div style={{ color: '#8B9BBE', fontSize: 12, marginTop: 2 }}>{item.userPhone}</div>
+                            <div style={{ color: '#8B9BBE', fontSize: 11 }}>{item.city}</div>
+                          </td>
+                          <td style={{ padding: '16px 20px' }}>
+                            <div style={{ color: '#38BDF8', fontSize: 13, fontWeight: 700 }}>{item.brand} {item.model}</div>
+                            <div style={{ color: '#8B9BBE', fontSize: 12, marginTop: 2 }}>
+                              {item.processor} • {item.ram} • {item.storage}
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 20px' }}>
+                            <span style={{
+                              background: item.condition?.includes('A+') ? 'rgba(16,185,129,0.1)' : 'rgba(56,189,248,0.1)',
+                              color: item.condition?.includes('A+') ? '#10B981' : '#38BDF8',
+                              border: `1px solid ${item.condition?.includes('A+') ? 'rgba(16,185,129,0.2)' : 'rgba(56,189,248,0.2)'}`,
+                              borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 700, display: 'inline-block'
+                            }}>
+                              {item.condition || 'Standard'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '16px 20px', color: '#10B981', fontSize: 14, fontWeight: 800 }}>
+                            {item.expectedPrice ? `₹${Number(item.expectedPrice).toLocaleString('en-IN')}` : 'Not Specified'}
+                          </td>
+                          <td style={{ padding: '16px 20px' }}>
+                            <span style={{
+                              background: imageCount > 0 ? 'rgba(56,189,248,0.1)' : 'rgba(255,255,255,0.04)',
+                              color: imageCount > 0 ? '#38BDF8' : '#8B9BBE',
+                              borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 700
+                            }}>
+                              📷 {imageCount} Photo{imageCount === 1 ? '' : 's'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '16px 20px' }}>
+                            <select
+                              value={statusVal}
+                              onChange={e => handleSellStatusUpdate(item.id, e.target.value)}
+                              style={{
+                                background: '#0d1117',
+                                border: '1px solid rgba(56,189,248,0.2)',
+                                color: statusVal === 'Completed' ? '#10B981' : statusVal === 'In Review' ? '#38BDF8' : statusVal === 'Rejected' ? '#EF4444' : '#F59E0B',
+                                borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer'
+                              }}
+                            >
+                              <option value="Pending Review">Pending Review</option>
+                              <option value="In Review">In Review</option>
+                              <option value="Completed">Completed</option>
+                              <option value="Rejected">Rejected</option>
+                            </select>
+                          </td>
+                          <td style={{ padding: '16px 20px', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                              <button
+                                onClick={() => {
+                                  setActiveImageIndex(0);
+                                  setSellDetailModal({ open: true, item });
+                                }}
+                                style={{
+                                  background: 'rgba(56,189,248,0.1)', color: '#38BDF8',
+                                  border: '1px solid rgba(56,189,248,0.25)', borderRadius: 8,
+                                  padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                                  display: 'flex', alignItems: 'center', gap: 6
+                                }}
+                              >
+                                <Eye size={14} /> Inspect Details
+                              </button>
+                              <button
+                                onClick={() => handleSellDelete(item.id)}
+                                style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', padding: 4 }}
+                                title="Delete Request"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  {sellRequests.filter(r => sellStatusFilter === 'all' || (r.status || 'Pending Review') === sellStatusFilter).length === 0 && (
+                    <tr>
+                      <td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#8B9BBE', fontSize: 14 }}>
+                        No sell requests found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
       </main>
 
       {/* ── Modal: Product Form ── */}
@@ -3449,6 +3766,242 @@ export default function App() {
         </div>
       )}
 
+      {/* ── Modal: Sell Request Inspection & Image Lightbox ── */}
+      {sellDetailModal.open && sellDetailModal.item && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+        }}>
+          <div className="fade-in" style={{
+            background: '#131a24', border: '1px solid rgba(56,189,248,0.15)',
+            borderRadius: 24, width: '100%', maxWidth: 900, padding: 32,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+            maxHeight: '90vh', overflowY: 'auto'
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <h2 style={{ fontFamily: 'Sora', fontSize: 22, color: '#fff', fontWeight: 800, margin: 0 }}>
+                    {sellDetailModal.item.brand} {sellDetailModal.item.model}
+                  </h2>
+                  <span style={{ background: 'rgba(56,189,248,0.1)', color: '#38BDF8', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 100, padding: '4px 12px', fontSize: 12, fontWeight: 800 }}>
+                    #{sellDetailModal.item.requestId || sellDetailModal.item.id.substring(0, 8)}
+                  </span>
+                </div>
+                <div style={{ color: '#8B9BBE', fontSize: 13, marginTop: 4 }}>
+                  Submitted on {sellDetailModal.item.createdAt ? new Date(sellDetailModal.item.createdAt).toLocaleString('en-IN') : 'N/A'}
+                </div>
+              </div>
+              <button
+                onClick={() => setSellDetailModal({ open: false })}
+                style={{ background: 'transparent', border: 'none', color: '#8B9BBE', cursor: 'pointer' }}
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.1fr 1fr', gap: 28 }}>
+
+              {/* Left Column: Specifications Breakdown */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#38BDF8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 14 }}>
+                    <Cpu size={14} /> Hardware Configurations
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13 }}>
+                    <div><span style={{ color: '#8B9BBE' }}>Processor:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.processor}</strong></div>
+                    <div><span style={{ color: '#8B9BBE' }}>RAM:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.ram}</strong></div>
+                    <div><span style={{ color: '#8B9BBE' }}>Storage:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.storage}</strong></div>
+                    <div><span style={{ color: '#8B9BBE' }}>Graphics:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.gpu || 'N/A'}</strong></div>
+                    <div><span style={{ color: '#8B9BBE' }}>Condition:</span> <strong style={{ color: '#10B981' }}>{sellDetailModal.item.condition}</strong></div>
+                    <div><span style={{ color: '#8B9BBE' }}>Expected Price:</span> <strong style={{ color: '#10B981' }}>{sellDetailModal.item.expectedPrice ? `₹${Number(sellDetailModal.item.expectedPrice).toLocaleString('en-IN')}` : 'N/A'}</strong></div>
+                  </div>
+                </div>
+
+                {/* Accessories Included */}
+                {Array.isArray(sellDetailModal.item.accessories) && sellDetailModal.item.accessories.length > 0 && (
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: 18 }}>
+                    <div style={{ color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Included Accessories</div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {sellDetailModal.item.accessories.map((acc: string) => (
+                        <span key={acc} style={{ background: 'rgba(56,189,248,0.1)', color: '#38BDF8', borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 700 }}>
+                          ✓ {acc}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Battery & Fault Notes */}
+                {sellDetailModal.item.notes && (
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: 18 }}>
+                    <div style={{ color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Battery Health & Fault Notes</div>
+                    <div style={{ color: '#fff', fontSize: 13, lineHeight: 1.5 }}>{sellDetailModal.item.notes}</div>
+                  </div>
+                )}
+
+                {/* Customer Contact Details */}
+                <div style={{ background: 'rgba(56,189,248,0.04)', border: '1px solid rgba(56,189,248,0.15)', borderRadius: 16, padding: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#38BDF8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
+                    <User size={14} /> Customer Contact Details
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 13 }}>
+                    <div><span style={{ color: '#8B9BBE' }}>Name:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.userName}</strong></div>
+                    <div><span style={{ color: '#8B9BBE' }}>Phone:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.userPhone}</strong></div>
+                    <div><span style={{ color: '#8B9BBE' }}>Email:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.userEmail}</strong></div>
+                    <div><span style={{ color: '#8B9BBE' }}>Location:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.city} ({sellDetailModal.item.pincode || 'N/A'})</strong></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Uploaded Device Photos Lightbox */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#38BDF8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <ImageIcon size={14} /> Uploaded Photos ({Array.isArray(sellDetailModal.item.images) ? sellDetailModal.item.images.length : 0})
+                  </div>
+
+                {Array.isArray(sellDetailModal.item.images) && sellDetailModal.item.images.length > 0 ? (
+                  <div>
+                    {/* Zoom & Inspection Control Toolbar */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <button
+                          type="button"
+                          onClick={() => setZoomScale(prev => Math.min(prev + 0.5, 4))}
+                          style={{ background: 'rgba(56,189,248,0.15)', color: '#38BDF8', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}
+                          title="Zoom In"
+                        >
+                          <ZoomIn size={14} /> Zoom In
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setZoomScale(prev => Math.max(prev - 0.5, 1))}
+                          style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}
+                          title="Zoom Out"
+                        >
+                          <ZoomOut size={14} /> Zoom Out
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRotationDeg(prev => (prev + 90) % 360)}
+                          style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}
+                          title="Rotate 90°"
+                        >
+                          <RotateCw size={14} /> Rotate
+                        </button>
+                        {(zoomScale !== 1 || rotationDeg !== 0) && (
+                          <button
+                            type="button"
+                            onClick={() => { setZoomScale(1); setRotationDeg(0); }}
+                            style={{ background: 'rgba(239,68,68,0.15)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}
+                            title="Reset"
+                          >
+                            <Maximize2 size={14} /> Reset
+                          </button>
+                        )}
+                      </div>
+                      <span style={{ color: '#38BDF8', fontSize: 12, fontWeight: 800, fontFamily: 'monospace' }}>
+                        {Math.round(zoomScale * 100)}% {rotationDeg > 0 ? `(${rotationDeg}°)` : ''}
+                      </span>
+                    </div>
+
+                    {/* Main Active Image Preview with Dynamic Zoom & Click-to-Zoom */}
+                    <div
+                      style={{
+                        borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)',
+                        background: '#0d1117', aspectRatio: '4/3', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        position: 'relative', cursor: zoomScale > 1 ? 'zoom-out' : 'zoom-in'
+                      }}
+                      onClick={() => {
+                        if (zoomScale === 1) setZoomScale(2);
+                        else if (zoomScale === 2) setZoomScale(3);
+                        else setZoomScale(1);
+                      }}
+                      title="Click to toggle zoom levels (1x -> 2x -> 3x)"
+                    >
+                      <img
+                        src={sellDetailModal.item.images[activeImageIndex] || sellDetailModal.item.images[0]}
+                        alt="Laptop Inspection Photo"
+                        style={{
+                          width: '100%', height: '100%', objectFit: 'contain',
+                          transform: `scale(${zoomScale}) rotate(${rotationDeg}deg)`,
+                          transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transformOrigin: 'center center'
+                        }}
+                      />
+                    </div>
+
+                    {/* Thumbnails Selection Strip */}
+                    <div style={{ display: 'flex', gap: 10, marginTop: 12, overflowX: 'auto', paddingBottom: 4 }}>
+                      {sellDetailModal.item.images.map((imgUrl: string, idx: number) => (
+                        <div
+                          key={idx}
+                          onClick={() => {
+                            setActiveImageIndex(idx);
+                            setZoomScale(1);
+                            setRotationDeg(0);
+                          }}
+                          style={{
+                            width: 60, height: 60, borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
+                            border: activeImageIndex === idx ? '2px solid #38BDF8' : '1px solid rgba(255,255,255,0.1)',
+                            opacity: activeImageIndex === idx ? 1 : 0.6, transition: 'all 0.2s', flexShrink: 0
+                          }}
+                        >
+                          <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)', padding: 40,
+                    textAlign: 'center', color: '#8B9BBE', fontSize: 13
+                  }}>
+                    No photos uploaded for this device.
+                  </div>
+                )}
+
+                {/* Status Update Controls */}
+                <div style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>
+                    Evaluation Status
+                  </label>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <select
+                      value={sellDetailModal.item.status || 'Pending Review'}
+                      onChange={e => handleSellStatusUpdate(sellDetailModal.item.id, e.target.value)}
+                      className="form-input"
+                      style={{ background: '#0d1117', color: '#38BDF8', fontWeight: 700 }}
+                    >
+                      <option value="Pending Review">Pending Review</option>
+                      <option value="In Review">In Review</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Rejected">Rejected</option>
+                    </select>
+
+                    <button
+                      onClick={() => handleSellDelete(sellDetailModal.item.id)}
+                      style={{
+                        background: 'rgba(239,68,68,0.1)', color: '#EF4444',
+                        border: '1px solid rgba(239,68,68,0.25)', borderRadius: 12,
+                        padding: '0 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
