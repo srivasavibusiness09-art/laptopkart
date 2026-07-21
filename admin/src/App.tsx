@@ -29,7 +29,8 @@ import {
   RotateCw,
   Maximize2,
   Cpu,
-  User
+  User,
+  Menu
 } from 'lucide-react';
 
 // compressImage removed (using storage.ts module)
@@ -198,6 +199,7 @@ export default function App() {
   const [ordersPage, setOrdersPage] = useState(0);
 
   const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   useEffect(() => {
     if (typeof window !== "undefined") {
       const handleResize = () => setIsMobile(window.innerWidth < 992);
@@ -1198,6 +1200,14 @@ export default function App() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0d1117' }}>
 
+      {/* ── Mobile Sidebar Overlay ── */}
+      {isMobile && isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 40 }}
+        />
+      )}
+
       {/* ── Left Sidebar ── */}
       <aside style={{
         width: 260,
@@ -1207,6 +1217,16 @@ export default function App() {
         display: 'flex',
         flexDirection: 'column',
         gap: 32,
+        ...(isMobile ? {
+          position: 'fixed',
+          top: 0,
+          bottom: 0,
+          left: isSidebarOpen ? 0 : -260,
+          zIndex: 50,
+          transition: 'left 0.3s ease'
+        } : {
+          position: 'relative'
+        })
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1242,7 +1262,10 @@ export default function App() {
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => {
+                setActiveTab(tab.id as any);
+                if (isMobile) setIsSidebarOpen(false);
+              }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
                 background: activeTab === tab.id ? 'rgba(56, 189, 248, 0.08)' : 'transparent',
@@ -1273,7 +1296,17 @@ export default function App() {
       </aside>
 
       {/* ── Main Workspace ── */}
-      <main style={{ flex: 1, padding: '40px 32px', overflowY: 'auto' }}>
+      <main style={{ flex: 1, padding: isMobile ? '20px 16px' : '40px 32px', overflowY: 'auto', overflowX: 'hidden' }}>
+
+        {/* Mobile Header Toggle */}
+        {isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <button onClick={() => setIsSidebarOpen(true)} style={{ background: 'rgba(56,189,248,0.1)', border: 'none', color: '#38BDF8', padding: 8, borderRadius: 8, cursor: 'pointer' }}>
+              <Menu size={20} />
+            </button>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: 'Sora' }}>Laptopkart Admin</div>
+          </div>
+        )}
 
         {/* Alert Banner */}
         {alertMsg && (
@@ -1330,7 +1363,7 @@ export default function App() {
             </p>
 
             {/* Quick Stats Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginBottom: 32 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 20, marginBottom: 32 }}>
               {[
                 { label: 'Total Products', val: products.length, icon: <Laptop size={20} color="#38BDF8" />, bg: 'rgba(56,189,248,0.1)' },
                 { label: 'Accessories Listed', val: accessories.length, icon: <Keyboard size={20} color="#8B5CF6" />, bg: 'rgba(139,92,246,0.1)' },
@@ -1353,7 +1386,7 @@ export default function App() {
             </div>
 
             {/* Simulated Activity Section */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.2fr', gap: 24 }}>
 
               <div style={{
                 background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
@@ -1533,7 +1566,7 @@ export default function App() {
             </div>
 
             {/* Table Grid */}
-            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflow: 'hidden' }}>
+            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(56, 189, 248, 0.12)' }}>
@@ -1633,7 +1666,7 @@ export default function App() {
             </div>
 
             {/* Grid Table */}
-            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflow: 'hidden' }}>
+            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(56, 189, 248, 0.12)' }}>
@@ -2179,7 +2212,7 @@ export default function App() {
             </div>
 
             {/* Blogs List Grid Table */}
-            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflow: 'hidden' }}>
+            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(56, 189, 248, 0.12)' }}>
@@ -2466,7 +2499,7 @@ export default function App() {
                   />
                 </div>
 
-                <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflow: 'hidden' }}>
+                <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead>
                       <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(56, 189, 248, 0.12)' }}>
@@ -2649,7 +2682,7 @@ export default function App() {
             </div>
 
             {/* Submissions Table */}
-            <div style={{ background: '#131a24', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflow: 'hidden' }}>
+            <div style={{ background: '#131a24', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(56, 189, 248, 0.12)' }}>
@@ -2800,12 +2833,12 @@ export default function App() {
               <button onClick={() => setProductModal({ open: false, mode: 'add' })} style={{ background: 'transparent', border: 'none', color: '#8B9BBE', cursor: 'pointer' }}><X size={20} /></button>
             </div>
 
-            <form onSubmit={handleProductSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            <form onSubmit={handleProductSubmit} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
 
               {/* Form Navigation Tabs */}
               <div style={{
                 display: 'flex', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.06)',
-                paddingBottom: 16, marginBottom: 12, gridColumn: 'span 2'
+                paddingBottom: 16, marginBottom: 12, gridColumn: isMobile ? 'span 1' : 'span 2'
               }}>
                 {(['basic', 'specs', 'media'] as const).map(tab => (
                   <button
@@ -2829,7 +2862,7 @@ export default function App() {
 
               {modalTab === 'basic' && (
                 <>
-                  <div style={{ gridColumn: 'span 2', display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', display: 'flex', gap: 12, alignItems: 'flex-end' }}>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Product Name</label>
                       <input
@@ -3038,7 +3071,7 @@ export default function App() {
 
               {modalTab === 'specs' && (
                 <>
-                  <div style={{ gridColumn: 'span 2' }}>
+                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
                     <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Processor Details</label>
                     <input
                       type="text" placeholder="e.g. Intel Core i5 8265U"
@@ -3047,7 +3080,7 @@ export default function App() {
                     />
                   </div>
 
-                  <div style={{ gridColumn: 'span 2' }}>
+                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
                     <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Specifications Tagline</label>
                     <input
                       type="text" placeholder="e.g. Intel i5 8th Gen • 16GB RAM • 512GB SSD"
@@ -3057,7 +3090,7 @@ export default function App() {
                   </div>
 
                   {/* RAM Custom Visual Toggle & Offset Input */}
-                  <div style={{ gridColumn: 'span 2', background: '#0d1117', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 18, padding: 18 }}>
+                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', background: '#0d1117', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 18, padding: 18 }}>
                     <label style={{ display: 'block', color: '#38BDF8', fontSize: 12, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase' }}>Memory Configuration (RAM Options)</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
                       {Object.entries(selectedRamOptions).map(([size, opt]) => (
@@ -3115,7 +3148,7 @@ export default function App() {
                   </div>
 
                   {/* Storage Custom Visual Toggle & Offset Input */}
-                  <div style={{ gridColumn: 'span 2', background: '#0d1117', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 18, padding: 18 }}>
+                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', background: '#0d1117', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 18, padding: 18 }}>
                     <label style={{ display: 'block', color: '#38BDF8', fontSize: 12, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase' }}>Storage Configuration Options</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
                       {Object.entries(selectedStorageOptions).map(([size, opt]) => (
@@ -3176,7 +3209,7 @@ export default function App() {
 
               {modalTab === 'media' && (
                 <>
-                  <div style={{ gridColumn: 'span 2' }}>
+                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
                     <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Description (Optional, overrides auto-template)</label>
                     <textarea
                       placeholder="e.g. This laptop features high performance with dual channel RAM..."
@@ -3185,7 +3218,7 @@ export default function App() {
                     />
                   </div>
 
-                  <div style={{ gridColumn: 'span 2' }}>
+                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
                     <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Box Contents (Optional, comma-separated)</label>
                     <input
                       type="text" placeholder="e.g. Refurbished Grade A+ Laptop, Original Power Adapter, Certification Booklet"
@@ -3194,7 +3227,7 @@ export default function App() {
                     />
                   </div>
 
-                  <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>
                       Product Images Gallery (Max 5, Drag & Drop or Click to Select)
                     </label>
@@ -3298,7 +3331,7 @@ export default function App() {
                 </>
               )}
 
-              <div style={{ gridColumn: 'span 2', display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
+              <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
                 <button
                   type="button" onClick={() => setProductModal({ open: false, mode: 'add' })}
                   style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8B9BBE', borderRadius: 12, padding: '12px 24px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 600 }}
@@ -3347,7 +3380,7 @@ export default function App() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Brand</label>
                   <input
@@ -3389,7 +3422,7 @@ export default function App() {
                 </div>
               )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Selling Price (₹)</label>
                   <input
@@ -3543,7 +3576,7 @@ export default function App() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Badge / Offer Tag</label>
                   <input
@@ -3811,7 +3844,7 @@ export default function App() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#38BDF8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 14 }}>
                     <Cpu size={14} /> Hardware Configurations
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, fontSize: 13 }}>
                     <div><span style={{ color: '#8B9BBE' }}>Processor:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.processor}</strong></div>
                     <div><span style={{ color: '#8B9BBE' }}>RAM:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.ram}</strong></div>
                     <div><span style={{ color: '#8B9BBE' }}>Storage:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.storage}</strong></div>
@@ -3848,7 +3881,7 @@ export default function App() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#38BDF8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
                     <User size={14} /> Customer Contact Details
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 13 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, fontSize: 13 }}>
                     <div><span style={{ color: '#8B9BBE' }}>Name:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.userName}</strong></div>
                     <div><span style={{ color: '#8B9BBE' }}>Phone:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.userPhone}</strong></div>
                     <div><span style={{ color: '#8B9BBE' }}>Email:</span> <strong style={{ color: '#fff' }}>{sellDetailModal.item.userEmail}</strong></div>
