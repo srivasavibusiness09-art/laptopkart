@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, query } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { uploadProductImage, uploadVideoToCloudinary } from "./lib/storage";
@@ -195,7 +195,7 @@ export const DEFAULT_BANNERS: Banner[] = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests'>('overview');
-  const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed'>('active');
+  const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed' | 'unpaid'>('active');
   const [ordersPage, setOrdersPage] = useState(0);
 
   const [isMobile, setIsMobile] = useState(false);
@@ -675,6 +675,7 @@ export default function App() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [newOrderAlert, setNewOrderAlert] = useState<Order | null>(null);
+  const orderStatusesRef = useRef<Record<string, string>>({});
 
   // Subscribe to live order checkouts (WebSockets)
   useEffect(() => {
@@ -684,12 +685,24 @@ export default function App() {
       let newOrder: Order | null = null;
 
       snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          const ord = change.doc.data() as Order;
-          if (!isInitial) {
+        const ord = change.doc.data() as Order;
+        const prevStatus = orderStatusesRef.current[ord.orderId];
+        const newStatus = ord.status || 'Pending';
+
+        if (!isInitial) {
+          const isRealOrder = newStatus !== "Pending Payment" && newStatus !== "Failed";
+          const wasRealOrder = prevStatus && prevStatus !== "Pending Payment" && prevStatus !== "Failed";
+
+          // Trigger alert if:
+          // 1. It is a new order (added) and is already paid or COD (i.e. not Pending Payment or Failed)
+          // 2. Or it was modified, and its status transitioned from 'Pending Payment' to 'Paid' (or any non-pending/non-failed state)
+          if (isRealOrder && !wasRealOrder) {
             newOrder = ord;
           }
         }
+
+        // Update the ref map
+        orderStatusesRef.current[ord.orderId] = newStatus;
       });
 
       snapshot.forEach((doc) => {
@@ -1910,13 +1923,19 @@ export default function App() {
         {activeTab === 'orders' && (() => {
           const activeOrders = orders.filter(ord => {
             const status = ord.status || 'Pending';
-            return status !== 'Completed' && status !== 'Cancelled';
+            return status !== 'Completed' && status !== 'Cancelled' && status !== 'Pending Payment' && status !== 'Failed';
           });
           const completedOrders = orders.filter(ord => {
             const status = ord.status || 'Pending';
             return status === 'Completed' || status === 'Cancelled';
           });
-          const displayedOrders = ordersFilter === 'active' ? activeOrders : completedOrders;
+          const unpaidOrders = orders.filter(ord => {
+            const status = ord.status || 'Pending';
+            return status === 'Pending Payment' || status === 'Failed';
+          });
+          const displayedOrders = 
+            ordersFilter === 'active' ? activeOrders : 
+            ordersFilter === 'completed' ? completedOrders : unpaidOrders;
 
           const PAGE_SIZE = 20;
           const totalPages = Math.ceil(displayedOrders.length / PAGE_SIZE);
@@ -1928,6 +1947,8 @@ export default function App() {
               case 'Cancelled': return { bg: 'rgba(239,68,68,0.12)', color: '#EF4444', border: 'rgba(239,68,68,0.25)' };
               case 'Shipped': return { bg: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: 'rgba(139,92,246,0.25)' };
               case 'Pending (COD)': return { bg: 'rgba(245,158,11,0.12)', color: '#F59E0B', border: 'rgba(245,158,11,0.25)' };
+              case 'Pending Payment': return { bg: 'rgba(245,158,11,0.12)', color: '#F59E0B', border: 'rgba(245,158,11,0.25)' };
+              case 'Failed': return { bg: 'rgba(239,68,68,0.12)', color: '#EF4444', border: 'rgba(239,68,68,0.25)' };
               case 'Paid (Simulated)': return { bg: 'rgba(6,182,212,0.12)', color: '#06B6D4', border: 'rgba(6,182,212,0.25)' };
               case 'Paid':
               default: return { bg: 'rgba(56,189,248,0.12)', color: '#38BDF8', border: 'rgba(56,189,248,0.25)' };
@@ -1989,6 +2010,26 @@ export default function App() {
                     {completedOrders.length}
                   </span>
                 </button>
+                <button
+                  onClick={() => { setOrdersFilter('unpaid'); setOrdersPage(0); }}
+                  style={{
+                    background: ordersFilter === 'unpaid' ? 'rgba(239,68,68,0.1)' : 'transparent',
+                    border: `1px solid ${ordersFilter === 'unpaid' ? 'rgba(239,68,68,0.25)' : 'transparent'}`,
+                    borderRadius: 12, padding: '10px 20px',
+                    color: ordersFilter === 'unpaid' ? '#EF4444' : '#8B9BBE',
+                    fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                    fontFamily: 'Sora', display: 'flex', alignItems: 'center', gap: 8
+                  }}
+                >
+                  Unpaid & Failed
+                  <span style={{
+                    background: ordersFilter === 'unpaid' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)',
+                    color: ordersFilter === 'unpaid' ? '#EF4444' : '#8B9BBE',
+                    borderRadius: 100, fontSize: 11, padding: '2px 8px', fontWeight: 800
+                  }}>
+                    {unpaidOrders.length}
+                  </span>
+                </button>
               </div>
 
               {/* Orders List container */}
@@ -1999,7 +2040,9 @@ export default function App() {
                     <p style={{ color: '#8B9BBE', fontSize: 15, margin: 0 }}>
                       {ordersFilter === 'active'
                         ? 'No active customer orders to process. All set!'
-                        : 'No completed or archived customer orders found.'}
+                        : ordersFilter === 'completed'
+                        ? 'No completed or archived customer orders found.'
+                        : 'No unpaid or failed checkouts found.'}
                     </p>
                   </div>
                 ) : (
