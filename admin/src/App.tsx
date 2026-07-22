@@ -222,6 +222,10 @@ export default function App() {
   // Alerts
   const [alertMsg, setAlertMsg] = useState<{ type: 'success' | 'danger', text: string } | null>(null);
 
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
+  );
+
   // Modals status
   const [blogReviewModal, setBlogReviewModal] = useState<{ open: boolean, item?: any }>({ open: false });
   const [productModal, setProductModal] = useState<{ open: boolean, mode: 'add' | 'edit', item?: Product }>({ open: false, mode: 'add' });
@@ -421,57 +425,106 @@ export default function App() {
     setTimeout(() => setAlertMsg(null), 3000);
   };
 
-  // Push Notifications FCM Setup
-  useEffect(() => {
+  // Reusable FCM Registration function
+  const registerFCM = async () => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+    try {
+      const { getMessaging, getToken } = await import('firebase/messaging');
+      const { app } = await import('./lib/firebase');
+      const messaging = getMessaging(app);
 
-    const setupNotifications = async () => {
+      // Register service worker explicitly
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      
+      // Get registration token
+      const currentToken = await getToken(messaging, {
+        vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+        serviceWorkerRegistration: registration
+      });
+
+      if (currentToken) {
+        console.log('FCM Token registered:', currentToken);
+        const tokenDocId = currentToken.substring(0, 32);
+        await setDoc(doc(db, "admin_fcm_tokens", tokenDocId), {
+          token: currentToken,
+          updatedAt: new Date().toISOString()
+        });
+        triggerAlert('success', 'Mobile notifications setup successfully!');
+      } else {
+        console.warn('No registration token available.');
+      }
+    } catch (error) {
+      console.error('Error during FCM setup:', error);
+    }
+  };
+
+  // Interactive notification permission request
+  const requestNotificationPermission = async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      if (permission === 'granted') {
+        await registerFCM();
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    }
+  };
+
+  // Foreground notification handler & Quiet auto-registration on mount if already granted
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+      if (Notification.permission === 'granted') {
+        registerFCM();
+      }
+    }
+
+    if (!('serviceWorker' in navigator)) return;
+
+    const setupFCMListener = async () => {
       try {
-        const { getMessaging, getToken, onMessage } = await import('firebase/messaging');
+        const { getMessaging, onMessage } = await import('firebase/messaging');
         const { app } = await import('./lib/firebase');
         const messaging = getMessaging(app);
 
-        // Request browser permission
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          // Register service worker explicitly first to prevent timeout errors
-          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          
-          // Get registration token
-          const currentToken = await getToken(messaging, {
-            vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-            serviceWorkerRegistration: registration
-          });
-
-          if (currentToken) {
-            console.log('FCM Token registered:', currentToken);
-            // Save token to Firestore 'admin_fcm_tokens'
-            const tokenDocId = currentToken.substring(0, 32); // simple unique key for token
-            await setDoc(doc(db, "admin_fcm_tokens", tokenDocId), {
-              token: currentToken,
-              updatedAt: new Date().toISOString()
-            });
-          } else {
-            console.warn('No registration token available. Request permission to generate one.');
-          }
-        } else {
-          console.warn('Notification permission denied.');
-        }
-
-        // Foreground Message Handler (Lucide alert/toast)
+        // Foreground Message Handler (Lucide alert/toast + Native notification bar)
         onMessage(messaging, (payload) => {
           console.log('Message received in foreground: ', payload);
           if (payload.notification) {
+            // 1. Show custom in-app HTML alert banner
             triggerAlert('success', `[Alert] ${payload.notification.title}: ${payload.notification.body}`);
+
+            // 2. Trigger native notification in the mobile status/notification bar
+            if (Notification.permission === 'granted') {
+              navigator.serviceWorker.ready.then((reg) => {
+                reg.showNotification(payload.notification?.title || "Laptopkart Alert", {
+                  body: payload.notification?.body || "",
+                  icon: '/logo.png',
+                  badge: '/logo.png',
+                  tag: 'admin-notification',
+                  renotify: true,
+                  data: payload.data
+                } as any);
+              }).catch(err => {
+                console.error("SW showNotification error, using standard Notification API:", err);
+                new Notification(payload.notification?.title || "Laptopkart Alert", {
+                  body: payload.notification?.body || "",
+                  icon: '/logo.png',
+                });
+              });
+            }
           }
         });
-
       } catch (error) {
-        console.error('An error occurred while retrieving token/setting up messaging: ', error);
+        console.error('Error setting up foreground messaging listener:', error);
       }
     };
 
-    setupNotifications();
+    setupFCMListener();
   }, []);
 
   const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1305,6 +1358,70 @@ export default function App() {
               <Menu size={20} />
             </button>
             <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: 'Sora' }}>Laptopkart Admin</div>
+          </div>
+        )}
+
+        {/* Push Notification Setup Banner */}
+        {notificationPermission !== 'granted' && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05))',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+            borderRadius: 16,
+            padding: '16px 20px',
+            marginBottom: 24,
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'stretch' : 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+            animation: 'fadeIn 0.3s ease'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ 
+                background: 'rgba(245, 158, 11, 0.2)', 
+                color: '#F59E0B', 
+                padding: 10, 
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Bell size={20} />
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: 0, fontFamily: 'Sora' }}>
+                  {notificationPermission === 'denied' ? 'Notification Bar Blocked' : 'Enable Mobile Notifications'}
+                </h4>
+                <p style={{ color: '#8B9BBE', fontSize: 12, margin: '4px 0 0 0', lineHeight: 1.4, fontFamily: 'Outfit' }}>
+                  {notificationPermission === 'denied' 
+                    ? 'Browser notifications are blocked. Please reset site permissions in your Chrome browser settings to receive order alerts in your mobile notification bar.'
+                    : 'Get real-time order alerts pushed directly to your phone\'s notification bar, even when the browser is closed.'}
+                </p>
+              </div>
+            </div>
+            {notificationPermission !== 'denied' && (
+              <button 
+                onClick={requestNotificationPermission}
+                style={{
+                  background: '#F59E0B',
+                  color: '#0d1117',
+                  border: 'none',
+                  borderRadius: 12,
+                  padding: '10px 20px',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: 'Outfit',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.filter = 'none'}
+              >
+                Enable Notifications
+              </button>
+            )}
           </div>
         )}
 
