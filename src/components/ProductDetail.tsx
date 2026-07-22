@@ -645,19 +645,32 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
           }
           setPage("checkout");
         }}
+        disabled={(product.stock !== undefined ? product.stock : 1) <= 0}
         style={{
-          width: "100%", background: "transparent",
+          width: "100%",
+          background: (product.stock !== undefined ? product.stock : 1) <= 0 ? "#2A354F" : "transparent",
           border: "1px solid rgba(255,255,255,0.12)",
-          color: COLORS.text, borderRadius: 14, height: 48,
-          fontWeight: 700, fontSize: 15, cursor: "pointer",
+          color: (product.stock !== undefined ? product.stock : 1) <= 0 ? COLORS.muted : COLORS.text,
+          borderRadius: 14, height: 48,
+          fontWeight: 700, fontSize: 15,
+          cursor: (product.stock !== undefined ? product.stock : 1) <= 0 ? "not-allowed" : "pointer",
           fontFamily: "'Sora', sans-serif",
           transition: "border-color 0.2s",
           marginBottom: 22,
+          opacity: (product.stock !== undefined ? product.stock : 1) <= 0 ? 0.5 : 1,
         }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.3)"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; }}
+        onMouseEnter={(e) => {
+          if ((product.stock !== undefined ? product.stock : 1) > 0) {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.3)";
+          }
+        }}
+        onMouseLeave={(e) => {
+          if ((product.stock !== undefined ? product.stock : 1) > 0) {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+          }
+        }}
       >
-        Buy Now
+        {(product.stock !== undefined ? product.stock : 1) <= 0 ? "Out of Stock" : "Buy Now"}
       </button>
       <div style={{ marginTop: 24 }}>
         <div style={{

@@ -18,7 +18,7 @@ import { COLORS } from "@/data/products";
 import type { Product } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
 
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc, increment } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface CartItem extends Product { qty: number }
@@ -114,6 +114,11 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
         setOrderId(checkId);
         return checkId;
       }
+      const existingData = docSnap.data();
+      if (existingData && (existingData.status === "Pending Payment" || existingData.status === "Failed")) {
+        setOrderId(checkId);
+        return checkId; // Reuse the order ID for retries
+      }
       checkId = Math.floor(100000 + Math.random() * 900000).toString();
       attempts++;
     }
@@ -124,6 +129,25 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
     // If they choose payment, launch Razorpay Checkout flow
     if (step === 1) {
       setIsProcessing(true);
+
+      // Verify stock in database before proceeding to payment/checkout
+      try {
+        for (const item of cart) {
+          const productRef = doc(db, "products", String(item.id));
+          const productSnap = await getDoc(productRef);
+          if (productSnap.exists()) {
+            const pData = productSnap.data();
+            if (pData.stock !== undefined && pData.stock < (item.qty || 1)) {
+              alert(`Sorry, "${item.name}" is now out of stock. Please adjust your cart.`);
+              setIsProcessing(false);
+              return;
+            }
+          }
+        }
+      } catch (stockErr) {
+        console.error("Stock validation failed:", stockErr);
+      }
+
       let finalOrderId = orderId;
       try {
         finalOrderId = await ensureUniqueOrderId(orderId);
@@ -155,6 +179,20 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
           };
           const orderRef = doc(db, "orders", finalOrderId);
           await setDoc(orderRef, newOrder);
+
+          // Decrease stock for items in the order
+          for (const item of cart) {
+            const productRef = doc(db, "products", String(item.id));
+            const productSnap = await getDoc(productRef);
+            if (productSnap.exists()) {
+              const pData = productSnap.data();
+              if (pData.stock !== undefined) {
+                await updateDoc(productRef, {
+                  stock: increment(-(item.qty || 1))
+                });
+              }
+            }
+          }
 
           // Update default address details inside users doc for subsequent orders
           await setDoc(doc(db, "users", user.uid), {

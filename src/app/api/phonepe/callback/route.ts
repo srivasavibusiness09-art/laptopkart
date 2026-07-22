@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { StandardCheckoutClient, Env } from "@phonepe-pg/pg-sdk-node";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc, increment } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 async function handleVerification(req: Request) {
@@ -37,6 +37,29 @@ async function handleVerification(req: Request) {
         phonepeTransactionId: response.orderId || "",
         paymentMethod: "PhonePe"
       });
+
+      // Decrease stock for items in the order
+      try {
+        const orderSnap = await getDoc(orderRef);
+        if (orderSnap.exists()) {
+          const orderData = orderSnap.data();
+          const items = orderData.items || [];
+          for (const item of items) {
+            const productRef = doc(db, "products", String(item.id));
+            const productSnap = await getDoc(productRef);
+            if (productSnap.exists()) {
+              const pData = productSnap.data();
+              if (pData.stock !== undefined) {
+                await updateDoc(productRef, {
+                  stock: increment(-item.qty)
+                });
+              }
+            }
+          }
+        }
+      } catch (stockErr) {
+        console.error("[PhonePe Callback] Failed to decrease stock:", stockErr);
+      }
 
       // Trigger Push Notification to Admin (No emojis, per user request)
       try {

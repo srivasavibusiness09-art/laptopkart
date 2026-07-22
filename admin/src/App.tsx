@@ -685,6 +685,8 @@ export default function App() {
       let newOrder: Order | null = null;
 
       snapshot.docChanges().forEach((change) => {
+        if (change.type === "removed") return;
+
         const ord = change.doc.data() as Order;
         const prevStatus = orderStatusesRef.current[ord.orderId];
         const newStatus = ord.status || 'Pending';
@@ -1498,7 +1500,7 @@ export default function App() {
                 { label: 'Total Products', val: products.length, icon: <Laptop size={20} color="#38BDF8" />, bg: 'rgba(56,189,248,0.1)' },
                 { label: 'Accessories Listed', val: accessories.length, icon: <Keyboard size={20} color="#8B5CF6" />, bg: 'rgba(139,92,246,0.1)' },
                 { label: 'Active Banner Slides', val: banners.length, icon: <ImageIcon size={20} color="#EF4444" />, bg: 'rgba(239,68,68,0.1)' },
-                { label: 'Total Sales Revenue', val: `₹${orders.filter(ord => ord.status !== 'Cancelled' && ord.status !== 'Pending (COD)').reduce((sum, ord) => sum + ord.total, 0).toLocaleString('en-IN')}`, icon: <TrendingUp size={20} color="#10B981" />, bg: 'rgba(16,185,129,0.1)' },
+                { label: 'Total Sales Revenue', val: `₹${orders.filter(ord => ord.status !== 'Cancelled' && ord.status !== 'Pending (COD)' && ord.status !== 'Pending Payment' && ord.status !== 'Failed').reduce((sum, ord) => sum + ord.total, 0).toLocaleString('en-IN')}`, icon: <TrendingUp size={20} color="#10B981" />, bg: 'rgba(16,185,129,0.1)' },
               ].map(stat => (
                 <div key={stat.label} style={{
                   background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',

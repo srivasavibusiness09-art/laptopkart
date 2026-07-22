@@ -1,11 +1,23 @@
 import { NextResponse } from "next/server";
 import { StandardCheckoutClient, Env, StandardCheckoutPayRequest } from "@phonepe-pg/pg-sdk-node";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export async function POST(req: Request) {
   try {
     const { amount, orderId, email, phone, userId, address, cart } = await req.json();
+
+    // Server-side stock verification
+    for (const item of cart) {
+      const productRef = doc(db, "products", String(item.id));
+      const productSnap = await getDoc(productRef);
+      if (productSnap.exists()) {
+        const pData = productSnap.data();
+        if (pData.stock !== undefined && pData.stock < (item.qty || 1)) {
+          return NextResponse.json({ error: `Sorry, "${item.name}" is now out of stock.` }, { status: 400 });
+        }
+      }
+    }
 
     const clientId = process.env.PHONEPE_CLIENT_ID?.trim() || "PGTESTPAYUAT";
     const clientSecret = process.env.PHONEPE_CLIENT_SECRET?.trim() || "099eb0cd-02cf-4e2a-8aca-3e6c6aff0399";
