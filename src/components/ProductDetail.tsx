@@ -339,11 +339,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   );
 
   const trustBadgesJSX = (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(4, 1fr)",
-      gap: 8, marginTop: 16,
-    }}>
+    <div className="pd-trust-grid">
       {trustBadges.map((b) => (
         <div key={b.text} style={{
           background: COLORS.background,
@@ -651,24 +647,28 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
         style={{
           width: "100%",
           background: (product.stock !== undefined ? product.stock : 1) <= 0 ? "var(--bg-2)" : "transparent",
-          border: "1px solid var(--border)",
+          border: "1px solid var(--border-hi)",
           color: (product.stock !== undefined ? product.stock : 1) <= 0 ? COLORS.muted : COLORS.text,
           borderRadius: 14, height: 48,
           fontWeight: 700, fontSize: 15,
           cursor: (product.stock !== undefined ? product.stock : 1) <= 0 ? "not-allowed" : "pointer",
           fontFamily: "'Sora', sans-serif",
-          transition: "border-color 0.2s",
+          transition: "all 0.2s ease",
           marginBottom: 22,
           opacity: (product.stock !== undefined ? product.stock : 1) <= 0 ? 0.5 : 1,
         }}
         onMouseEnter={(e) => {
           if ((product.stock !== undefined ? product.stock : 1) > 0) {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-hi)";
+            const btn = e.currentTarget as HTMLButtonElement;
+            btn.style.borderColor = "var(--text)";
+            btn.style.background = "var(--bg-hover)";
           }
         }}
         onMouseLeave={(e) => {
           if ((product.stock !== undefined ? product.stock : 1) > 0) {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
+            const btn = e.currentTarget as HTMLButtonElement;
+            btn.style.borderColor = "var(--border-hi)";
+            btn.style.background = "transparent";
           }
         }}
       >
@@ -679,6 +679,8 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
           display: "flex", gap: 0,
           borderBottom: `1px solid ${COLORS.cardBorder}`,
           marginBottom: 20,
+          overflowX: "auto",
+          WebkitOverflowScrolling: "touch",
         }}>
           {(["specs", "why", "reviews"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} style={{
@@ -689,6 +691,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
               fontSize: 13, fontWeight: 700,
               textTransform: "capitalize",
               transition: "all 0.2s",
+              flexShrink: 0,
             }}>
               {t === "specs" ? "Specifications" : t === "why" ? "Why Buy?" : "Reviews"}
             </button>
@@ -701,11 +704,20 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
                 display: "flex", justifyContent: "space-between",
                 padding: "12px 0",
                 borderBottom: `1px solid ${COLORS.cardBorder}`,
+                gap: 16,
               }}>
-                <span style={{ color: COLORS.muted, fontSize: 13, display: "flex", alignItems: "center", gap: 7 }}>
+                <span style={{ color: COLORS.muted, fontSize: 13, display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
                   {specIcons[key] ?? "·"} {key}
                 </span>
-                <span style={{ color: COLORS.text, fontSize: 13, fontWeight: 600, maxWidth: "55%", textAlign: "right" }}>
+                <span style={{
+                  color: COLORS.text,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  maxWidth: "70%",
+                  textAlign: "right",
+                  wordBreak: "break-word",
+                  whiteSpace: "normal",
+                }}>
                   {val as string}
                 </span>
               </div>
@@ -768,11 +780,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   return (
     <main style={{ background: COLORS.darkBg, minHeight: "100vh" }}>
       {/* ── Breadcrumb ─────────────────────────── */}
-      <div style={{
-        maxWidth: 1200, margin: "0 auto",
-        padding: isMobile ? "16px 20px" : "20px 24px",
-        display: "flex", gap: 6, alignItems: "center",
-      }}>
+      <div className="pd-breadcrumbs">
         {[
           { label: "Home", page: "home" },
           { label: "Laptops", page: "listing" },
@@ -794,67 +802,151 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
         ))}
       </div>
 
-      {/* ── Main content ───────────────────────── */}
+      {/* ── Main content Styles ─────────────────── */}
       <style>{`
         @keyframes ping {
           75%, 100% { transform: scale(2.2); opacity: 0; }
         }
+        
+        .pd-breadcrumbs {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 24px 24px 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          font-size: 12px;
+          color: var(--text-2);
+        }
+        
+        .pd-main-grid {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 24px 80px;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 56px;
+          align-items: start;
+        }
+        
+        .pd-gallery-col {
+          order: 1;
+          grid-column: 1;
+          grid-row: 1;
+          min-width: 0;
+        }
+        
+        .pd-info-col {
+          order: 2;
+          grid-column: 2;
+          grid-row: 1 / span 3;
+          min-width: 0;
+        }
+        
+        .pd-about-col {
+          order: 3;
+          grid-column: 1;
+          grid-row: 3;
+          margin-top: 24px;
+          min-width: 0;
+        }
+        
+        .pd-badges-col {
+          order: 4;
+          grid-column: 1;
+          grid-row: 2;
+          margin-top: 16px;
+          min-width: 0;
+        }
+        
+        .pd-trust-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 8px;
+          margin-top: 16px;
+        }
+        
+        .pd-related-section {
+          background: var(--bg-1);
+          border-top: 1px solid var(--border);
+          padding: 80px 24px;
+        }
+        
+        .pd-related-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 18px;
+        }
+        
+        @media (max-width: 768px) {
+          .pd-breadcrumbs {
+            padding: 16px 20px 0;
+          }
+          .pd-main-grid {
+            padding: 0 20px 48px;
+            grid-template-columns: 1fr;
+            gap: 32px;
+          }
+          .pd-gallery-col {
+            order: 1;
+            grid-column: 1;
+            grid-row: auto;
+          }
+          .pd-info-col {
+            order: 2;
+            grid-column: 1;
+            grid-row: auto;
+          }
+          .pd-about-col {
+            order: 3;
+            grid-column: 1;
+            grid-row: auto;
+            margin-top: 0;
+          }
+          .pd-badges-col {
+            order: 4;
+            grid-column: 1;
+            grid-row: auto;
+            margin-top: 0;
+          }
+          .pd-trust-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          .pd-related-section {
+            padding: 48px 18px;
+          }
+          .pd-related-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
       `}</style>
 
       {/* ── Main content ───────────────────────── */}
-      <div style={{
-        maxWidth: 1200, margin: "0 auto",
-        padding: isMobile ? "0 20px 48px" : "0 24px 80px",
-        display: "grid",
-        gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-        gap: isMobile ? 32 : 56,
-        alignItems: "start",
-      }}>
+      <div className="pd-main-grid">
         {/* 1. Image Gallery */}
-        <div style={{
-          order: 1,
-          gridColumn: isMobile ? "1" : "1",
-          gridRow: isMobile ? "auto" : "1",
-        }}>
+        <div className="pd-gallery-col">
           {galleryJSX}
         </div>
 
         {/* 2. Product Name, Price, Rating, Cart, Buy Now, Tabs */}
-        <div style={{
-          order: 2,
-          gridColumn: isMobile ? "1" : "2",
-          gridRow: isMobile ? "auto" : "1 / span 3",
-        }}>
+        <div className="pd-info-col">
           {productInfoJSX}
         </div>
 
         {/* 3. About this Laptop Card */}
-        <div style={{
-          order: 3,
-          gridColumn: isMobile ? "1" : "1",
-          gridRow: isMobile ? "auto" : "3",
-          marginTop: isMobile ? 0 : 24,
-        }}>
+        <div className="pd-about-col">
           {aboutCardJSX}
         </div>
 
         {/* 4. Trust Badges row */}
-        <div style={{
-          order: 4,
-          gridColumn: isMobile ? "1" : "1",
-          gridRow: isMobile ? "auto" : "2",
-          marginTop: isMobile ? 0 : 16,
-        }}>
+        <div className="pd-badges-col">
           {trustBadgesJSX}
         </div>
       </div>
 
       {/* ── Related products ──────────────────── */}
-      <div style={{
-        background: COLORS.background,
-        borderTop: `1px solid ${COLORS.cardBorder}`,
-        padding: isMobile ? "48px 18px" : "80px 24px",
-      }}>
+      <div className="pd-related-section">
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <h2 style={{
             fontFamily: "'Sora', sans-serif",
@@ -863,11 +955,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             letterSpacing: "-0.025em",
             margin: "0 0 32px",
           }}>You Might Also Like</h2>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)",
-            gap: 18,
-          }}>
+          <div className="pd-related-grid">
             {related.map((p) => (
               <ProductCard key={p.id} product={p} onView={onViewProduct} onAddToCart={onAddToCart} onWishlist={onWishlist} wishlist={wishlist} />
             ))}
