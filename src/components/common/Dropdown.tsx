@@ -88,8 +88,8 @@ export default function Dropdown({
           alignItems: "center",
           justifyContent: "space-between",
           gap: 8,
-          background: COLORS.cardBg || "rgba(255, 255, 255, 0.02)",
-          border: `1px solid ${isOpen ? "#3B82F6" : COLORS.cardBorder || "rgba(255, 255, 255, 0.08)"}`,
+          background: COLORS.cardBg || "var(--border)",
+          border: `1px solid ${isOpen ? "var(--accent-2)" : COLORS.cardBorder || "var(--border-hi)"}`,
           borderRadius: 12,
           padding: "10px 16px",
           color: COLORS.text || "#fff",
@@ -106,7 +106,7 @@ export default function Dropdown({
         }}
         onMouseLeave={(e) => {
           if (!isOpen) {
-            e.currentTarget.style.borderColor = COLORS.cardBorder || "rgba(255, 255, 255, 0.08)";
+            e.currentTarget.style.borderColor = COLORS.cardBorder || "var(--border-hi)";
           }
         }}
       >
@@ -132,15 +132,15 @@ export default function Dropdown({
             top: "calc(100% + 6px)",
             left: 0,
             right: 0,
-            background: "rgba(17, 24, 39, 0.95)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "color-mix(in srgb, var(--bg-2) 95%, transparent)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid var(--border-hi)",
             borderRadius: 12,
             padding: 6,
             zIndex: 9999,
             maxHeight: 240,
             overflowY: "auto",
-            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
+            boxShadow: "var(--shadow-md)",
             ...menuStyle,
           }}
         >
@@ -159,11 +159,11 @@ export default function Dropdown({
                   padding: "10px 14px",
                   borderRadius: 8,
                   fontSize: 13,
-                  color: isSelected ? "#3B82F6" : "#E2E8F0",
+                  color: isSelected ? "var(--accent-2)" : "var(--text)",
                   background: isSelected
-                    ? "rgba(59, 130, 246, 0.15)"
+                    ? "var(--bg-active)"
                     : isFocused
-                    ? "rgba(255, 255, 255, 0.05)"
+                    ? "var(--border)"
                     : "transparent",
                   cursor: "pointer",
                   fontWeight: isSelected ? 700 : 400,
@@ -176,7 +176,7 @@ export default function Dropdown({
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {opt.label}
                 </span>
-                {isSelected && <span style={{ fontSize: 12, color: "#3B82F6" }}>✓</span>}
+                {isSelected && <span style={{ fontSize: 12, color: "var(--accent-2)" }}>✓</span>}
               </div>
             );
           })}

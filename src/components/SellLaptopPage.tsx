@@ -229,9 +229,9 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
 
         {/* Header Title */}
         <div style={{ marginBottom: 32, textAlign: "center" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 100, padding: "6px 16px", marginBottom: 12 }}>
-            <Laptop size={14} color="#38BDF8" />
-            <span style={{ color: "#38BDF8", fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--bg-active)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 100, padding: "6px 16px", marginBottom: 12 }}>
+            <Laptop size={14} color="var(--accent)" />
+            <span style={{ color: "var(--accent)", fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Instant Valuation & Trade-In
             </span>
           </div>
@@ -252,7 +252,7 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
             <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 28, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>
               Request Received!
             </h2>
-            <div style={{ display: "inline-block", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 12, padding: "8px 16px", color: COLORS.green, fontWeight: 800, fontSize: 15, marginBottom: 20 }}>
+            <div style={{ display: "inline-block", background: "rgba(16,185,129,0.1)", border: "1px solid var(--success-border)", borderRadius: 12, padding: "8px 16px", color: COLORS.green, fontWeight: 800, fontSize: 15, marginBottom: 20 }}>
               Reference ID: #{submittedId}
             </div>
             <p style={{ color: COLORS.muted, fontSize: 14, lineHeight: 1.6, marginBottom: 32 }}>
@@ -262,7 +262,7 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <button
                 onClick={() => setPage("home")}
-                style={{ background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 800, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}
+                style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))", color: "var(--text-inverse)", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 800, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}
               >
                 Back to Home
               </button>
@@ -290,7 +290,7 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
             {/* Section 1: Laptop Configurations */}
             <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 24, padding: isMobile ? 20 : 32 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24, paddingBottom: 16, borderBottom: `1px solid ${COLORS.cardBorder}` }}>
-                <Cpu size={20} color="#38BDF8" />
+                <Cpu size={20} color="var(--accent)" />
                 <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, fontWeight: 800, color: COLORS.text, margin: 0 }}>
                   1. Laptop Hardware Specifications
                 </h2>
@@ -302,7 +302,7 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
                   <label style={labelStyle}>Brand</label>
                   <select value={brand} onChange={(e) => setBrand(e.target.value)} style={inputStyle}>
                     {["Dell", "HP", "Lenovo", "Apple", "Asus", "Acer", "MSI", "Samsung", "Other"].map((b) => (
-                      <option key={b} value={b} style={{ background: "#0d1117" }}>{b}</option>
+                      <option key={b} value={b} style={{ background: "var(--bg-2)" }}>{b}</option>
                     ))}
                   </select>
                 </div>
@@ -335,7 +335,7 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
                   <label style={labelStyle}>RAM Capacity</label>
                   <select value={ram} onChange={(e) => setRam(e.target.value)} style={inputStyle}>
                     {["4 GB", "8 GB", "16 GB", "32 GB", "64 GB"].map((r) => (
-                      <option key={r} value={r} style={{ background: "#0d1117" }}>{r}</option>
+                      <option key={r} value={r} style={{ background: "var(--bg-2)" }}>{r}</option>
                     ))}
                   </select>
                 </div>
@@ -344,7 +344,7 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
                   <label style={labelStyle}>Storage Capacity</label>
                   <select value={storage} onChange={(e) => setStorage(e.target.value)} style={inputStyle}>
                     {["128 GB SSD", "256 GB SSD", "512 GB SSD", "1 TB SSD", "1 TB HDD", "500 GB HDD", "Other"].map((s) => (
-                      <option key={s} value={s} style={{ background: "#0d1117" }}>{s}</option>
+                      <option key={s} value={s} style={{ background: "var(--bg-2)" }}>{s}</option>
                     ))}
                   </select>
                 </div>
@@ -363,10 +363,10 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
                 <div style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
                   <label style={labelStyle}>Physical Condition Grade</label>
                   <select value={condition} onChange={(e) => setCondition(e.target.value)} style={inputStyle}>
-                    <option value="Grade A+ (Like New, no scratches)" style={{ background: "#0d1117" }}>Grade A+ (Like New, pristine state)</option>
-                    <option value="Grade A (Good, minor cosmetic marks)" style={{ background: "#0d1117" }}>Grade A (Good condition, light scratches)</option>
-                    <option value="Grade B (Noticeable scratches / wear)" style={{ background: "#0d1117" }}>Grade B (Visible wear/dents, working)</option>
-                    <option value="Defective / Screen Damage / Faulty" style={{ background: "#0d1117" }}>Defective / Faulty / Broken Screen</option>
+                    <option value="Grade A+ (Like New, no scratches)" style={{ background: "var(--bg-2)" }}>Grade A+ (Like New, pristine state)</option>
+                    <option value="Grade A (Good, minor cosmetic marks)" style={{ background: "var(--bg-2)" }}>Grade A (Good condition, light scratches)</option>
+                    <option value="Grade B (Noticeable scratches / wear)" style={{ background: "var(--bg-2)" }}>Grade B (Visible wear/dents, working)</option>
+                    <option value="Defective / Screen Damage / Faulty" style={{ background: "var(--bg-2)" }}>Defective / Faulty / Broken Screen</option>
                   </select>
                 </div>
 
@@ -381,9 +381,9 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
                           type="button"
                           onClick={() => toggleAccessory(acc)}
                           style={{
-                            background: isChecked ? "rgba(56,189,248,0.12)" : COLORS.background,
+                            background: isChecked ? "var(--bg-active)" : COLORS.background,
                             border: `1px solid ${isChecked ? "rgba(56,189,248,0.3)" : COLORS.cardBorder}`,
-                            color: isChecked ? "#38BDF8" : COLORS.muted,
+                            color: isChecked ? "var(--accent)" : COLORS.muted,
                             borderRadius: 10,
                             padding: "8px 14px",
                             fontSize: 13,
@@ -430,7 +430,7 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
             {/* Section 2: Photo Attachments */}
             <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 24, padding: isMobile ? 20 : 32 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                <ImageIcon size={20} color="#38BDF8" />
+                <ImageIcon size={20} color="var(--accent)" />
                 <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, fontWeight: 800, color: COLORS.text, margin: 0 }}>
                   2. Upload Laptop Photos (Max 5 Photos)
                 </h2>
@@ -449,14 +449,14 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
                   style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", zIndex: 10 }}
                 />
                 <div style={{
-                  border: "2px dashed rgba(56,189,248,0.25)",
+                  border: "2px dashed var(--border-focus)",
                   borderRadius: 16,
                   padding: "28px 20px",
                   textAlign: "center",
-                  background: "rgba(56,189,248,0.03)",
+                  background: "var(--bg-hover)",
                   transition: "all 0.2s"
                 }}>
-                  <Upload size={32} color="#38BDF8" style={{ marginBottom: 8 }} />
+                  <Upload size={32} color="var(--accent)" style={{ marginBottom: 8 }} />
                   <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
                     Click or Drag Photos Here to Upload
                   </div>
@@ -477,7 +477,7 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
                         onClick={() => removeImage(index)}
                         style={{
                           position: "absolute", top: 6, right: 6,
-                          background: "rgba(0,0,0,0.75)", color: "#EF4444",
+                          background: "var(--bg-overlay)", color: "var(--error)",
                           border: "none", borderRadius: "50%", width: 24, height: 24,
                           display: "flex", alignItems: "center", justifyContent: "center",
                           cursor: "pointer"
@@ -494,7 +494,7 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
             {/* Section 3: Contact Info */}
             <div style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 24, padding: isMobile ? 20 : 32 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24, paddingBottom: 16, borderBottom: `1px solid ${COLORS.cardBorder}` }}>
-                <User size={20} color="#38BDF8" />
+                <User size={20} color="var(--accent)" />
                 <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, fontWeight: 800, color: COLORS.text, margin: 0 }}>
                   3. Contact Information
                 </h2>
@@ -567,8 +567,8 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
               type="submit"
               disabled={isUploading}
               style={{
-                background: "linear-gradient(135deg, #3B82F6, #38BDF8)",
-                color: "#000",
+                background: "linear-gradient(135deg, var(--accent-2), var(--accent))",
+                color: "var(--text-inverse)",
                 border: "none",
                 borderRadius: 16,
                 padding: "16px 32px",
@@ -580,7 +580,7 @@ export default function SellLaptopPage({ setPage, user, triggerAlert }: SellLapt
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 10,
-                boxShadow: "0 10px 30px rgba(56,189,248,0.25)",
+                boxShadow: "0 10px 30px var(--border-focus)",
                 transition: "all 0.2s"
               }}
             >

@@ -1,6 +1,5 @@
 import React from "react";
 import { Tag, BadgeCheck, Zap } from "lucide-react";
-import { COLORS } from "@/data/products";
 
 interface BadgeProps {
   type: "badge" | "condition";
@@ -12,14 +11,14 @@ export default function Badge({ type, text, style }: BadgeProps) {
   const getBadgeStyles = () => {
     if (type === "badge") {
       const badgeColors: Record<string, string> = {
-        "Best Seller": "#EF4444",
+        "Best Seller": "var(--error)",
         "Gaming": "#8B5CF6",
-        "Top Rated": "#10B981",
-        "Value Deal": "#F59E0B",
+        "Top Rated": "var(--success)",
+        "Value Deal": "var(--warning)",
       };
       return {
-        background: badgeColors[text] || COLORS.primary,
-        color: "#ffffff",
+        background: badgeColors[text] || "var(--accent-2)",
+        color: "#FFFFFF",
         border: "none",
         icon: <Tag size={8} />,
       };
@@ -33,9 +32,9 @@ export default function Badge({ type, text, style }: BadgeProps) {
         };
       } else {
         return {
-          background: "rgba(56,189,248,0.10)",
-          color: COLORS.green,
-          border: "1px solid rgba(56,189,248,0.18)",
+          background: "var(--bg-active)",
+          color: "var(--accent)",
+          border: "1px solid var(--bg-active)",
           icon: <BadgeCheck size={8} />,
         };
       }

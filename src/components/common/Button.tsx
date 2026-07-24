@@ -37,9 +37,9 @@ export default function Button({
   const getVariantStyles = () => {
     if (props.disabled) {
       return {
-        background: "rgba(255,255,255,0.03)",
-        color: "rgba(255,255,255,0.25)",
-        border: "1px solid rgba(255,255,255,0.05)",
+        background: "var(--bg-1)",
+        color: "var(--text-3)",
+        border: "1px solid var(--border)",
         boxShadow: "none",
         transform: "none",
       };
@@ -48,17 +48,17 @@ export default function Button({
     switch (variant) {
       case "secondary":
         return {
-          background: btnHovered ? "rgba(0, 229, 255, 0.06)" : "rgba(0, 229, 255, 0.02)",
-          color: "#F3F6FA",
-          border: `1px solid ${btnHovered ? "rgba(0, 229, 255, 0.25)" : "rgba(0, 229, 255, 0.12)"}`,
+          background: btnHovered ? "var(--bg-3)" : "var(--bg-2)",
+          color: "var(--text)",
+          border: `1px solid ${btnHovered ? "var(--border-hi)" : "var(--border)"}`,
           boxShadow: "none",
           transform: btnHovered ? "translateY(-1px)" : "none",
         };
       case "ghost":
         return {
-          background: btnHovered ? "rgba(0, 229, 255, 0.04)" : "transparent",
-          color: "#00E5FF",
-          border: `1px solid ${btnHovered ? "rgba(0, 229, 255, 0.35)" : "rgba(0, 229, 255, 0.18)"}`,
+          background: btnHovered ? "var(--bg-hover)" : "transparent",
+          color: "var(--accent)",
+          border: `1px solid ${btnHovered ? "var(--border-focus)" : "var(--bg-active)"}`,
           boxShadow: "none",
           transform: btnHovered ? "translateY(-1px)" : "none",
         };
@@ -73,7 +73,7 @@ export default function Button({
       case "primary":
       default:
         return {
-          background: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
+          background: "linear-gradient(135deg, var(--accent-2) 0%, #1D4ED8 100%)",
           color: "#FFFFFF",
           border: "none",
           boxShadow: btnHovered 

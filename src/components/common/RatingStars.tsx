@@ -18,8 +18,8 @@ export default function RatingStars({
         <Star
           key={i}
           size={size}
-          fill={i <= Math.floor(rating) ? "#F59E0B" : "transparent"}
-          color={i <= Math.floor(rating) ? "#F59E0B" : "rgba(255,255,255,0.15)"}
+          fill={i <= Math.floor(rating) ? "var(--warning)" : "transparent"}
+          color={i <= Math.floor(rating) ? "var(--warning)" : "var(--text-3)"}
         />
       ))}
     </div>

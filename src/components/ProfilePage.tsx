@@ -194,8 +194,8 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
             {/* Avatar circle */}
             <div style={{
               width: 80, height: 80, borderRadius: "50%",
-              background: "linear-gradient(135deg, #3B82F6, #38BDF8)",
-              color: "#000", fontSize: 28, fontWeight: 800,
+              background: "linear-gradient(135deg, var(--accent-2), var(--accent))",
+              color: "var(--text-inverse)", fontSize: 28, fontWeight: 800,
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 16px", fontFamily: "'Sora', sans-serif",
             }}>
@@ -209,7 +209,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
               {user.name || (user as any).displayName || user.email?.split("@")[0] || "Customer"}
             </h3>
             <span style={{
-              background: "rgba(56,189,248,0.10)", color: COLORS.green,
+              background: "var(--bg-active)", color: COLORS.green,
               fontSize: 10, fontWeight: 700, padding: "3px 9px",
               borderRadius: 100, display: "inline-block", marginBottom: 24,
               letterSpacing: "0.03em", textTransform: "uppercase",
@@ -233,9 +233,9 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
               onClick={handleLogout}
               style={{
                 width: "100%",
-                background: "rgba(239,68,68,0.08)",
+                background: "var(--error-bg)",
                 border: "1px solid rgba(239,68,68,0.2)",
-                color: "#EF4444",
+                color: "var(--error)",
                 borderRadius: 12,
                 padding: "12px 0",
                 fontSize: 13,
@@ -248,8 +248,8 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                 transition: "all 0.2s",
                 fontFamily: "'Sora', sans-serif",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.15)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--error-bg)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--error-bg)"; }}
             >
               <LogOut size={14} /> Log Out
             </button>
@@ -277,7 +277,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                 <button
                   onClick={() => setIsEditing(true)}
                   style={{
-                    background: "transparent", border: "none", color: "#38BDF8",
+                    background: "transparent", border: "none", color: "var(--accent)",
                     fontSize: 12, fontWeight: 700, cursor: "pointer",
                     display: "flex", alignItems: "center", gap: 4
                   }}
@@ -361,7 +361,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                     onClick={handleSave}
                     style={{
                       background: COLORS.green, border: "none",
-                      color: "#000", borderRadius: 8, padding: "8px 16px",
+                      color: "var(--text-inverse)", borderRadius: 8, padding: "8px 16px",
                       fontSize: 12, fontWeight: 700, cursor: "pointer",
                     }}
                   >
@@ -419,7 +419,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                   <div
                     key={o.orderId}
                     style={{
-                      background: "rgba(255,255,255,0.01)",
+                      background: "var(--border)",
                       border: `1px solid ${COLORS.cardBorder}`,
                       borderRadius: 16,
                       padding: 16,
@@ -436,17 +436,17 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                           </span>
                           {(() => {
                             const status = o.status || 'Pending';
-                            let bg = 'rgba(56,189,248,0.15)';
-                            let color = '#38BDF8';
+                            let bg = 'var(--bg-active)';
+                            let color = 'var(--accent)';
                             if (status === 'Cancelled') {
-                              bg = 'rgba(239,68,68,0.15)';
-                              color = '#EF4444';
+                              bg = 'var(--error-bg)';
+                              color = 'var(--error)';
                             } else if (status === 'Pending (COD)') {
-                              bg = 'rgba(245,158,11,0.15)';
-                              color = '#F59E0B';
+                              bg = 'var(--warning-bg)';
+                              color = 'var(--warning)';
                             } else if (status === 'Completed' || status === 'Delivered') {
-                              bg = 'rgba(16,185,129,0.15)';
-                              color = '#10B981';
+                              bg = 'var(--success-bg)';
+                              color = 'var(--success)';
                             } else if (status === 'Shipped') {
                               bg = 'rgba(139,92,246,0.15)';
                               color = '#8B5CF6';
@@ -478,7 +478,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                     </div>
 
                     {/* Order Items list */}
-                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ borderTop: "1px solid var(--border)", paddingTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
                       {o.items.map((item, idx) => (
                         <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center" }}>
                           <img src={item.img} alt={item.name} style={{ width: 40, height: 30, objectFit: "cover", borderRadius: 4, background: COLORS.background }} />
@@ -495,7 +495,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                     {/* Delivery Timeline Tracker */}
                     {o.status !== "Cancelled" && (
                       <div style={{
-                        borderTop: "1px solid rgba(255,255,255,0.04)",
+                        borderTop: "1px solid var(--border)",
                         paddingTop: 16, marginTop: 4,
                         display: "flex", flexDirection: "column", gap: 14
                       }}>
@@ -503,7 +503,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                           {/* Progress Line Background */}
                           <div style={{
                             position: "absolute", top: 12, left: "10%", right: "10%", height: 2,
-                            background: "rgba(255,255,255,0.06)", zIndex: 0
+                            background: "var(--border)", zIndex: 0
                           }} />
                           {/* Progress Line Active Fill */}
                           <div style={{
@@ -521,7 +521,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                               width: 24, height: 24, borderRadius: "50%",
                               background: COLORS.green, border: `2.5px solid ${COLORS.cardBg}`,
                               display: "flex", alignItems: "center", justifyContent: "center",
-                              color: "#000", fontWeight: 800, fontSize: 10
+                              color: "var(--text-inverse)", fontWeight: 800, fontSize: 10
                             }}>✓</div>
                             <span style={{ fontSize: 11, color: COLORS.text, fontWeight: 700, marginTop: 6 }}>Ordered</span>
                           </div>
@@ -530,10 +530,10 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 1, position: "relative" }}>
                             <div style={{
                               width: 24, height: 24, borderRadius: "50%",
-                              background: (o.status === "Paid" || o.status === "Pending (COD)" || o.status === "Paid (Simulated)" || o.status === "Shipped" || o.status === "Completed" || o.status === "Delivered") ? COLORS.green : "rgba(255,255,255,0.08)",
+                              background: (o.status === "Paid" || o.status === "Pending (COD)" || o.status === "Paid (Simulated)" || o.status === "Shipped" || o.status === "Completed" || o.status === "Delivered") ? COLORS.green : "var(--border-hi)",
                               border: `2.5px solid ${COLORS.cardBg}`,
                               display: "flex", alignItems: "center", justifyContent: "center",
-                              color: "#000", fontWeight: 800, fontSize: 10
+                              color: "var(--text-inverse)", fontWeight: 800, fontSize: 10
                             }}>
                               {(o.status === "Paid" || o.status === "Pending (COD)" || o.status === "Paid (Simulated)" || o.status === "Shipped" || o.status === "Completed" || o.status === "Delivered") ? "✓" : ""}
                             </div>
@@ -544,10 +544,10 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 1, position: "relative" }}>
                             <div style={{
                               width: 24, height: 24, borderRadius: "50%",
-                              background: (o.status === "Shipped" || o.status === "Completed" || o.status === "Delivered") ? COLORS.green : "rgba(255,255,255,0.08)",
+                              background: (o.status === "Shipped" || o.status === "Completed" || o.status === "Delivered") ? COLORS.green : "var(--border-hi)",
                               border: `2.5px solid ${COLORS.cardBg}`,
                               display: "flex", alignItems: "center", justifyContent: "center",
-                              color: "#000", fontWeight: 800, fontSize: 10
+                              color: "var(--text-inverse)", fontWeight: 800, fontSize: 10
                             }}>
                               {(o.status === "Shipped" || o.status === "Completed" || o.status === "Delivered") ? "✓" : ""}
                             </div>
@@ -558,10 +558,10 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 1, position: "relative" }}>
                             <div style={{
                               width: 24, height: 24, borderRadius: "50%",
-                              background: (o.status === "Completed" || o.status === "Delivered") ? COLORS.green : "rgba(255,255,255,0.08)",
+                              background: (o.status === "Completed" || o.status === "Delivered") ? COLORS.green : "var(--border-hi)",
                               border: `2.5px solid ${COLORS.cardBg}`,
                               display: "flex", alignItems: "center", justifyContent: "center",
-                              color: "#000", fontWeight: 800, fontSize: 10
+                              color: "var(--text-inverse)", fontWeight: 800, fontSize: 10
                             }}>
                               {(o.status === "Completed" || o.status === "Delivered") ? "✓" : ""}
                             </div>
@@ -573,7 +573,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                         {o.trackingId && (
                           <div style={{
                             display: "flex", justifyContent: "space-between", alignItems: "center",
-                            background: "rgba(255,255,255,0.01)", border: `1px dashed ${COLORS.cardBorder}`,
+                            background: "var(--border)", border: `1px dashed ${COLORS.cardBorder}`,
                             borderRadius: 14, padding: "10px 16px", marginTop: 4, flexWrap: "wrap", gap: 12
                           }}>
                             <div style={{ fontSize: 12 }}>
@@ -581,15 +581,15 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                               <strong style={{ color: COLORS.text }}>{o.courierPartner}</strong>{" "}
                               <span style={{ color: COLORS.muted, margin: "0 4px" }}>|</span>{" "}
                               <span style={{ color: COLORS.muted }}>AWB / Tracking:</span>{" "}
-                              <code style={{ background: "rgba(255,255,255,0.04)", padding: "2px 6px", borderRadius: 4, color: COLORS.green, fontFamily: "monospace", fontSize: 11 }}>{o.trackingId}</code>
+                              <code style={{ background: "var(--border)", padding: "2px 6px", borderRadius: 4, color: COLORS.green, fontFamily: "monospace", fontSize: 11 }}>{o.trackingId}</code>
                             </div>
                             <a
                               href={o.trackingUrl}
                               target="_blank"
                               rel="noreferrer"
                               style={{
-                                background: `linear-gradient(135deg, ${COLORS.green}, #38BDF8)`,
-                                color: "#000", border: "none", borderRadius: 8,
+                                background: `linear-gradient(135deg, ${COLORS.green}, var(--accent))`,
+                                color: "var(--text-inverse)", border: "none", borderRadius: 8,
                                 padding: "6px 14px", fontSize: 11, fontWeight: 800,
                                 cursor: "pointer", textDecoration: "none", display: "inline-flex",
                                 alignItems: "center", gap: 4, fontFamily: "'Sora', sans-serif"
@@ -603,7 +603,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                         {/* Write Review Underlay for Completed/Delivered orders */}
                         {(o.status === "Completed" || o.status === "Delivered") && (
                           <div style={{
-                            borderTop: "1px solid rgba(255,255,255,0.04)",
+                            borderTop: "1px solid var(--border)",
                             paddingTop: 16, marginTop: 12,
                             display: "flex", flexDirection: "column", gap: 12
                           }}>
@@ -613,7 +613,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                               </div>
                             ) : reviewingOrderId === o.orderId ? (
                               <div style={{
-                                background: "rgba(255,255,255,0.01)", border: `1px solid ${COLORS.cardBorder}`,
+                                background: "var(--border)", border: `1px solid ${COLORS.cardBorder}`,
                                 borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12
                               }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -633,8 +633,8 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                                       key={s}
                                       size={18}
                                       onClick={() => setReviewRating(s)}
-                                      fill={s <= reviewRating ? "#F59E0B" : "transparent"}
-                                      color={s <= reviewRating ? "#F59E0B" : "rgba(255,255,255,0.15)"}
+                                      fill={s <= reviewRating ? "var(--warning)" : "transparent"}
+                                      color={s <= reviewRating ? "var(--warning)" : "var(--text-3)"}
                                       style={{ cursor: "pointer" }}
                                     />
                                   ))}
@@ -647,8 +647,8 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                                   onChange={(e) => setReviewText(e.target.value)}
                                   rows={3}
                                   style={{
-                                    width: "100%", background: "#0d1117", border: "1px solid rgba(255,255,255,0.06)",
-                                    borderRadius: 10, padding: 10, color: "#fff", fontSize: 12, outline: "none",
+                                    width: "100%", background: "var(--bg-2)", border: "1px solid var(--border)",
+                                    borderRadius: 10, padding: 10, color: "var(--text)", fontSize: 12, outline: "none",
                                     resize: "none", boxSizing: "border-box", fontFamily: "inherit", lineHeight: 1.4
                                   }}
                                 />
@@ -658,8 +658,8 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                                   disabled={reviewSubmitting}
                                   style={{
                                     alignSelf: "flex-end",
-                                    background: `linear-gradient(135deg, ${COLORS.green}, #38BDF8)`,
-                                    color: "#000", border: "none", borderRadius: 8,
+                                    background: `linear-gradient(135deg, ${COLORS.green}, var(--accent))`,
+                                    color: "var(--text-inverse)", border: "none", borderRadius: 8,
                                     padding: "6px 16px", fontSize: 12, fontWeight: 800,
                                     cursor: "pointer", fontFamily: "'Sora', sans-serif"
                                   }}
@@ -678,11 +678,11 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Pr
                                   }}
                                   style={{
                                     background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.2)",
-                                    color: "#38BDF8", borderRadius: 10, padding: "6px 14px", fontSize: 12, fontWeight: 700,
+                                    color: "var(--accent)", borderRadius: 10, padding: "6px 14px", fontSize: 12, fontWeight: 700,
                                     cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6
                                   }}
                                 >
-                                  <Star size={13} fill="#38BDF8" /> Write a Review
+                                  <Star size={13} fill="var(--accent)" /> Write a Review
                                 </button>
                               </div>
                             )}

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { COLORS, navLinks } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface NavbarProps {
   setPage: (page: string) => void;
@@ -18,7 +19,7 @@ interface NavbarProps {
 }
 
 const linkIcons: Record<string, React.ReactNode> = {
-  Offers: <Flame size={13} color="#F59E0B" />,
+  Offers: <Flame size={13} color="var(--warning)" />,
   Laptops: <Laptop size={13} />,
   Desktops: <Monitor size={13} />,
   Accessories: <Keyboard size={13} />,
@@ -70,8 +71,8 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
   };
 
   const navBg = scrolled
-    ? "rgba(7,10,19,0.92)"
-    : "rgba(7,10,19,0.65)";
+    ? "color-mix(in srgb, var(--bg) 92%, transparent)"
+    : "color-mix(in srgb, var(--bg) 65%, transparent)";
 
   return (
     <>
@@ -85,8 +86,8 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
         transition: "background 0.3s ease",
       }}>
         <div style={{
-          maxWidth: 1360, margin: "0 auto",
-          padding: isMobile ? "0 10px" : "0 20px",
+          maxWidth: "100%", margin: "0 auto",
+          padding: isMobile ? "0 12px" : "0 24px",
           display: "flex", alignItems: "center",
           height: 60, gap: isMobile ? 8 : 16,
         }}>
@@ -108,7 +109,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                 color: "transparent",
                 backgroundClip: "text",
                 WebkitBackgroundClip: "text",
-                backgroundImage: "linear-gradient(135deg, #38BDF8, #6366F1)",
+                backgroundImage: "linear-gradient(135deg, var(--accent), #6366F1)",
               }}>Laptopkart</span>
             </span>
           </div>
@@ -119,11 +120,10 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
               display: "flex",
               justifyContent: "flex-start",
               gap: 4,
-              overflow: "hidden",
               minWidth: 0,
               marginLeft: 28,
               marginRight: "auto",
-              flexShrink: 1,
+              flexShrink: 0,
             }}>
               {navLinks
                 .filter((link) => !searchActive || (link !== "Resell Laptop" && link !== "About"))
@@ -136,15 +136,15 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                     style={{
                       padding: "6px 10px", background: "transparent",
                       border: "none",
-                      color: link === "Offers" ? "#F59E0B" : COLORS.muted,
+                      color: link === "Offers" ? "var(--warning)" : "var(--text-2)",
                       cursor: "pointer", fontSize: 14, fontWeight: 500,
                       whiteSpace: "nowrap", letterSpacing: "0.01em",
                       display: "flex", alignItems: "center", gap: 3,
                       transition: "color 0.2s",
                       borderRadius: 6,
                     }}
-                    onMouseEnter={(e) => { (e.currentTarget).style.color = COLORS.text; }}
-                    onMouseLeave={(e) => { (e.currentTarget).style.color = link === "Offers" ? "#F59E0B" : COLORS.muted; }}
+                    onMouseEnter={(e) => { (e.currentTarget).style.color = "var(--text)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget).style.color = link === "Offers" ? "var(--warning)" : "var(--text-2)"; }}
                   >
                     {linkIcons[link] && <span className="nav-link-icon">{linkIcons[link]}</span>}
                     {link === "Resell Laptop" ? (
@@ -187,11 +187,11 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                   placeholder="Search..."
                   style={{
                     width: "100%",
-                    background: "rgba(56, 150, 240, 0.08)",
-                    border: "1px solid rgba(0, 229, 255, 0.35)",
+                    background: "var(--bg-1)",
+                    border: "1px solid var(--border-hi)",
                     borderRadius: 8,
                     padding: "6px 26px 6px 10px",
-                    color: COLORS.text,
+                    color: "var(--text)",
                     fontSize: isMobile ? 16 : 12,
                     lineHeight: "20px",
                     margin: 0,
@@ -214,7 +214,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                     transform: "translateY(-50%)",
                     background: "transparent",
                     border: "none",
-                    color: COLORS.muted,
+                    color: "var(--text-2)",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
@@ -226,36 +226,38 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
               </div>
             ) : (
               <IconBtn onClick={() => setSearchActive(true)}>
-                <Search size={isMobile ? 16 : 14} color={COLORS.muted} />
+                <Search size={isMobile ? 16 : 14} color="var(--text-2)" />
               </IconBtn>
             )}
 
             {isMobile ? (
               <>
-                <IconBtn onClick={() => go("wishlist")} count={wishlist.length} countColor="#EF4444">
-                  <Heart size={16} color={wishlist.length > 0 ? "#EF4444" : COLORS.muted} fill={wishlist.length > 0 ? "#EF4444" : "none"} />
+                <IconBtn onClick={() => go("wishlist")} count={wishlist.length} countColor="var(--error)">
+                  <Heart size={16} color={wishlist.length > 0 ? "var(--error)" : "var(--text-2)"} fill={wishlist.length > 0 ? "var(--error)" : "none"} />
                 </IconBtn>
                 <IconBtn onClick={() => go("cart")} count={cart.length} accent={cart.length > 0} countColor="#fff">
-                  <ShoppingCart size={16} color={cart.length > 0 ? "#000" : COLORS.muted} />
+                  <ShoppingCart size={16} color={cart.length > 0 ? "#000" : "var(--text-2)"} />
                 </IconBtn>
+                <ThemeToggle />
                 <IconBtn onClick={() => setMenuOpen((o) => !o)}>
-                  {menuOpen ? <X size={18} color={COLORS.text} /> : <Menu size={18} color={COLORS.text} />}
+                  {menuOpen ? <X size={18} color="var(--text)" /> : <Menu size={18} color="var(--text)" />}
                 </IconBtn>
               </>
             ) : (
               <>
-                <IconBtn onClick={() => go("wishlist")} count={wishlist.length} countColor="#EF4444" label="Wishlist">
-                  <Heart size={14} color={wishlist.length > 0 ? "#EF4444" : COLORS.muted} fill={wishlist.length > 0 ? "#EF4444" : "none"} />
+                <IconBtn onClick={() => go("wishlist")} count={wishlist.length} countColor="var(--error)" label="Wishlist">
+                  <Heart size={14} color={wishlist.length > 0 ? "var(--error)" : "var(--text-2)"} fill={wishlist.length > 0 ? "var(--error)" : "none"} />
                 </IconBtn>
                 <IconBtn onClick={() => go("cart")} count={cart.length} accent={cart.length > 0} countColor="#fff" label={`Cart${cart.length > 0 ? ` (${cart.length})` : ""}`}>
-                  <ShoppingCart size={14} color={cart.length > 0 ? "#000" : COLORS.muted} />
+                  <ShoppingCart size={14} color={cart.length > 0 ? "#000" : "var(--text-2)"} />
                 </IconBtn>
                 <IconBtn onClick={() => go("compare")} label="Compare">
-                  <Scale size={14} color={COLORS.muted} />
+                  <Scale size={14} color="var(--text-2)" />
                 </IconBtn>
                 <IconBtn onClick={() => go(user ? "profile" : "login")} label={user ? "Profile" : "Login"}>
-                  <User size={14} color={user ? COLORS.green : COLORS.muted} />
+                  <User size={14} color={user ? COLORS.green : "var(--text-2)"} />
                 </IconBtn>
+                <ThemeToggle />
                 <div style={{ position: "relative" }}>
                   <button
                     onClick={() => setBulkDropdownOpen(!bulkDropdownOpen)}
@@ -263,26 +265,26 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                       display: "flex",
                       alignItems: "center",
                       gap: 4,
-                      background: "rgba(0, 229, 255, 0.04)",
-                      border: "1px solid rgba(0, 229, 255, 0.15)",
+                      background: "var(--bg-hover)",
+                      border: "1px solid var(--bg-active)",
                       borderRadius: 8,
-                      padding: "7px 12px",
-                      fontSize: 11,
+                      padding: "6px 10px",
+                      fontSize: 10,
                       fontWeight: 800,
-                      color: "#00E5FF",
+                      color: "var(--accent)",
                       cursor: "pointer",
                       whiteSpace: "nowrap",
-                      height: 34,
+                      height: 30,
                       boxSizing: "border-box",
                       transition: "all 0.2s",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(0, 229, 255, 0.08)";
-                      e.currentTarget.style.borderColor = "rgba(0, 229, 255, 0.35)";
+                      e.currentTarget.style.background = "var(--bg-active)";
+                      e.currentTarget.style.borderColor = "var(--border-focus)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "rgba(0, 229, 255, 0.04)";
-                      e.currentTarget.style.borderColor = "rgba(0, 229, 255, 0.15)";
+                      e.currentTarget.style.background = "var(--bg-hover)";
+                      e.currentTarget.style.borderColor = "var(--bg-active)";
                     }}
                   >
                     <span className="bulk-order-text-long">Bulk Order Contact</span>
@@ -294,16 +296,16 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                       position: "absolute",
                       top: "calc(100% + 6px)",
                       right: 0,
-                      background: "#070A13",
-                      border: "1px solid rgba(0, 229, 255, 0.25)",
+                      background: "var(--bg)",
+                      border: "1px solid var(--border)",
                       borderRadius: 10,
                       padding: "12px 16px",
                       minWidth: 165,
-                      boxShadow: "0 10px 25px rgba(0,0,0,0.6)",
+                      boxShadow: "0 10px 25px var(--bg-overlay)",
                       zIndex: 1000,
                       textAlign: "center",
                     }}>
-                      <div style={{ color: COLORS.muted, fontSize: 10, fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.02em" }}>Call or WhatsApp</div>
+                      <div style={{ color: "var(--text-2)", fontSize: 10, fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.02em" }}>Call or WhatsApp</div>
                       <a
                         href="tel:+919750331313"
                         style={{
@@ -311,7 +313,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                           alignItems: "center",
                           justifyContent: "center",
                           gap: 6,
-                          color: "#00E5FF",
+                          color: "var(--accent)",
                           fontSize: 13,
                           fontWeight: 800,
                           textDecoration: "none",
@@ -331,8 +333,8 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
         {/* Mobile drawer */}
         {isMobile && menuOpen && (
           <div style={{
-            background: "rgba(7,10,19,0.97)", backdropFilter: "blur(24px)",
-            borderTop: "1px solid rgba(56,150,240,0.08)",
+            background: "color-mix(in srgb, var(--bg) 97%, transparent)", backdropFilter: "blur(24px)",
+            borderTop: "1px solid var(--border)",
             padding: "8px 0 16px",
           }}>
             {navLinks.map((link) => (
@@ -343,10 +345,10 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                   display: "flex", alignItems: "center", gap: 12,
                   width: "100%", textAlign: "left",
                   background: "transparent", border: "none",
-                  color: link === "Offers" ? "#F59E0B" : COLORS.muted,
+                  color: link === "Offers" ? "var(--warning)" : "var(--text-2)",
                   padding: "14px 24px", cursor: "pointer",
                   fontSize: 15, fontWeight: 500,
-                  borderBottom: "1px solid rgba(56,150,240,0.06)",
+                  borderBottom: "1px solid var(--border)",
                   minHeight: 48,
                 }}
               >
@@ -357,8 +359,8 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
               {[{ l: "Compare", t: "compare", icon: <Scale size={14} /> }, { l: user ? "Profile" : "Login", t: user ? "profile" : "login", icon: <User size={14} color={user ? COLORS.green : undefined} /> }].map((b) => (
                 <button key={b.l} onClick={() => go(b.t)} style={{
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  gap: 6, background: "rgba(56,150,240,0.07)",
-                  color: COLORS.muted, border: "1px solid rgba(56,189,248,0.12)",
+                  gap: 6, background: "var(--bg-1)",
+                  color: "var(--text-2)", border: "1px solid var(--border)",
                   borderRadius: 10, padding: "12px", cursor: "pointer", fontSize: 13,
                   minHeight: 44,
                 }}>
@@ -369,7 +371,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
           </div>
         )}
         <style>{`
-          @media (max-width: 1380px) {
+          @media (max-width: 1440px) {
             .nav-link-icon {
               display: none !important;
             }
@@ -392,7 +394,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
               display: inline !important;
             }
           }
-          @media (min-width: 1381px) {
+          @media (min-width: 1441px) {
             .resell-text-short {
               display: none !important;
             }
@@ -422,27 +424,27 @@ function IconBtn({
       onClick={onClick}
       style={{
         background: accent ? COLORS.green : "transparent",
-        border: `1px solid ${accent ? "transparent" : "rgba(56,150,240,0.12)"}`,
+        border: `1px solid ${accent ? "transparent" : "var(--border)"}`,
         borderRadius: 8,
         height: 34,
         display: "flex", alignItems: "center", gap: 5,
         padding: label ? "0 12px" : "0 9px",
         cursor: "pointer", position: "relative",
         fontSize: 12, fontWeight: 600,
-        color: accent ? "#000" : COLORS.muted,
+        color: accent ? "#000" : "var(--text-2)",
         transition: "all 0.2s",
         whiteSpace: "nowrap",
       }}
-      onMouseEnter={(e) => { if (!accent) (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(56,189,248,0.28)"; }}
-      onMouseLeave={(e) => { if (!accent) (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(56,150,240,0.12)"; }}
+      onMouseEnter={(e) => { if (!accent) (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-focus)"; }}
+      onMouseLeave={(e) => { if (!accent) (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
     >
       {children}
       {label && <span className="nav-btn-label">{label}</span>}
       {count !== undefined && count > 0 && (
         <span style={{
           position: "absolute", top: -5, right: -5,
-          background: countColor ?? "#EF4444",
-          color: "#fff", borderRadius: "50%",
+          background: countColor ?? "var(--error)",
+          color: "var(--text)", borderRadius: "50%",
           width: 16, height: 16, fontSize: 9, fontWeight: 800,
           display: "flex", alignItems: "center", justifyContent: "center",
           border: `2px solid ${COLORS.darkBg}`,

@@ -324,7 +324,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
                 <CreditCard size={20} color={COLORS.green} /> Payment Method
               </h2>
               {PAYMENT_OPTIONS.map(({ val, label, icon }) => (
-                <label key={val} style={{ display: "flex", alignItems: "center", gap: 14, background: payment === val ? "rgba(56,189,248,0.06)" : COLORS.background, border: `1px solid ${payment === val ? COLORS.green : COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, cursor: "pointer" }}>
+                <label key={val} style={{ display: "flex", alignItems: "center", gap: 14, background: payment === val ? "var(--bg-hover)" : COLORS.background, border: `1px solid ${payment === val ? COLORS.green : COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, cursor: "pointer" }}>
                   <input type="radio" name="payment" value={val} checked={payment === val} onChange={() => setPayment(val)} style={{ accentColor: COLORS.green }} />
                   <span style={{ color: payment === val ? COLORS.green : COLORS.muted }}>{icon}</span>
                   <span style={{ color: COLORS.text, fontWeight: 600 }}>{label}</span>
@@ -338,12 +338,12 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
             phonepeStatus?.status === "failed" || phonepeStatus?.status === "error" ? (
               <div style={{ textAlign: "center", padding: "40px 0" }}>
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-                  <X size={80} color="#EF4444" strokeWidth={1.5} />
+                  <X size={80} color="var(--error)" strokeWidth={1.5} />
                 </div>
-                <h2 style={{ color: "#EF4444", fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 28, marginBottom: 12 }}>Payment Failed</h2>
+                <h2 style={{ color: "var(--error)", fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 28, marginBottom: 12 }}>Payment Failed</h2>
                 <p style={{ color: COLORS.text, fontSize: 16, marginBottom: 8 }}>Transaction for Order #LK-{orderId} was unsuccessful.</p>
                 <p style={{ color: COLORS.muted, marginBottom: 32 }}>Please try checking out again or contact customer support if money was debited.</p>
-                <button onClick={() => { setStep(1); setPhonepeStatus(null); }} style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                <button onClick={() => { setStep(1); setPhonepeStatus(null); }} style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
                   Retry Payment
                 </button>
               </div>
@@ -355,7 +355,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
                 <h2 style={{ color: COLORS.green, fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 28, marginBottom: 12 }}>Order Placed!</h2>
                 <p style={{ color: COLORS.text, fontSize: 16, marginBottom: 8 }}>Order #LK-{orderId}</p>
                 <p style={{ color: COLORS.muted, marginBottom: 32 }}>Your refurbished tech is on its way! Estimated delivery: 3-5 business days.</p>
-                <button onClick={() => { setCart([]); setPage("home"); }} style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                <button onClick={() => { setCart([]); setPage("home"); }} style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
                   Continue Shopping
                 </button>
               </div>
@@ -370,7 +370,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
                   ← Back
                 </button>
               )}
-              <button onClick={handleNext} style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginLeft: "auto", width: isMobile ? "100%" : "auto" }}>
+              <button onClick={handleNext} style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginLeft: "auto", width: isMobile ? "100%" : "auto" }}>
                 {step === 1 ? (isProcessing ? "Processing..." : "Place Order") : "Continue"}
               </button>
             </div>

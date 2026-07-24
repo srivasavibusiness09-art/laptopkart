@@ -9,6 +9,78 @@
 
 /* ─── Design Tokens ──────────────────────────────────────── */
 :root {
+  /* ☀️ Light Theme (Cream & Terracotta) */
+  /* Backgrounds — warm premium cream */
+  --bg:         #F5F2EE;
+  --bg-1:       #EBE6DF;
+  --bg-2:       #FDFBF7;
+  --bg-3:       #E1DBD2;
+  --bg-footer:  #EBE6DF;
+
+  /* Borders — warm grey tinted */
+  --border:     rgba(31, 29, 27, 0.08);
+  --border-hi:  rgba(31, 29, 27, 0.15);
+  --border-glow: rgba(0, 113, 227, 0.25);
+
+  /* Text — high contrast warm charcoal */
+  --text:       #1F1D1B;
+  --text-2:     #4A4642;
+  --text-3:     #756F68;
+
+  /* Accent colors - Apple-Style Blue */
+  --accent:     #0071E3; 
+  --accent-2:   #005BB5; 
+  --accent-3:   #47A1FA;
+  --accent-indigo: #7C4DFF;
+  --gold:       #FFD600;
+  --red:        #FF1744;
+
+  /* Radii */
+  --r-sm:       12px;
+  --r-md:       20px;
+  --r-lg:       28px;
+  --r-xl:       36px;
+
+  /* Semantic UI Tokens (Light) */
+  --bg-hover:   rgba(0, 113, 227, 0.06);
+  --bg-active:  rgba(0, 113, 227, 0.12);
+  --border-focus: rgba(0, 113, 227, 0.35);
+  
+  --badge-bg:   rgba(0, 113, 227, 0.12);
+  --badge-border: rgba(0, 113, 227, 0.25);
+  
+  --success-bg: rgba(0, 113, 227, 0.08);
+  --success-border: rgba(0, 113, 227, 0.15);
+  --success:    #0071E3;
+  
+  --error-bg:   rgba(239, 68, 68, 0.12);
+  --error-border: rgba(239, 68, 68, 0.25);
+  --error:      #EF4444;
+  
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --warning-border: rgba(245, 158, 11, 0.25);
+  --warning:    #F59E0B;
+
+  --text-inverse: #FFFFFF;
+  --bg-overlay: rgba(0,0,0,0.65);
+
+  /* Shadows & Glows */
+  --shadow-sm:  0 4px 12px rgba(31,29,27,0.05);
+  --shadow-md:  0 12px 48px rgba(31,29,27,0.08);
+  --shadow-lg:  0 32px 80px rgba(31,29,27,0.12);
+  --shadow-glow: 0 0 30px rgba(0,113,227,0.15), 0 0 60px rgba(71,161,250,0.10);
+  --shadow-indigo: 0 0 30px rgba(124,77,255,0.15);
+
+  /* Layout & transitions */
+  --nav-h:      52px;
+  --section-pad: 120px;
+  --section-pad-m: 80px;
+  --max-w:      1200px;
+  --transition: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark {
+  /* 🌙 Dark Theme (Existing) */
   /* Backgrounds — deep tech voids */
   --bg:         #040712;
   --bg-1:       #0A0F1E;
@@ -30,29 +102,35 @@
   --accent:     #00E5FF; /* Neo cyan */
   --accent-2:   #2979FF; /* Cyber blue */
   --accent-3:   #00B0FF;
-  --accent-indigo: #7C4DFF;
-  --gold:       #FFD600;
-  --red:        #FF1744;
 
-  /* Radii */
-  --r-sm:       12px;
-  --r-md:       20px;
-  --r-lg:       28px;
-  --r-xl:       36px;
+  /* Semantic UI Tokens (Dark) */
+  --bg-hover:   rgba(56, 189, 248, 0.08);
+  --bg-active:  rgba(56, 189, 248, 0.15);
+  --border-focus: rgba(56, 189, 248, 0.35);
+  
+  --badge-bg:   rgba(56, 189, 248, 0.12);
+  --badge-border: rgba(56, 189, 248, 0.25);
+  
+  --success-bg: rgba(0, 229, 255, 0.12);
+  --success-border: rgba(0, 229, 255, 0.25);
+  --success:    #00E5FF;
+  
+  --error-bg:   rgba(239, 68, 68, 0.12);
+  --error-border: rgba(239, 68, 68, 0.25);
+  --error:      #EF4444;
+  
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --warning-border: rgba(245, 158, 11, 0.25);
+  --warning:    #F59E0B;
+
+  --text-inverse: #000000;
+  --bg-overlay: rgba(0,0,0,0.85);
 
   /* Shadows & Glows */
   --shadow-sm:  0 4px 12px rgba(0,0,0,0.6);
   --shadow-md:  0 12px 48px rgba(0,0,0,0.7);
   --shadow-lg:  0 32px 80px rgba(0,0,0,0.85);
   --shadow-glow: 0 0 30px rgba(0,229,255,0.18), 0 0 60px rgba(41,121,255,0.08);
-  --shadow-indigo: 0 0 30px rgba(124,77,255,0.15);
-
-  /* Layout & transitions */
-  --nav-h:      52px;
-  --section-pad: 120px;
-  --section-pad-m: 80px;
-  --max-w:      1200px;
-  --transition: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ─── Base ───────────────────────────────────────────────── */
@@ -163,13 +241,13 @@ body {
 
 .btn-ghost {
   background: transparent;
-  color: var(--accent);
-  border: 1px solid rgba(56,189,248,0.35);
+  color: var(--accent-2);
+  border: 1px solid var(--border-focus);
   border-radius: var(--r-sm);
 }
 .btn-ghost:hover {
-  background: rgba(56,189,248,0.1);
-  color: var(--accent);
+  background: var(--bg-hover);
+  color: var(--accent-2);
 }
 
 /* ─── Cards ──────────────────────────────────── */

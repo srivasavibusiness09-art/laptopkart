@@ -47,9 +47,9 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert }: Props
           <div style={{
             display: "flex", justifyContent: "center", alignItems: "center",
             width: 120, height: 120, borderRadius: "50%",
-            background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,150,240,0.12)",
+            background: "var(--bg-hover)", border: "1px solid var(--border)",
             margin: "0 auto 28px",
-            boxShadow: "0 0 40px rgba(56,189,248,0.06)",
+            boxShadow: "0 0 40px var(--bg-hover)",
           }}>
             <ShoppingCart size={48} color={COLORS.green} />
           </div>
@@ -60,7 +60,7 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert }: Props
             Add some refurbished laptops to get started
           </p>
           <button onClick={() => setPage("listing")} style={{
-            background: COLORS.green, color: "#000",
+            background: COLORS.green, color: "var(--text-inverse)",
             border: "none", borderRadius: 100,
             padding: "14px 32px", fontWeight: 800, fontSize: 15,
             cursor: "pointer", fontFamily: "'Sora', sans-serif",
@@ -129,10 +129,10 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert }: Props
                       {item.name}
                     </h3>
                     <button onClick={() => remove(item.id)} style={{
-                      background: "rgba(239,68,68,0.08)",
-                      border: "1px solid rgba(239,68,68,0.15)",
+                      background: "var(--error-bg)",
+                      border: "1px solid var(--error-bg)",
                       borderRadius: 8, padding: "5px",
-                      cursor: "pointer", color: "#EF4444", flexShrink: 0,
+                      cursor: "pointer", color: "var(--error)", flexShrink: 0,
                     }}>
                       <Trash2 size={13} />
                     </button>
@@ -209,8 +209,8 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert }: Props
                 <button
                   onClick={() => { if (coupon.length > 2) setApplied(true); }}
                   style={{
-                    background: applied ? "#10B981" : COLORS.green,
-                    color: "#000", border: "none", borderRadius: 10,
+                    background: applied ? "var(--success)" : COLORS.green,
+                    color: "var(--text-inverse)", border: "none", borderRadius: 10,
                     padding: "11px 20px", fontWeight: 700, fontSize: 13,
                     cursor: "pointer", fontFamily: "'Sora', sans-serif",
                   }}
@@ -219,7 +219,7 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert }: Props
                 </button>
               </div>
               {applied && (
-                <p style={{ color: "#10B981", fontSize: 12, marginTop: 8 }}>
+                <p style={{ color: "var(--success)", fontSize: 12, marginTop: 8 }}>
                   🎉 5% discount applied!
                 </p>
               )}
@@ -253,7 +253,7 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert }: Props
                   borderBottom: `1px solid ${COLORS.cardBorder}`,
                 }}>
                   <span style={{ color: COLORS.muted, fontSize: 14 }}>{label}</span>
-                  <span style={{ color: green ? "#10B981" : COLORS.text, fontWeight: 600, fontSize: 14 }}>{value}</span>
+                  <span style={{ color: green ? "var(--success)" : COLORS.text, fontWeight: 600, fontSize: 14 }}>{value}</span>
                 </div>
               ))}
             </div>
@@ -270,30 +270,30 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert }: Props
 
             <button onClick={() => setPage("checkout")} style={{
               width: "100%",
-              background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000",
+              background: "linear-gradient(135deg, var(--accent-2), var(--accent))", color: "var(--text-inverse)",
               border: "none", borderRadius: 14,
               padding: "16px 0", fontWeight: 800, fontSize: 16,
               cursor: "pointer", fontFamily: "'Sora', sans-serif",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              boxShadow: "0 0 40px rgba(56,189,248,0.22)",
+              boxShadow: "0 0 40px var(--border-focus)",
               transition: "all 0.2s",
             }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 60px rgba(56,189,248,0.45)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 40px rgba(56,189,248,0.22)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 60px var(--border-focus)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 40px var(--border-focus)"; }}
             >
               Proceed to Checkout <ArrowRight size={16} />
             </button>
 
             <button onClick={() => setPage("listing")} style={{
               width: "100%", background: "transparent",
-              border: "1px solid rgba(255,255,255,0.1)",
+              border: "1px solid var(--border-focus)",
               color: COLORS.muted, borderRadius: 14,
               padding: "13px 0", fontWeight: 600, fontSize: 14,
               cursor: "pointer", marginTop: 10,
               transition: "border-color 0.2s",
             }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.25)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.1)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-focus)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-focus)"; }}
             >
               Continue Shopping
             </button>

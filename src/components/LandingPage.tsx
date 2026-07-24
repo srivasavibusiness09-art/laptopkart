@@ -17,7 +17,7 @@ const scenes = [
   { from: 17, to: 24, h: "Memory Upgraded", s: "Max RAM. Maximum possibilities.", b: "" },
   { from: 25, to: 32, h: "Lightning Fast Storage", s: "NVMe SSD. Zero wait time.", b: "" },
   { from: 33, to: 39, h: "Thermally Tested", s: "Runs cool under any load.", b: "" },
-  { from: 40, to: 46, h: "72 Point Quality Check", s: "Display. Keyboard. Ports. Verified.", b: "" },
+  { from: 40, to: 46, h: "Multi Point Quality Check", s: "Display. Keyboard. Ports. Verified.", b: "" },
   { from: 47, to: 52, h: "Feels Brand New", s: "Certified. Warranted. Delivered.", b: "" },
 ];
 
@@ -197,7 +197,7 @@ export default function LandingPage({ onEnterStore }: Props) {
       if (f !== lastFrame.current) {
         lastFrame.current = f;
         drawFrame(f);
-        
+
         // Throttle React renders to 30fps (every 2nd frame) on mobile to keep physics processing fluid
         if (!isMobile || f % 2 === 0 || f === 1 || f === totalFrames) {
           setFrameNum(f); // update UI state
@@ -300,7 +300,19 @@ export default function LandingPage({ onEnterStore }: Props) {
         overflow: "hidden",
         background: "#000",
         userSelect: "none",
-      }}
+        "--text": "#F3F6FA",
+        "--text-2": "#A5B4CD",
+        "--text-3": "#756F68",
+        "--border": "rgba(255,255,255,0.08)",
+        "--border-hi": "rgba(255,255,255,0.15)",
+        "--border-focus": "rgba(255,255,255,0.35)",
+        "--bg-overlay": "rgba(0,0,0,0.85)",
+        "--accent": "#00E5FF",
+        "--accent-2": "#2979FF",
+        "--accent-3": "#00B0FF",
+        "--bg-active": "rgba(56, 189, 248, 0.15)",
+        "--success": "#00E5FF",
+      } as React.CSSProperties}
     >
       {/* ── Loader overlay ────────────────────────── */}
       <div style={{
@@ -313,7 +325,7 @@ export default function LandingPage({ onEnterStore }: Props) {
         alignItems: "center",
         justifyContent: "center",
         fontFamily: "'Sora', sans-serif",
-        color: "#fff",
+        color: "var(--text)",
         opacity: isLoading ? 1 : 0,
         pointerEvents: isLoading ? "auto" : "none",
         transition: "opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -323,7 +335,7 @@ export default function LandingPage({ onEnterStore }: Props) {
           position: "absolute",
           width: "300px",
           height: "300px",
-          background: "radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 70%)",
+          background: "radial-gradient(circle, var(--bg-active) 0%, transparent 70%)",
           borderRadius: "50%",
           filter: "blur(40px)",
           animation: "pulse-glow 3s ease-in-out infinite",
@@ -341,12 +353,12 @@ export default function LandingPage({ onEnterStore }: Props) {
               color: "transparent",
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
-              backgroundImage: "linear-gradient(135deg, #38BDF8, #6366F1)",
+              backgroundImage: "linear-gradient(135deg, var(--accent), #6366F1)",
             }}>Laptopkart</span>
           </div>
 
           <div style={{
-            color: "#38BDF8",
+            color: "var(--accent)",
             fontSize: 12,
             fontWeight: 700,
             textTransform: "uppercase",
@@ -360,7 +372,7 @@ export default function LandingPage({ onEnterStore }: Props) {
           <div style={{
             width: 240,
             height: 4,
-            background: "rgba(255,255,255,0.08)",
+            background: "var(--border-hi)",
             borderRadius: 2,
             overflow: "hidden",
             margin: "0 auto 12px",
@@ -368,7 +380,7 @@ export default function LandingPage({ onEnterStore }: Props) {
             <div style={{
               height: "100%",
               width: `${Math.round((loadedCount / totalFrames) * 100)}%`,
-              background: "linear-gradient(90deg, #3B82F6, #38BDF8)",
+              background: "linear-gradient(90deg, var(--accent-2), var(--accent))",
               boxShadow: "0 0 10px rgba(56,189,248,0.6)",
               transition: "width 0.1s ease",
             }} />
@@ -376,7 +388,7 @@ export default function LandingPage({ onEnterStore }: Props) {
 
           {/* Percentage Text */}
           <div style={{
-            color: "rgba(255,255,255,0.4)",
+            color: "var(--text-3)",
             fontSize: 13,
             fontWeight: 600,
           }}>
@@ -407,12 +419,12 @@ export default function LandingPage({ onEnterStore }: Props) {
         {/* Bottom gradient for text */}
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0, height: "50%",
-          background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)",
+          background: "linear-gradient(to top, var(--bg-overlay) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)",
         }} />
         {/* Top gradient for nav */}
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0, height: "20%",
-          background: "linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 100%)",
+          background: "linear-gradient(to bottom, var(--bg-overlay) 0%, transparent 100%)",
         }} />
       </div>
 
@@ -426,11 +438,11 @@ export default function LandingPage({ onEnterStore }: Props) {
           onClick={() => setMenuOpen((o) => !o)}
           style={{
             background: "transparent", border: "none", cursor: "pointer",
-            color: "rgba(255,255,255,0.85)", padding: 6, display: "flex",
+            color: "var(--text)", padding: 6, display: "flex",
             alignItems: "center", borderRadius: 8, transition: "0.2s",
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.85)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text)"; }}
         >
           {menuOpen ? <X size={isMobile ? 18 : 22} /> : <Menu size={isMobile ? 18 : 22} />}
         </button>
@@ -445,7 +457,7 @@ export default function LandingPage({ onEnterStore }: Props) {
             color: "transparent",
             backgroundClip: "text",
             WebkitBackgroundClip: "text",
-            backgroundImage: "linear-gradient(135deg, #38BDF8, #6366F1)",
+            backgroundImage: "linear-gradient(135deg, var(--accent), #6366F1)",
           }}>Laptopkart</span>
         </div>
 
@@ -453,8 +465,8 @@ export default function LandingPage({ onEnterStore }: Props) {
         <button
           onClick={onEnterStore}
           style={{
-            background: "rgba(56,189,248,0.12)",
-            color: "#38BDF8",
+            background: "var(--bg-active)",
+            color: "var(--accent)",
             border: "1px solid rgba(56,189,248,0.3)",
             borderRadius: isMobile ? 8 : 10,
             padding: isMobile ? "6px 12px" : "9px 20px",
@@ -466,11 +478,11 @@ export default function LandingPage({ onEnterStore }: Props) {
           }}
           onMouseEnter={(e) => {
             const b = e.currentTarget as HTMLButtonElement;
-            b.style.background = "#38BDF8"; b.style.color = "#000";
+            b.style.background = "var(--accent)"; b.style.color = "#000";
           }}
           onMouseLeave={(e) => {
             const b = e.currentTarget as HTMLButtonElement;
-            b.style.background = "rgba(56,189,248,0.12)"; b.style.color = "#38BDF8";
+            b.style.background = "var(--bg-active)"; b.style.color = "var(--accent)";
           }}
         >
           Home
@@ -489,9 +501,9 @@ export default function LandingPage({ onEnterStore }: Props) {
           />
           <aside style={{
             position: "absolute", top: 0, left: 0, bottom: 0,
-            width: 280, background: "rgba(0,0,0,0.92)",
+            width: 280, background: "var(--bg-overlay)",
             backdropFilter: "blur(30px)",
-            borderRight: "1px solid rgba(255,255,255,0.07)",
+            borderRight: "1px solid var(--border-hi)",
             zIndex: 99, padding: "80px 0 24px",
           }}>
             {["Laptops", "Gaming", "MacBooks", "Ultrabooks", "Accessories"].map((l) => (
@@ -502,19 +514,19 @@ export default function LandingPage({ onEnterStore }: Props) {
                   display: "flex", alignItems: "center",
                   width: "100%", textAlign: "left",
                   background: "transparent", border: "none",
-                  color: "rgba(255,255,255,0.75)", fontSize: 16,
+                  color: "var(--text-2)", fontSize: 16,
                   fontFamily: "'Sora', sans-serif",
                   padding: "14px 28px", cursor: "pointer",
-                  borderBottom: "1px solid rgba(255,255,255,0.04)",
+                  borderBottom: "1px solid var(--border)",
                   transition: "all 0.15s",
                 }}
                 onMouseEnter={(e) => {
                   const b = e.currentTarget as HTMLButtonElement;
-                  b.style.color = "#38BDF8"; b.style.paddingLeft = "36px";
+                  b.style.color = "var(--accent)"; b.style.paddingLeft = "36px";
                 }}
                 onMouseLeave={(e) => {
                   const b = e.currentTarget as HTMLButtonElement;
-                  b.style.color = "rgba(255,255,255,0.75)"; b.style.paddingLeft = "28px";
+                  b.style.color = "var(--text-2)"; b.style.paddingLeft = "28px";
                 }}
               >
                 {l}
@@ -538,11 +550,11 @@ export default function LandingPage({ onEnterStore }: Props) {
           fontFamily: "'Sora', sans-serif",
           fontSize: "clamp(32px, 6vw, 72px)",
           fontWeight: 800,
-          color: "#fff",
+          color: "var(--text)",
           margin: "0 0 12px",
           lineHeight: 1.05,
           letterSpacing: "-0.03em",
-          textShadow: "0 4px 40px rgba(0,0,0,0.8), 0 0 80px rgba(56,189,248,0.2)",
+          textShadow: "0 4px 40px var(--bg-overlay), 0 0 80px rgba(56,189,248,0.2)",
         }}>
           {scene.h}
         </h1>
@@ -550,8 +562,8 @@ export default function LandingPage({ onEnterStore }: Props) {
           <p style={{
             fontFamily: "'Sora', sans-serif",
             fontSize: "clamp(15px, 2.2vw, 24px)",
-            color: "#38BDF8", fontWeight: 600, margin: "0 0 8px",
-            textShadow: "0 2px 20px rgba(0,0,0,0.6)",
+            color: "var(--accent)", fontWeight: 600, margin: "0 0 8px",
+            textShadow: "0 2px 20px var(--bg-overlay)",
           }}>
             {scene.s}
           </p>
@@ -559,7 +571,7 @@ export default function LandingPage({ onEnterStore }: Props) {
         {scene.b && (
           <p style={{
             fontSize: "clamp(13px, 1.6vw, 18px)",
-            color: "rgba(255,255,255,0.55)",
+            color: "var(--text-3)",
             lineHeight: 1.7, whiteSpace: "pre-line",
           }}>
             {scene.b}
@@ -578,30 +590,31 @@ export default function LandingPage({ onEnterStore }: Props) {
           <button
             onClick={onEnterStore}
             style={{
-              background: "#38BDF8", color: "#000",
+              background: "linear-gradient(135deg, var(--accent-2) 0%, #1D4ED8 100%)",
+              color: "#FFFFFF",
               border: "none", borderRadius: "100px",
               padding: isMobile ? "12px 28px" : "16px 48px",
               fontSize: isMobile ? 14 : 17, fontWeight: 800,
               cursor: "pointer",
               fontFamily: "'Sora', sans-serif",
-              boxShadow: "0 0 60px rgba(56,189,248,0.45)",
+              boxShadow: "0 4px 20px rgba(37, 99, 235, 0.25)",
               letterSpacing: "-0.01em",
               transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
             }}
             onMouseEnter={(e) => {
               const b = e.currentTarget as HTMLButtonElement;
               b.style.transform = "scale(1.05)";
-              b.style.boxShadow = "0 0 80px rgba(56,189,248,0.65)";
+              b.style.boxShadow = "0 8px 30px rgba(37, 99, 235, 0.45)";
             }}
             onMouseLeave={(e) => {
               const b = e.currentTarget as HTMLButtonElement;
               b.style.transform = "scale(1)";
-              b.style.boxShadow = "0 0 60px rgba(56,189,248,0.45)";
+              b.style.boxShadow = "0 4px 20px rgba(37, 99, 235, 0.25)";
             }}
           >
             Continue To Store →
           </button>
-          <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginTop: 12, fontFamily: "'Inter', sans-serif" }}>
+          <p style={{ color: "var(--text-3)", fontSize: 12, marginTop: 12, fontFamily: "'Inter', sans-serif" }}>
             or keep scrolling
           </p>
         </div>
@@ -610,12 +623,12 @@ export default function LandingPage({ onEnterStore }: Props) {
       {/* ── Progress bar ──────────────────────────── */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
-        height: 2, background: "rgba(255,255,255,0.06)", zIndex: 20,
+        height: 2, background: "var(--border)", zIndex: 20,
       }}>
         <div style={{
           height: "100%",
           width: `${progress * 100}%`,
-          background: "linear-gradient(90deg, #3B82F6, #38BDF8)",
+          background: "linear-gradient(90deg, var(--accent-2), var(--accent))",
           transition: "width 0.05s linear",
           boxShadow: "0 0 10px rgba(56,189,248,0.6)",
         }} />
@@ -632,13 +645,13 @@ export default function LandingPage({ onEnterStore }: Props) {
           opacity: 1 - (frameNum - 1) / 3,
         }}>
           <div style={{
-            color: "rgba(255,255,255,0.4)", fontSize: 11,
+            color: "var(--text-3)", fontSize: 11,
             fontFamily: "'Inter', sans-serif", letterSpacing: "0.1em",
             textTransform: "uppercase", marginBottom: 6,
           }}>
             Scroll
           </div>
-          <div style={{ color: "#38BDF8", fontSize: 20 }}>↓</div>
+          <div style={{ color: "var(--accent)", fontSize: 20 }}>↓</div>
         </div>
       )}
 
@@ -656,7 +669,7 @@ export default function LandingPage({ onEnterStore }: Props) {
               width: active ? 6 : 4,
               height: active ? 20 : 4,
               borderRadius: 100,
-              background: active ? "#38BDF8" : past ? "rgba(56,189,248,0.35)" : "rgba(255,255,255,0.18)",
+              background: active ? "var(--accent)" : past ? "var(--border-focus)" : "var(--border-focus)",
               transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
             }} />
           );

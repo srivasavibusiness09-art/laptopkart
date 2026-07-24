@@ -22,17 +22,17 @@ import Script from "next/script";
 
 /* ── Trust Strip ──────────────────────────────────────── */
 const trustItems = [
-  { icon: <Shield size={15} color={COLORS.green} />, text: "1 Year Warranty" },
-  { icon: <RefreshCw size={15} color={COLORS.green} />, text: "7 Day Replacement*" },
-  { icon: <CheckCircle2 size={15} color={COLORS.green} />, text: "Quality Checked" },
+  { icon: <Shield size={15} color="var(--accent)" />, text: "1 Year Warranty" },
+  { icon: <RefreshCw size={15} color="var(--accent)" />, text: "7 Day Replacement*" },
+  { icon: <CheckCircle2 size={15} color="var(--accent)" />, text: "Quality Checked" },
 ];
 
 function TrustStrip() {
   return (
     <div style={{
-      background: "rgba(10, 15, 30, 0.6)",
-      borderTop: "1px solid rgba(0, 229, 255, 0.08)",
-      borderBottom: "1px solid rgba(0, 229, 255, 0.08)",
+      background: "var(--bg-2)",
+      borderTop: "1px solid var(--border-hi)",
+      borderBottom: "1px solid var(--border-hi)",
       backdropFilter: "blur(20px)",
       WebkitBackdropFilter: "blur(20px)",
       padding: "18px 24px",
@@ -64,7 +64,7 @@ function SectionHeader({ eyebrow, title, subtitle, titleColor }: { eyebrow?: str
       {eyebrow && (
         <div style={{
           display: "inline-block",
-          color: "#00E5FF", fontSize: 11, fontWeight: 800,
+          color: "var(--accent)", fontSize: 11, fontWeight: 800,
           letterSpacing: "0.08em", textTransform: "uppercase",
           marginBottom: 12,
           background: "rgba(0, 229, 255, 0.06)",
@@ -78,7 +78,7 @@ function SectionHeader({ eyebrow, title, subtitle, titleColor }: { eyebrow?: str
         fontSize: "clamp(26px, 4vw, 46px)",
         fontWeight: 800, letterSpacing: "-0.03em",
         color: titleColor || "transparent",
-        backgroundImage: titleColor ? "none" : "linear-gradient(135deg, #FFFFFF 30%, #A5B4CD 100%)",
+        backgroundImage: titleColor ? "none" : "linear-gradient(135deg, var(--text) 30%, var(--text-2) 100%)",
         backgroundClip: titleColor ? "unset" : "text",
         WebkitBackgroundClip: titleColor ? "unset" : "text",
         margin: "0 0 12px", lineHeight: 1.1,
@@ -319,7 +319,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                   <div style={{ flex: 1.2, textAlign: isMobile ? "center" : "left" }}>
                     <div style={{
                       display: "inline-block",
-                      color: "#00E5FF", fontSize: 11, fontWeight: 800,
+                      color: "var(--accent)", fontSize: 11, fontWeight: 800,
                       letterSpacing: "0.08em", textTransform: "uppercase",
                       marginBottom: 12,
                       background: "rgba(0, 229, 255, 0.06)",
@@ -331,7 +331,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                       fontFamily: "'Sora', sans-serif",
                       fontSize: "clamp(26px, 4vw, 42px)",
                       fontWeight: 800, letterSpacing: "-0.03em",
-                      color: "#FFFFFF",
+                      color: "var(--text)",
                       margin: "0 0 16px", lineHeight: 1.1,
                     }}>
                       {videoSettings.title || "Explore Laptopkart in Action"}
@@ -354,8 +354,8 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                       textAlign: "left",
                       maxWidth: 480,
                       margin: isMobile ? "0 auto" : "0",
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid rgba(255,255,255,0.05)",
+                      background: "var(--border)",
+                      border: "1px solid var(--border)",
                       borderRadius: 16,
                       padding: 20
                     }}>
@@ -365,8 +365,8 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                         "Fast and Secure Shipping Across India",
                         "7 Days Easy Replacement Policy"
                       ].map((bullet, idx) => (
-                        <div key={idx} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#A5B4CD" }}>
-                          <span style={{ color: "#00E5FF", fontWeight: "bold" }}>✓</span>
+                        <div key={idx} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--text-2)" }}>
+                          <span style={{ color: "var(--accent)", fontWeight: "bold" }}>✓</span>
                           <span>{bullet}</span>
                         </div>
                       ))}
@@ -415,7 +415,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                     eyebrow="Introduction"
                     title={videoSettings.title || "Explore Laptopkart in Action"}
                     subtitle={videoSettings.subtitle || "Watch our certified refurbishment process and see why thousands trust us."}
-                    titleColor="#FFFFFF"
+                    titleColor="var(--text)"
                   />
 
                   <div style={{
@@ -518,14 +518,14 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                         <h3 style={{
                           fontFamily: "'Sora', sans-serif",
                           fontSize: isMobile ? 18 : 32,
-                          fontWeight: 800, color: "#fff",
+                          fontWeight: 800, color: "var(--text)",
                           margin: "0 0 8px", letterSpacing: "-0.02em",
                           lineHeight: 1.2,
                         }}>
                           {img.title}
                         </h3>
                         <p style={{
-                          color: "rgba(255,255,255,0.65)",
+                          color: "var(--text-3)",
                           fontSize: isMobile ? 11 : 15,
                           margin: 0, maxWidth: 520, lineHeight: 1.5,
                         }}>
@@ -548,7 +548,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                         width: activeSlideIdx === i ? 18 : 6,
                         height: 6,
                         borderRadius: 100,
-                        background: activeSlideIdx === i ? COLORS.green : "rgba(255,255,255,0.4)",
+                        background: activeSlideIdx === i ? COLORS.green : "var(--border-focus)",
                         transition: "all 0.25s",
                       }}
                     />
@@ -639,7 +639,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
           }}>
             <div style={{ textAlign: "center", marginBottom: 36 }}>
               <span style={{
-                background: "rgba(99,102,241,0.12)", color: "#818CF8",
+                background: "rgba(99,102,241,0.12)", color: "var(--accent-2)",
                 fontSize: 10, fontWeight: 700, padding: "4px 12px",
                 borderRadius: 100, textTransform: "uppercase", letterSpacing: "0.1em",
               }}>AI-Powered</span>
@@ -697,7 +697,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                     <div key={i} style={{
                       height: 4, borderRadius: 2,
                       width: i <= step ? 32 : 16,
-                      background: i <= step ? COLORS.green : "rgba(255,255,255,0.08)",
+                      background: i <= step ? COLORS.green : "var(--border-hi)",
                       transition: "all 0.3s ease",
                     }} />
                   ))}
@@ -727,7 +727,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                       }}
                       onMouseEnter={(e) => {
                         const b = e.currentTarget as HTMLButtonElement;
-                        b.style.background = "linear-gradient(135deg, #3B82F6, #38BDF8)"; b.style.color = "#000";
+                        b.style.background = "linear-gradient(135deg, var(--accent-2), var(--accent))"; b.style.color = "#000";
                         b.style.border = "1px solid transparent";
                       }}
                       onMouseLeave={(e) => {
@@ -869,7 +869,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                         height: 8,
                         borderRadius: 4,
                         border: "none",
-                        background: activeTopPickIdx === idx ? COLORS.green : "rgba(255,255,255,0.2)",
+                        background: activeTopPickIdx === idx ? COLORS.green : "var(--border-focus)",
                         cursor: "pointer",
                         transition: "all 0.3s ease"
                       }}
@@ -995,7 +995,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
 
         return section(
           <>
-            <SectionHeader eyebrow="Reviews" title="What Customer Says" subtitle="Trusted by students, professionals, and businesses across India" titleColor="#FFFFFF" />
+            <SectionHeader eyebrow="Reviews" title="What Customer Says" subtitle="Trusted by students, professionals, and businesses across India" titleColor="var(--text)" />
 
             {/* Write a Review Toggle */}
             <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -1011,7 +1011,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
             {reviewSuccess && (
               <div style={{
                 background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)",
-                color: "#10B981", borderRadius: 12, padding: "12px 24px",
+                color: "var(--success)", borderRadius: 12, padding: "12px 24px",
                 maxWidth: 400, margin: "0 auto 20px", textAlign: "center",
                 fontWeight: 700, fontSize: 13, fontFamily: "Sora"
               }}>
@@ -1032,7 +1032,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                   boxShadow: "0 12px 40px rgba(0,0,0,0.3)"
                 }}
               >
-                <h3 style={{ margin: 0, fontFamily: "Sora", color: "#fff", fontSize: 18, fontWeight: 800 }}>Share Your Experience</h3>
+                <h3 style={{ margin: 0, fontFamily: "Sora", color: "var(--text)", fontSize: 18, fontWeight: 800 }}>Share Your Experience</h3>
 
                 {/* Rating selection (Stars) */}
                 <div>
@@ -1043,8 +1043,8 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                         key={s}
                         size={24}
                         onClick={() => setReviewRating(s)}
-                        fill={s <= reviewRating ? "#F59E0B" : "transparent"}
-                        color={s <= reviewRating ? "#F59E0B" : "rgba(255,255,255,0.2)"}
+                        fill={s <= reviewRating ? "var(--warning)" : "transparent"}
+                        color={s <= reviewRating ? "var(--warning)" : "var(--text-3)"}
                         style={{ cursor: "pointer", transition: "transform 0.1s" }}
                       />
                     ))}
@@ -1060,8 +1060,8 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                       value={reviewerName}
                       onChange={(e) => setReviewerName(e.target.value)}
                       style={{
-                        width: "100%", background: "#0d1117", border: "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: 12, padding: "10px 14px", color: "#fff", fontSize: 13, outline: "none",
+                        width: "100%", background: "var(--bg-2)", border: "1px solid var(--border-hi)",
+                        borderRadius: 12, padding: "10px 14px", color: "var(--text)", fontSize: 13, outline: "none",
                         boxSizing: "border-box"
                       }}
                     />
@@ -1074,8 +1074,8 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                       value={reviewerCity}
                       onChange={(e) => setReviewerCity(e.target.value)}
                       style={{
-                        width: "100%", background: "#0d1117", border: "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: 12, padding: "10px 14px", color: "#fff", fontSize: 13, outline: "none",
+                        width: "100%", background: "var(--bg-2)", border: "1px solid var(--border-hi)",
+                        borderRadius: 12, padding: "10px 14px", color: "var(--text)", fontSize: 13, outline: "none",
                         boxSizing: "border-box"
                       }}
                     />
@@ -1091,8 +1091,8 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
                     required
                     rows={4}
                     style={{
-                      width: "100%", background: "#0d1117", border: "1px solid rgba(255,255,255,0.08)",
-                      borderRadius: 12, padding: "12px 14px", color: "#fff", fontSize: 13, outline: "none",
+                      width: "100%", background: "var(--bg-2)", border: "1px solid var(--border-hi)",
+                      borderRadius: 12, padding: "12px 14px", color: "var(--text)", fontSize: 13, outline: "none",
                       resize: "none", boxSizing: "border-box", fontFamily: "inherit", lineHeight: 1.5
                     }}
                   />
@@ -1117,7 +1117,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
             {directReviews.length > 0 && (
               <div style={{ marginTop: 48 }}>
                 <h3 style={{
-                  fontFamily: "Sora", color: "#fff", fontSize: 20,
+                  fontFamily: "Sora", color: "var(--text)", fontSize: 20,
                   fontWeight: 800, marginBottom: 24, textAlign: "center"
                 }}>
                   Direct Website Customer Reviews
@@ -1199,7 +1199,7 @@ export default function Homepage({ products, banners, setPage, onViewProduct, on
               onChange={(e) => setNewsletterEmail(e.target.value)}
               placeholder="Enter your email"
               style={{
-                flex: 1, background: "rgba(10,15,30,0.6)",
+                flex: 1, background: "var(--bg-2)",
                 border: "1px solid rgba(0,229,255,0.18)",
                 borderRadius: 12, padding: "14px 18px",
                 color: COLORS.text, fontSize: 15, outline: "none",

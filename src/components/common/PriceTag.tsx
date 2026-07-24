@@ -66,8 +66,8 @@ export default function PriceTag({
       </span>
       <span
         style={{
-          background: "#EF4444",
-          color: "#ffffff",
+          background: "var(--error)",
+          color: "#FFFFFF",
           fontSize: size === "sm" ? 8 : 9,
           fontWeight: 700,
           padding: "2px 6px",

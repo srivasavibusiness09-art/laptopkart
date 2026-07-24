@@ -243,7 +243,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
         />
         <span style={{
           position: "absolute", top: 16, left: 16,
-          background: "#EF4444", color: "#fff",
+          background: "var(--error)", color: "var(--text)",
           fontSize: 11, fontWeight: 800, padding: "4px 12px",
           borderRadius: 100,
           zIndex: 3,
@@ -266,13 +266,13 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             onClick={handlePrevImage}
             style={{
               width: 38, height: 38, borderRadius: "50%",
-              background: "rgba(13,17,23,0.75)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+              background: "var(--bg-2)",
+              border: "1px solid var(--border)",
+              color: "var(--text)", display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", transition: "all 0.2s",
             }}
-            onMouseEnter={e => e.currentTarget.style.background = "rgba(13,17,23,0.95)"}
-            onMouseLeave={e => e.currentTarget.style.background = "rgba(13,17,23,0.75)"}
+            onMouseEnter={e => e.currentTarget.style.background = "var(--bg-3)"}
+            onMouseLeave={e => e.currentTarget.style.background = "var(--bg-2)"}
           >
             <ChevronLeft size={20} />
           </button>
@@ -280,13 +280,13 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             onClick={handleNextImage}
             style={{
               width: 38, height: 38, borderRadius: "50%",
-              background: "rgba(13,17,23,0.75)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+              background: "var(--bg-2)",
+              border: "1px solid var(--border)",
+              color: "var(--text)", display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", transition: "all 0.2s",
             }}
-            onMouseEnter={e => e.currentTarget.style.background = "rgba(13,17,23,0.95)"}
-            onMouseLeave={e => e.currentTarget.style.background = "rgba(13,17,23,0.75)"}
+            onMouseEnter={e => e.currentTarget.style.background = "var(--bg-3)"}
+            onMouseLeave={e => e.currentTarget.style.background = "var(--bg-2)"}
           >
             <ChevronRight size={20} />
           </button>
@@ -304,7 +304,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
                 width: activeImgIdx === idx ? 18 : 6,
                 height: 6,
                 borderRadius: 100,
-                background: activeImgIdx === idx ? COLORS.green : "rgba(255,255,255,0.4)",
+                background: activeImgIdx === idx ? COLORS.green : "var(--text-3)",
                 transition: "all 0.25s",
               }}
             />
@@ -315,6 +315,9 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
         display: "flex",
         gap: 10, marginTop: 14,
         justifyContent: "center",
+        overflowX: "auto",
+        maxWidth: "100%",
+        padding: "4px 0",
       }}>
         {productImages.map((img, idx) => (
           <button
@@ -325,6 +328,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
               overflow: "hidden", border: `2px solid ${activeImgIdx === idx ? COLORS.green : "transparent"}`,
               padding: 0, background: COLORS.background, cursor: "pointer",
               transition: "all 0.2s",
+              flexShrink: 0,
             }}
           >
             <img src={img} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -357,7 +361,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   const aboutCardJSX = (
     <div style={{
       marginTop: 24,
-      background: "rgba(255,255,255,0.01)",
+      background: "var(--bg-1)",
       border: `1px solid ${COLORS.cardBorder}`,
       borderRadius: 20,
       padding: 24,
@@ -368,7 +372,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
       <p style={{ color: COLORS.muted, fontSize: 13, lineHeight: 1.65, margin: "0 0 16px" }}>
         {product.description || getAboutText(product.name, product.brand, product.category, product.condition === "Brand New")}
       </p>
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 14 }}>
+      <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>
         <div style={{ color: COLORS.text, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
           {product.condition === "Brand New" ? "Sealed Box Contents:" : "Certified Box Contents:"}
         </div>
@@ -402,7 +406,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 6,
-          background: "rgba(56,189,248,0.08)",
+          background: "var(--bg-active)",
           border: "1px solid rgba(56,189,248,0.2)",
           borderRadius: 100, padding: "4px 12px",
         }}>
@@ -415,15 +419,15 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
           <span style={{ position: "relative", display: "flex", width: 8, height: 8 }}>
             <span style={{
               position: "absolute", width: "100%", height: "100%",
-              borderRadius: "50%", background: "#10B981", opacity: 0.75,
+              borderRadius: "50%", background: "var(--success)", opacity: 0.75,
               animation: "ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite",
             }} />
             <span style={{
               position: "relative", borderRadius: "50%", width: 8, height: 8,
-              background: "#10B981",
+              background: "var(--success)",
             }} />
           </span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#10B981", letterSpacing: "0.02em" }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--success)", letterSpacing: "0.02em" }}>
             Live Shop Certified
           </span>
         </div>
@@ -443,7 +447,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
         <div style={{ display: "flex", gap: 2 }}>
           {[1, 2, 3, 4, 5].map((s) => (
-            <Star key={s} size={14} fill={s <= Math.floor(product.rating) ? "#F59E0B" : "transparent"} color={s <= Math.floor(product.rating) ? "#F59E0B" : "rgba(255,255,255,0.15)"} />
+            <Star key={s} size={14} fill={s <= Math.floor(product.rating) ? "var(--warning)" : "transparent"} color={s <= Math.floor(product.rating) ? "var(--warning)" : "var(--border-hi)"} />
           ))}
         </div>
         <span style={{ color: COLORS.text, fontWeight: 700, fontSize: 14 }}>{product.rating}</span>
@@ -469,7 +473,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <span style={{
-            background: "rgba(16,185,129,0.12)", color: "#10B981",
+            background: "var(--success-bg)", color: "var(--success)",
             fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 100,
           }}>
             You save ₹{(activeMrp - activePrice).toLocaleString("en-IN")}
@@ -492,11 +496,11 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
                   key={ramOpt}
                   onClick={() => setSelectedRam(ramOpt)}
                   style={{
-                    background: isSelected ? "rgba(59, 130, 246, 0.08)" : "rgba(255,255,255,0.01)",
-                    border: `1px solid ${isSelected ? "#3B82F6" : "rgba(255,255,255,0.08)"}`,
+                    background: isSelected ? "rgba(59, 130, 246, 0.08)" : "var(--bg)",
+                    border: `1px solid ${isSelected ? "var(--accent-2)" : "var(--border)"}`,
                     borderRadius: 12,
                     padding: "10px 18px",
-                    color: isSelected ? "#3B82F6" : COLORS.text,
+                    color: isSelected ? "var(--accent-2)" : COLORS.text,
                     fontSize: 13,
                     fontWeight: 700,
                     cursor: "pointer",
@@ -512,8 +516,8 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
                   }}
                   onMouseLeave={(e) => {
                     if (!isSelected) {
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                      e.currentTarget.style.background = "rgba(255,255,255,0.01)";
+                      e.currentTarget.style.borderColor = "var(--border)";
+                      e.currentTarget.style.background = "var(--bg)";
                     }
                   }}
                 >
@@ -541,11 +545,11 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
                   key={storeOpt}
                   onClick={() => setSelectedStorage(storeOpt)}
                   style={{
-                    background: isSelected ? "rgba(59, 130, 246, 0.08)" : "rgba(255,255,255,0.01)",
-                    border: `1px solid ${isSelected ? "#3B82F6" : "rgba(255,255,255,0.08)"}`,
+                    background: isSelected ? "rgba(59, 130, 246, 0.08)" : "var(--bg)",
+                    border: `1px solid ${isSelected ? "var(--accent-2)" : "var(--border)"}`,
                     borderRadius: 12,
                     padding: "10px 18px",
-                    color: isSelected ? "#3B82F6" : COLORS.text,
+                    color: isSelected ? "var(--accent-2)" : COLORS.text,
                     fontSize: 13,
                     fontWeight: 700,
                     cursor: "pointer",
@@ -561,8 +565,8 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
                   }}
                   onMouseLeave={(e) => {
                     if (!isSelected) {
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                      e.currentTarget.style.background = "rgba(255,255,255,0.01)";
+                      e.currentTarget.style.borderColor = "var(--border)";
+                      e.currentTarget.style.background = "var(--bg)";
                     }
                   }}
                 >
@@ -604,17 +608,15 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
           disabled={(product.stock !== undefined ? product.stock : 1) <= 0}
           style={{
             flex: 1, minWidth: 180,
-            background: (product.stock !== undefined ? product.stock : 1) <= 0
-              ? "#2A354F"
-              : added ? "#10B981" : "linear-gradient(135deg, #3B82F6, #38BDF8)",
-            color: (product.stock !== undefined ? product.stock : 1) <= 0 ? COLORS.muted : "#000",
+            background: (product.stock !== undefined ? product.stock : 1) <= 0 ? "var(--bg-active)" : added ? "var(--success)" : "linear-gradient(135deg, var(--accent-2), var(--accent))",
+            color: (product.stock !== undefined ? product.stock : 1) <= 0 ? "var(--text-3)" : "var(--text-inverse)",
             border: "none", borderRadius: 14,
             height: 48, fontWeight: 800, fontSize: 15,
             cursor: (product.stock !== undefined ? product.stock : 1) <= 0 ? "not-allowed" : "pointer",
             fontFamily: "'Sora', sans-serif",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
             transition: "all 0.25s ease",
-            boxShadow: (product.stock !== undefined ? product.stock : 1) <= 0 ? "none" : "0 0 40px rgba(56,189,248,0.22)",
+            boxShadow: (product.stock !== undefined ? product.stock : 1) <= 0 ? "none" : "0 0 40px var(--border-focus)",
           }}
         >
           {(product.stock !== undefined ? product.stock : 1) <= 0 ? (
@@ -628,14 +630,14 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
         <button
           onClick={() => onWishlist(product.id)}
           style={{
-            background: isWished ? "rgba(239,68,68,0.12)" : COLORS.cardBg,
+            background: isWished ? "var(--error-bg)" : COLORS.cardBg,
             border: `1px solid ${isWished ? "rgba(239,68,68,0.3)" : COLORS.cardBorder}`,
             borderRadius: 14, width: 48, height: 48,
             cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
             transition: "all 0.2s",
           }}
         >
-          <Heart size={18} fill={isWished ? "#EF4444" : "transparent"} color={isWished ? "#EF4444" : COLORS.muted} />
+          <Heart size={18} fill={isWished ? "var(--error)" : "transparent"} color={isWished ? "var(--error)" : COLORS.muted} />
         </button>
       </div>
       <button
@@ -648,8 +650,8 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
         disabled={(product.stock !== undefined ? product.stock : 1) <= 0}
         style={{
           width: "100%",
-          background: (product.stock !== undefined ? product.stock : 1) <= 0 ? "#2A354F" : "transparent",
-          border: "1px solid rgba(255,255,255,0.12)",
+          background: (product.stock !== undefined ? product.stock : 1) <= 0 ? "var(--bg-2)" : "transparent",
+          border: "1px solid var(--border)",
           color: (product.stock !== undefined ? product.stock : 1) <= 0 ? COLORS.muted : COLORS.text,
           borderRadius: 14, height: 48,
           fontWeight: 700, fontSize: 15,
@@ -661,12 +663,12 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
         }}
         onMouseEnter={(e) => {
           if ((product.stock !== undefined ? product.stock : 1) > 0) {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.3)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-hi)";
           }
         }}
         onMouseLeave={(e) => {
           if ((product.stock !== undefined ? product.stock : 1) > 0) {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
           }
         }}
       >

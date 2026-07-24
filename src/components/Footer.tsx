@@ -70,7 +70,7 @@ export default function Footer({ setPage }: FooterProps) {
   const col = (title: string, links: string[]) => (
     <div>
       <div style={{
-        color: COLORS.text, fontWeight: 700, fontSize: 13,
+        color: "var(--text)", fontWeight: 700, fontSize: 13,
         marginBottom: 18, letterSpacing: "0.02em",
         fontFamily: "'Sora', sans-serif",
       }}>{title}</div>
@@ -79,12 +79,12 @@ export default function Footer({ setPage }: FooterProps) {
           key={link}
           onClick={() => setPage(getFooterLinkTarget(link))}
           style={{
-            color: COLORS.muted, fontSize: 13, marginBottom: 10,
+            color: "var(--text-2)", fontSize: 13, marginBottom: 10,
             cursor: "pointer", transition: "color 0.15s",
             display: "flex", alignItems: "center", gap: 4,
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.color = COLORS.green; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.color = COLORS.muted; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.color = "var(--text-2)"; }}
         >
           {link}
         </div>
@@ -94,8 +94,8 @@ export default function Footer({ setPage }: FooterProps) {
 
   return (
     <footer style={{
-      background: "#0a0f18",
-      borderTop: "1px solid rgba(56,150,240,0.10)",
+      background: "var(--bg-footer)",
+      borderTop: "1px solid var(--border)",
       padding: isMobile ? "48px 18px 24px" : "72px 40px 32px",
       marginTop: 0,
     }}>
@@ -120,10 +120,10 @@ export default function Footer({ setPage }: FooterProps) {
                 color: "transparent",
                 backgroundClip: "text",
                 WebkitBackgroundClip: "text",
-                backgroundImage: "linear-gradient(135deg, #38BDF8, #6366F1)",
+                backgroundImage: "linear-gradient(135deg, var(--accent), #6366F1)",
               }}>Laptopkart</span>
             </div>
-            <p style={{ color: COLORS.muted, fontSize: 13, lineHeight: 1.7, maxWidth: 260, marginBottom: 20 }}>
+            <p style={{ color: "var(--text-2)", fontSize: 13, lineHeight: 1.7, maxWidth: 260, marginBottom: 20 }}>
               India's most trusted refurbished laptop store. Best prices, best quality, backed by warranty.
             </p>
             {/* Contact info */}
@@ -135,7 +135,7 @@ export default function Footer({ setPage }: FooterProps) {
               ].map(({ icon, text }) => (
                 <div key={text} style={{
                   display: "flex", alignItems: "center", gap: 8,
-                  color: COLORS.muted, fontSize: 12, marginBottom: 8,
+                  color: "var(--text-2)", fontSize: 12, marginBottom: 8,
                 }}>
                   {icon}{text}
                 </div>
@@ -145,24 +145,24 @@ export default function Footer({ setPage }: FooterProps) {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {social.map(({ icon, label }) => (
                 <button key={label} aria-label={label} style={{
-                  background: "rgba(56,150,240,0.06)",
-                  border: "1px solid rgba(56,150,240,0.12)",
+                  background: "var(--bg)",
+                  border: "1px solid var(--border)",
                   borderRadius: 8, width: 34, height: 34,
-                  cursor: "pointer", color: COLORS.muted,
+                  cursor: "pointer", color: "var(--text-2)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.2s",
                 }}
                   onMouseEnter={(e) => {
                     const b = e.currentTarget as HTMLButtonElement;
                     b.style.color = COLORS.green;
-                    b.style.borderColor = "rgba(56,189,248,0.28)";
-                    b.style.background = "rgba(56,150,240,0.12)";
+                    b.style.borderColor = "var(--border-hi)";
+                    b.style.background = "var(--bg-1)";
                   }}
                   onMouseLeave={(e) => {
                     const b = e.currentTarget as HTMLButtonElement;
-                    b.style.color = COLORS.muted;
-                    b.style.borderColor = "rgba(56,150,240,0.12)";
-                    b.style.background = "rgba(56,150,240,0.06)";
+                    b.style.color = "var(--text-2)";
+                    b.style.borderColor = "var(--border)";
+                    b.style.background = "var(--bg)";
                   }}
                 >{icon}</button>
               ))}
@@ -193,10 +193,10 @@ export default function Footer({ setPage }: FooterProps) {
           {!isMobile && (
             <div>
               <div style={{
-                color: COLORS.text, fontWeight: 700, fontSize: 13,
+                color: "var(--text)", fontWeight: 700, fontSize: 13,
                 marginBottom: 12, fontFamily: "'Sora', sans-serif",
               }}>Stay Updated</div>
-              <p style={{ color: COLORS.muted, fontSize: 12, marginBottom: 14, lineHeight: 1.6 }}>
+              <p style={{ color: "var(--text-2)", fontSize: 12, marginBottom: 14, lineHeight: 1.6 }}>
                 Get exclusive deals and tech news delivered to you.
               </p>
               <form onSubmit={handleSubscribe} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -207,20 +207,20 @@ export default function Footer({ setPage }: FooterProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={{
-                    background: "rgba(56,150,240,0.06)",
-                    border: "1px solid rgba(56,150,240,0.12)",
+                    background: "var(--bg)",
+                    border: "1px solid var(--border)",
                     borderRadius: 8, padding: "10px 12px",
-                    color: COLORS.text, fontSize: 13, outline: "none",
+                    color: "var(--text)", fontSize: 13, outline: "none",
                     boxSizing: "border-box",
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = "rgba(56,189,248,0.35)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "rgba(56,150,240,0.12)"; }}
+                  onFocus={(e) => { e.target.style.borderColor = "var(--border-focus)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
                 />
                 <button
                   type="submit"
                   disabled={status === "loading"}
                   style={{
-                    background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000",
+                    background: "linear-gradient(135deg, var(--accent-2), var(--accent))", color: "var(--text-inverse)",
                     border: "none", borderRadius: 8,
                     padding: "10px 16px", fontWeight: 700,
                     fontSize: 13, cursor: "pointer",
@@ -236,7 +236,7 @@ export default function Footer({ setPage }: FooterProps) {
                   </span>
                 )}
                 {status === "error" && (
-                  <span style={{ color: "#EF4444", fontSize: 11, fontWeight: 600, marginTop: 4 }}>
+                  <span style={{ color: "var(--error)", fontSize: 11, fontWeight: 600, marginTop: 4 }}>
                     {errorMsg || "Failed to subscribe."}
                   </span>
                 )}
@@ -247,7 +247,7 @@ export default function Footer({ setPage }: FooterProps) {
 
         {/* Bottom bar */}
         <div style={{
-          borderTop: "1px solid rgba(56,150,240,0.08)",
+          borderTop: "1px solid var(--border)",
           paddingTop: 20,
           display: "flex",
           justifyContent: "space-between",
@@ -255,11 +255,11 @@ export default function Footer({ setPage }: FooterProps) {
           flexWrap: "wrap", gap: 12,
         }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ color: COLORS.muted, fontSize: 12 }}>
+            <div style={{ color: "var(--text-2)", fontSize: 12 }}>
               © 2026 Laptopkart. All Rights Reserved.
             </div>
-            <div style={{ color: COLORS.muted, fontSize: 11, fontWeight: 500 }}>
-              Developed by <a href="https://www.d2devs.co.in/" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.muted, textDecoration: "none", transition: "color 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.color = COLORS.text; }} onMouseLeave={(e) => { e.currentTarget.style.color = COLORS.muted; }}>D²Devs</a>
+            <div style={{ color: "var(--text-2)", fontSize: 11, fontWeight: 500 }}>
+              Developed by <a href="https://www.d2devs.co.in/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--text-2)", textDecoration: "none", transition: "color 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-2)"; }}>D²Devs</a>
             </div>
           </div>
           {!isMobile && (
@@ -270,11 +270,11 @@ export default function Footer({ setPage }: FooterProps) {
                 ["Refund Policy", "refund-policy"],
               ] as [string, string][]).map(([label, page]) => (
                 <span key={label} onClick={() => setPage(page)} style={{
-                  color: COLORS.muted, fontSize: 12, cursor: "pointer",
+                  color: "var(--text-2)", fontSize: 12, cursor: "pointer",
                   transition: "color 0.15s",
                 }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLSpanElement).style.color = COLORS.text; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLSpanElement).style.color = COLORS.muted; }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLSpanElement).style.color = "var(--text)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLSpanElement).style.color = "var(--text-2)"; }}
                 >{label}</span>
               ))}
             </div>
@@ -282,10 +282,10 @@ export default function Footer({ setPage }: FooterProps) {
           <div style={{ display: "flex", gap: 6 }}>
             {["VISA", "MC", "UPI"].map((p) => (
               <span key={p} style={{
-                background: "rgba(56,150,240,0.06)",
-                border: "1px solid rgba(56,150,240,0.12)",
+                background: "var(--bg)",
+                border: "1px solid var(--border)",
                 borderRadius: 6, padding: "4px 9px",
-                color: COLORS.muted, fontSize: 10, fontWeight: 800,
+                color: "var(--text-2)", fontSize: 10, fontWeight: 800,
                 letterSpacing: "0.03em",
               }}>{p}</span>
             ))}

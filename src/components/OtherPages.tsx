@@ -96,7 +96,7 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
             </thead>
             <tbody>
               {specs.map((spec, i) => (
-                <tr key={spec} style={{ background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
+                <tr key={spec} style={{ background: i % 2 === 0 ? "transparent" : "var(--bg-1)" }}>
                   <td style={{ padding: "14px 20px", color: COLORS.muted, fontSize: 14, fontWeight: 600, border: `1px solid ${COLORS.cardBorder}` }}>{labels[spec]}</td>
                   {selected.map((p, index) => {
                     const rawVal = p[spec as keyof typeof p] as string | number;
@@ -173,7 +173,7 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
               <div key={spec} style={{
                 padding: "16px 14px",
                 borderBottom: i < specs.length - 1 ? `1px solid ${COLORS.cardBorder}` : "none",
-                background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"
+                background: i % 2 === 0 ? "transparent" : "var(--bg-1)"
               }}>
                 {/* Spec Label */}
                 <div style={{
@@ -199,8 +199,8 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
                         width: "50%",
                         padding: "8px 4px",
                         borderRadius: 8,
-                        background: best ? "rgba(16,185,129,0.08)" : "transparent",
-                        border: best ? "1px solid rgba(16,185,129,0.15)" : "1px solid transparent",
+                        background: best ? "var(--success-bg)" : "transparent",
+                        border: best ? "1px solid var(--success-bg)" : "1px solid transparent",
                         color: best ? COLORS.green : COLORS.text,
                         fontWeight: best ? 700 : 500,
                         fontSize: 13,
@@ -283,8 +283,8 @@ export function BlogPage({ user, setPage }: { user: any; setPage: (p: string) =>
         <button
           onClick={() => setPage("write-blog")}
           style={{
-            background: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
-            color: "#fff",
+            background: "linear-gradient(135deg, var(--accent-2) 0%, #1D4ED8 100%)",
+            color: "var(--text)",
             border: "none",
             borderRadius: 12,
             padding: "12px 24px",
@@ -303,7 +303,7 @@ export function BlogPage({ user, setPage }: { user: any; setPage: (p: string) =>
         {posts.map((post, idx) => (
           <div key={post.id || idx} style={{ background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, borderRadius: 16, overflow: "hidden", cursor: "pointer", transition: "all 0.25s" }}
             onClick={() => setPage(`blog-${post.id || idx}`)}
-            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "#3B82F6"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)"; }}
+            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--accent-2)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = COLORS.cardBorder; (e.currentTarget as HTMLDivElement).style.transform = "none"; }}
           >
             <div style={{
@@ -314,7 +314,7 @@ export function BlogPage({ user, setPage }: { user: any; setPage: (p: string) =>
               width: "100%",
             }} />
             <div style={{ padding: 20 }}>
-              <span style={{ background: "rgba(59, 130, 246, 0.15)", color: "#3B82F6", border: "1px solid rgba(59, 130, 246, 0.25)", fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, textTransform: "uppercase" }}>{post.cat || post.category}</span>
+              <span style={{ background: "rgba(59, 130, 246, 0.15)", color: "var(--accent-2)", border: "1px solid rgba(59, 130, 246, 0.25)", fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, textTransform: "uppercase" }}>{post.cat || post.category}</span>
               <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 16, lineHeight: 1.5, margin: "10px 0 12px" }}>{post.title}</h3>
               <div style={{ color: COLORS.muted, fontSize: 12, display: "flex", flexDirection: "column", gap: 4 }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -348,14 +348,14 @@ export function BlogDetail({ postId, setPage }: { postId: string; setPage: (p: s
 
   if (!post) {
     return (
-      <div style={{ width: "100vw", minHeight: "100vh", padding: isMobile ? "24px 14px" : "40px 20px", background: "#0f1117", color: "#fff" }}>
+      <div style={{ width: "100vw", minHeight: "100vh", padding: isMobile ? "24px 14px" : "40px 20px", background: "var(--bg)", color: "var(--text)" }}>
         <p>Loading...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ width: "100vw", minHeight: "100vh", padding: isMobile ? "24px 14px" : "40px 20px", background: "#0f1117", color: "#fff" }}>
+    <div style={{ width: "100vw", minHeight: "100vh", padding: isMobile ? "24px 14px" : "40px 20px", background: "var(--bg)", color: "var(--text)" }}>
       <div style={{ maxWidth: 840, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
           <button onClick={() => setPage("blog")} style={{ color: COLORS.muted, background: "transparent", border: "none", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
@@ -363,9 +363,9 @@ export function BlogDetail({ postId, setPage }: { postId: string; setPage: (p: s
           </button>
         </div>
         <div style={{ height: 300, backgroundImage: `url(${post.coverUrl})`, backgroundSize: "cover", backgroundPosition: "center", borderRadius: 12, marginBottom: 24 }} />
-        <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 28 : 36, fontWeight: 800, color: "#fff", marginBottom: 12 }}>{post.title}</h2>
+        <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 28 : 36, fontWeight: 800, color: "var(--text)", marginBottom: 12 }}>{post.title}</h2>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 24, flexWrap: "wrap" }}>
-          <span style={{ background: "rgba(59, 130, 246, 0.15)", color: "#3B82F6", border: "1px solid rgba(59, 130, 246, 0.25)", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, textTransform: "uppercase" }}>
+          <span style={{ background: "rgba(59, 130, 246, 0.15)", color: "var(--accent-2)", border: "1px solid rgba(59, 130, 246, 0.25)", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, textTransform: "uppercase" }}>
             {post.category || post.cat}
           </span>
           <span style={{ color: COLORS.muted, fontSize: 13 }}>
@@ -375,7 +375,7 @@ export function BlogDetail({ postId, setPage }: { postId: string; setPage: (p: s
             By {post.author || "Contest Writer"}
           </span>
         </div>
-        <div style={{ lineHeight: 1.8, color: "#E8EDF5" }} dangerouslySetInnerHTML={{
+        <div style={{ lineHeight: 1.8, color: "var(--text-2)" }} dangerouslySetInnerHTML={{
           __html: post.content
             .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")           // Bold
             .replace(/### (.*)/g, "<h3>$1</h3>")                       // H3
@@ -452,7 +452,7 @@ export function ContactPage() {
               <p style={{ color: COLORS.muted, margin: "0 0 16px 0", fontSize: 14 }}>We&apos;ll get back to you within 24 hours.</p>
               <button 
                 onClick={() => { setSent(false); setForm({ name: "", email: "", phone: "", message: "" }); }} 
-                style={{ background: COLORS.green, color: COLORS.black, border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}
+                style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}
               >
                 Send Another
               </button>
@@ -523,7 +523,7 @@ export function ContactPage() {
                 style={{ 
                   width: "100%", 
                   background: COLORS.green, 
-                  color: COLORS.black, 
+                  color: "var(--text-inverse)", 
                   border: "none", 
                   borderRadius: 12, 
                   padding: "14px 0", 
@@ -569,8 +569,8 @@ export function ContactPage() {
               }}
             >
               <div style={{ 
-                background: "rgba(56,189,248,0.06)", 
-                border: "1px solid rgba(56,150,240,0.12)", 
+                background: "var(--bg-hover)", 
+                border: "1px solid var(--border)", 
                 borderRadius: 10, 
                 width: 36, 
                 height: 36, 
@@ -737,7 +737,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
       minHeight: "calc(100vh - 52px)",
       position: "relative",
       overflow: "hidden",
-      background: COLORS.darkBg,
+      background: "var(--bg)",
       padding: "48px 14px",
       boxSizing: "border-box",
     }}>
@@ -745,7 +745,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
       <div style={{
         position: "absolute", top: "10%", left: "12%",
         width: isMobile ? 180 : 360, height: isMobile ? 180 : 360,
-        borderRadius: "50%", background: "radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 70%)",
+        borderRadius: "50%", background: "radial-gradient(circle, var(--bg-active) 0%, transparent 70%)",
         filter: "blur(50px)",
         animation: "floatBg 12s ease-in-out infinite",
         pointerEvents: "none",
@@ -777,22 +777,22 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
           50% { transform: translate(-32px, 24px) scale(0.96); }
         }
         .glass-input:focus-within {
-          border-color: #38BDF8 !important;
-          box-shadow: 0 0 16px rgba(56,189,248,0.18) !important;
+          border-color: var(--accent) !important;
+          box-shadow: 0 0 16px var(--bg-active) !important;
         }
       `}</style>
 
       {/* Login Card */}
       <div style={{
-        background: "rgba(20,24,33,0.65)",
+        background: "var(--bg-2)",
         backdropFilter: "blur(24px)",
         WebkitBackdropFilter: "blur(24px)",
-        border: "1px solid rgba(255,255,255,0.06)",
+        border: "1px solid var(--border)",
         borderRadius: 24,
         padding: isMobile ? 28 : 40,
         width: "100%",
         maxWidth: 440,
-        boxShadow: "0 24px 60px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.08)",
+        boxShadow: "0 24px 60px rgba(0,0,0,0.5), inset 0 1px 1px var(--border-hi)",
         position: "relative",
         zIndex: 2,
         boxSizing: "border-box",
@@ -801,17 +801,17 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{
             width: 52, height: 52, borderRadius: 14,
-            background: "rgba(56,189,248,0.06)",
-            border: "1px solid rgba(56,189,248,0.18)",
+            background: "var(--bg-hover)",
+            border: "1px solid var(--bg-active)",
             display: "flex", alignItems: "center", justifyContent: "center",
             margin: "0 auto 16px",
-            boxShadow: "0 0 20px rgba(56,189,248,0.08)",
+            boxShadow: "0 0 20px var(--bg-active)",
           }}>
             <Laptop size={24} color={COLORS.green} />
           </div>
           <h2 style={{
             fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 800,
-            color: "#fff", margin: "0 0 6px", letterSpacing: "-0.02em",
+            color: "var(--text)", margin: "0 0 6px", letterSpacing: "-0.02em",
           }}>
             {mode === "login" ? "Welcome Back" : "Get Started"}
           </h2>
@@ -826,7 +826,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
           position: "relative",
           marginBottom: 24,
           background: "rgba(13,17,23,0.6)",
-          border: "1px solid rgba(255,255,255,0.04)",
+          border: "1px solid var(--border)",
           borderRadius: 14,
           padding: 4,
           height: 44,
@@ -860,7 +860,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
 
         {/* Error Alert */}
         {errorMsg && (
-          <div style={{ color: "#EF4444", fontSize: 13, textAlign: "center", marginBottom: 16, background: "rgba(239,68,68,0.08)", padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.18)" }}>
+          <div style={{ color: "var(--error)", fontSize: 13, textAlign: "center", marginBottom: 16, background: "var(--error-bg)", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--error-bg)" }}>
             {errorMsg}
           </div>
         )}
@@ -872,7 +872,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
               <div className="glass-input" style={{
                 display: "flex", alignItems: "center", gap: 10,
                 background: "rgba(13,17,23,0.5)",
-                border: "1px solid rgba(255,255,255,0.06)",
+                border: "1px solid var(--border)",
                 borderRadius: 12, padding: "0 14px", height: 46,
                 transition: "all 0.25s",
               }}>
@@ -892,7 +892,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
             <div className="glass-input" style={{
               display: "flex", alignItems: "center", gap: 10,
               background: "rgba(13,17,23,0.5)",
-              border: "1px solid rgba(255,255,255,0.06)",
+              border: "1px solid var(--border)",
               borderRadius: 12, padding: "0 14px", height: 46,
               transition: "all 0.25s",
             }}>
@@ -914,7 +914,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  style={{ background: "transparent", border: "none", color: "#38BDF8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
+                  style={{ background: "transparent", border: "none", color: "var(--accent)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
                 >
                   Forgot Password?
                 </button>
@@ -923,7 +923,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
             <div className="glass-input" style={{
               display: "flex", alignItems: "center", gap: 10,
               background: "rgba(13,17,23,0.5)",
-              border: "1px solid rgba(255,255,255,0.06)",
+              border: "1px solid var(--border)",
               borderRadius: 12, padding: "0 14px", height: 46,
               transition: "all 0.25s",
             }}>
@@ -963,7 +963,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
             style={{
               width: "100%",
               background: COLORS.green,
-              color: COLORS.black,
+              color: "var(--text-inverse)",
               border: "none",
               borderRadius: 12,
               padding: "14px 0",
@@ -977,17 +977,17 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
               justifyContent: "center",
               gap: 6,
               transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-              boxShadow: "0 4px 20px rgba(16,185,129,0.25)",
+              boxShadow: "0 4px 20px var(--success-border)",
             }}
             onMouseEnter={e => {
               const b = e.currentTarget;
               b.style.transform = "translateY(-1px)";
-              b.style.boxShadow = "0 6px 24px rgba(16,185,129,0.45)";
+              b.style.boxShadow = "0 6px 24px var(--success-border)";
             }}
             onMouseLeave={e => {
               const b = e.currentTarget;
               b.style.transform = "none";
-              b.style.boxShadow = "0 4px 20px rgba(16,185,129,0.25)";
+              b.style.boxShadow = "0 4px 20px var(--success-border)";
             }}
           >
             {mode === "login" ? "Access Account →" : "Register Account →"}
@@ -996,34 +996,34 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
 
         {/* Separator */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+          <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
           <span style={{ color: COLORS.muted, fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
             or join with
           </span>
-          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+          <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
         </div>
 
         {/* SSO Actions */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <button onClick={handleGoogleAuth} style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+            background: "var(--border)", border: "1px solid var(--border)",
             borderRadius: 12, padding: "11px 0", color: COLORS.text, fontWeight: 700, fontSize: 13,
             cursor: "pointer", fontFamily: "'Sora', sans-serif", transition: "all 0.2s",
           }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(56,189,248,0.30)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--border-focus)"; e.currentTarget.style.background = "var(--border)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--border)"; }}
           >
             <FaGoogle size={14} color="#EA4335" /> Google
           </button>
           <button onClick={handleAppleAuth} style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+            background: "var(--border)", border: "1px solid var(--border)",
             borderRadius: 12, padding: "11px 0", color: COLORS.text, fontWeight: 700, fontSize: 13,
             cursor: "pointer", fontFamily: "'Sora', sans-serif", transition: "all 0.2s",
           }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--border-focus)"; e.currentTarget.style.background = "var(--border)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--border)"; }}
           >
             <FaApple size={14} color="#fff" /> Apple
           </button>
@@ -1056,12 +1056,12 @@ export function WhyRefurbishedPage() {
             desc: "Get premium business-class laptops (Dell Latitude, ThinkPad, MacBook) at 50% to 70% off retail pricing.",
           },
           {
-            icon: <ShieldCheck size={24} color="#38BDF8" />,
+            icon: <ShieldCheck size={24} color="var(--accent)" />,
             title: "Multi-Point Diagnostics",
             desc: "Every laptop undergoes testing, component restoration, and comes backed by a 1-Year Warranty.",
           },
           {
-            icon: <Leaf size={24} color="#10B981" />,
+            icon: <Leaf size={24} color="var(--success)" />,
             title: "Eco-Friendly Impact",
             desc: "Prevent hazardous electronic waste. Buying refurbished reduces the carbon footprint of manufacturing by 80%.",
           }
@@ -1070,7 +1070,7 @@ export function WhyRefurbishedPage() {
             key={idx}
             style={{ padding: 24 }}
           >
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: "rgba(255,255,255,0.03)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: "var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
               {item.icon}
             </div>
             <h3 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>
@@ -1086,7 +1086,7 @@ export function WhyRefurbishedPage() {
       {/* Refurbished vs. Used vs. New Comparison Section */}
       <Card
         hoverable={false}
-        style={{ padding: isMobile ? 20 : 36, marginBottom: 56, border: "1px solid rgba(0, 229, 255, 0.12)" }}
+        style={{ padding: isMobile ? 20 : 36, marginBottom: 56, border: "1px solid var(--bg-active)" }}
       >
         <h2 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: 20, fontWeight: 800, marginBottom: 24, textAlign: "center" }}>
           Refurbished vs. Used vs. New Laptops
@@ -1096,7 +1096,7 @@ export function WhyRefurbishedPage() {
             <thead>
               <tr style={{ borderBottom: `1px solid ${COLORS.cardBorder}` }}>
                 <th style={{ textAlign: "left", padding: "12px 8px", color: COLORS.muted, fontWeight: 600 }}>Feature</th>
-                <th style={{ textAlign: "left", padding: "12px 8px", color: "#00E5FF", fontWeight: 800 }}>Laptopkart Refurbished</th>
+                <th style={{ textAlign: "left", padding: "12px 8px", color: "var(--accent)", fontWeight: 800 }}>Laptopkart Refurbished</th>
                 <th style={{ textAlign: "left", padding: "12px 8px", color: COLORS.muted, fontWeight: 600 }}>Typical Used Laptop</th>
                 <th style={{ textAlign: "left", padding: "12px 8px", color: COLORS.muted, fontWeight: 600 }}>Brand New Laptop</th>
               </tr>
@@ -1109,7 +1109,7 @@ export function WhyRefurbishedPage() {
                 { f: "Average Cost", ref: "50% - 70% Off original price", used: "Cheap but highly risky", new: "Full retail price" },
                 { f: "Environmental Footprint", ref: "Ultra-low (extends device lifecycle)", used: "Low", new: "High (raw material extraction)" },
               ].map((row, idx) => (
-                <tr key={idx} style={{ borderBottom: idx === 4 ? "none" : `1px solid rgba(255,255,255,0.04)` }}>
+                <tr key={idx} style={{ borderBottom: idx === 4 ? "none" : `1px solid var(--border)` }}>
                   <td style={{ padding: "14px 8px", color: COLORS.text, fontWeight: 600 }}>{row.f}</td>
                   <td style={{ padding: "14px 8px", color: COLORS.text }}>{row.ref}</td>
                   <td style={{ padding: "14px 8px", color: COLORS.muted }}>{row.used}</td>
@@ -1147,7 +1147,7 @@ export function WhyRefurbishedPage() {
             ))}
           </div>
         </div>
-        <div style={{ background: "rgba(255,255,255,0.01)", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 24, padding: 32 }}>
+        <div style={{ background: "var(--border)", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 24, padding: 32 }}>
           <h3 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: 18, fontWeight: 700, marginBottom: 12 }}>
             Eco-Impact Fact:
           </h3>
@@ -1230,12 +1230,12 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
   };
 
   return (
-    <div style={{ width: "100%", minHeight: "100%", padding: isMobile ? "20px 14px" : "40px 20px", background: "#0a0c14", color: "#fff" }}>
+    <div style={{ width: "100%", minHeight: "100%", padding: isMobile ? "20px 14px" : "40px 20px", background: "#0a0c14", color: "var(--text)" }}>
       {submitted ? (
         // Success Screen (unchanged but nicer)
         <div style={{ textAlign: "center", marginTop: "15vh" }}>
-          <div style={{ margin: "0 auto 24px", width: 80, height: 80, background: "rgba(16,185,129,0.15)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <CheckCircle2 size={48} color="#10B981" />
+          <div style={{ margin: "0 auto 24px", width: 80, height: 80, background: "var(--success-bg)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <CheckCircle2 size={48} color="var(--success)" />
           </div>
           <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12 }}>Blog Published!</h2>
           <p style={{ color: COLORS.muted, maxWidth: 420, margin: "0 auto 32px" }}>Your story is now live in the blog section.</p>
@@ -1246,7 +1246,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
             <button onClick={() => setPage("blog")} style={{ color: COLORS.muted, background: "transparent", border: "none", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
               ← Back to Blogs
             </button>
-            <button onClick={handleSubmit} style={{ background: "linear-gradient(135deg, #3B82F6, #2563EB)", color: "#fff", border: "none", padding: "12px 32px", borderRadius: 12, fontWeight: 700, cursor: "pointer" }}>
+            <button onClick={handleSubmit} style={{ background: "linear-gradient(135deg, var(--accent-2), #2563EB)", color: "var(--text)", border: "none", padding: "12px 32px", borderRadius: 12, fontWeight: 700, cursor: "pointer" }}>
               Publish Blog
             </button>
           </div>
@@ -1260,7 +1260,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
               placeholder="Write a compelling title..."
               style={{
                 width: "100%", background: "transparent", border: "none", outline: "none",
-                fontSize: isMobile ? 32 : 42, fontWeight: 800, color: "#fff",
+                fontSize: isMobile ? 32 : 42, fontWeight: 800, color: "var(--text)",
                 fontFamily: "'Sora', sans-serif", lineHeight: 1.1
               }}
             />
@@ -1291,8 +1291,8 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
               marginBottom: 20,
               boxShadow: "0 20px 40px rgba(0,0,0,0.4)"
             }}>
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.75))", borderRadius: 20 }} />
-              <div style={{ position: "absolute", bottom: 24, left: 24, right: 24, color: "#fff" }}>
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(transparent, var(--bg-overlay))", borderRadius: 20 }} />
+              <div style={{ position: "absolute", bottom: 24, left: 24, right: 24, color: "var(--text)" }}>
                 <div style={{ fontSize: 13, opacity: 0.9 }}>{form.category}</div>
                 <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>{form.title || "Your Blog Title"}</div>
               </div>
@@ -1305,7 +1305,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
                   <div key={i} onClick={() => { setSelectedCover(item.url); setShowCustomInput(false); }}
                     style={{
                       borderRadius: 12, overflow: "hidden", cursor: "pointer",
-                      border: active ? "3px solid #3B82F6" : "2px solid #334155",
+                      border: active ? "3px solid var(--accent-2)" : "2px solid #334155",
                       transition: "all 0.2s"
                     }}>
                     <img src={item.url} alt={item.name} style={{ width: "100%", height: 100, objectFit: "cover" }} />
@@ -1324,7 +1324,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
                 placeholder="https://images.unsplash.com/..."
                 value={customCoverUrl}
                 onChange={e => setCustomCoverUrl(e.target.value)}
-                style={{ marginTop: 12, width: "100%", padding: "14px", background: "#1f2937", border: "1px solid #60A5FA", borderRadius: 12, color: "#fff" }}
+                style={{ marginTop: 12, width: "100%", padding: "14px", background: "#1f2937", border: "1px solid #60A5FA", borderRadius: 12, color: "var(--text)" }}
               />
             )}
           </div>
@@ -1342,7 +1342,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
                 { label: "Quote", before: "> ", after: "" },
               ].map((b, i) => (
                 <button key={i} onClick={() => insertFormat(b.before, b.after)}
-                  style={{ margin: "4px", padding: "8px 16px", background: "#374151", border: "none", borderRadius: 8, color: "#fff", fontWeight: 600 }}>
+                  style={{ margin: "4px", padding: "8px 16px", background: "#374151", border: "none", borderRadius: 8, color: "var(--text)", fontWeight: 600 }}>
                   {b.label}
                 </button>
               ))}
@@ -1403,9 +1403,9 @@ export function AccessoriesPage({
           color: COLORS.green, fontSize: 12, fontWeight: 700,
           letterSpacing: "0.08em", textTransform: "uppercase",
           marginBottom: 10,
-          background: "rgba(56,189,248,0.08)",
+          background: "var(--bg-active)",
           padding: "4px 14px", borderRadius: 100,
-          border: "1px solid rgba(56,189,248,0.15)",
+          border: "1px solid var(--bg-active)",
         }}>
           Enhance Your Setup
         </span>
@@ -1427,7 +1427,7 @@ export function AccessoriesPage({
             key={cat}
             onClick={() => setFilter(cat)}
             style={{
-              background: filter === cat ? "linear-gradient(135deg, #3B82F6, #38BDF8)" : COLORS.cardBg,
+              background: filter === cat ? "linear-gradient(135deg, var(--accent-2), var(--accent))" : COLORS.cardBg,
               color: filter === cat ? "#000" : COLORS.muted,
               border: `1px solid ${filter === cat ? "transparent" : COLORS.cardBorder}`,
               borderRadius: 100, padding: "8px 18px", fontSize: 13, fontWeight: 600,
@@ -1449,7 +1449,7 @@ export function AccessoriesPage({
           <div style={{
             display: "inline-flex", justifyContent: "center", alignItems: "center",
             width: 80, height: 80, borderRadius: "50%",
-            background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,150,240,0.12)",
+            background: "var(--bg-hover)", border: "1px solid var(--border)",
             marginBottom: 20,
           }}>
             <Keyboard size={36} color={COLORS.green} />
@@ -1484,7 +1484,7 @@ export function AccessoriesPage({
                 onClick={() => onViewAccessory?.(item)}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = "translateY(-6px)";
-                  e.currentTarget.style.borderColor = "rgba(56,189,248,0.28)";
+                  e.currentTarget.style.borderColor = "var(--border-focus)";
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.transform = "none";
@@ -1492,13 +1492,13 @@ export function AccessoriesPage({
                 }}
               >
                 {/* Image Box */}
-                <div style={{ height: 180, overflow: "hidden", background: "#0d1117", position: "relative" }}>
+                <div style={{ height: 180, overflow: "hidden", background: "var(--bg-2)", position: "relative" }}>
                   <img src={item.img} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
 
                   {/* Save Badge */}
                   <span style={{
                     position: "absolute", top: 12, left: 12,
-                    background: "rgba(16,185,129,0.92)", color: "#fff",
+                    background: "var(--success-border)", color: "var(--text)",
                     fontSize: 10, fontWeight: 800, padding: "4px 8px", borderRadius: 6,
                   }}>
                     SAVE ₹{saving.toLocaleString("en-IN")}
@@ -1514,7 +1514,7 @@ export function AccessoriesPage({
                       display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
                     }}
                   >
-                    <Heart size={15} fill={isWished ? "#EF4444" : "transparent"} color={isWished ? "#EF4444" : "#fff"} />
+                    <Heart size={15} fill={isWished ? "var(--error)" : "transparent"} color={isWished ? "var(--error)" : "#fff"} />
                   </button>
                 </div>
 
@@ -1540,7 +1540,7 @@ export function AccessoriesPage({
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 18 }}>
                     <div style={{ display: "flex", gap: 2 }}>
                       {[1, 2, 3, 4, 5].map(s => (
-                        <Star key={s} size={11} fill={s <= Math.floor(item.rating) ? "#FBBF24" : "transparent"} color={s <= Math.floor(item.rating) ? "#FBBF24" : "rgba(255,255,255,0.15)"} />
+                        <Star key={s} size={11} fill={s <= Math.floor(item.rating) ? "#FBBF24" : "transparent"} color={s <= Math.floor(item.rating) ? "#FBBF24" : "var(--text-3)"} />
                       ))}
                     </div>
                     <span style={{ color: COLORS.text, fontWeight: 700, fontSize: 12 }}>{item.rating}</span>
@@ -1560,8 +1560,8 @@ export function AccessoriesPage({
                     <button
                       onClick={() => onAddToCart({ ...item, specs: item.specs, warranty: "6 Months" })}
                       style={{
-                        background: "linear-gradient(135deg, #3B82F6, #38BDF8)",
-                        color: "#000", border: "none", borderRadius: 10,
+                        background: "linear-gradient(135deg, var(--accent-2), var(--accent))",
+                        color: "var(--text-inverse)", border: "none", borderRadius: 10,
                         padding: "8px 16px", fontSize: 12, fontWeight: 800,
                         cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
                         fontFamily: "'Sora', sans-serif",
@@ -1605,7 +1605,7 @@ export function AccessoryDetailPage({
         <p style={{ color: COLORS.muted, fontSize: 14, marginBottom: 20 }}>Please go back to the accessories catalog and try again.</p>
         <button
           onClick={() => setPage("accessories")}
-          style={{ background: "linear-gradient(135deg, #3B82F6, #38BDF8)", color: "#000", border: "none", borderRadius: 12, padding: "10px 18px", fontWeight: 800, cursor: "pointer" }}
+          style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))", color: "var(--text-inverse)", border: "none", borderRadius: 12, padding: "10px 18px", fontWeight: 800, cursor: "pointer" }}
         >
           Back to Accessories
         </button>
@@ -1645,10 +1645,10 @@ export function AccessoryDetailPage({
               <img src={accessory.img} alt={accessory.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-              <span style={{ background: "rgba(56,189,248,0.08)", color: COLORS.green, border: "1px solid rgba(56,189,248,0.15)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700 }}>
+              <span style={{ background: "var(--bg-active)", color: COLORS.green, border: "1px solid var(--bg-active)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700 }}>
                 {accessory.brand}
               </span>
-              <span style={{ background: "rgba(16,185,129,0.10)", color: "#10B981", border: "1px solid rgba(16,185,129,0.15)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700 }}>
+              <span style={{ background: "var(--success-bg)", color: "var(--success)", border: "1px solid var(--success-bg)", borderRadius: 100, padding: "5px 12px", fontSize: 11, fontWeight: 700 }}>
                 {accessory.category}
               </span>
             </div>
@@ -1672,7 +1672,7 @@ export function AccessoryDetailPage({
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
               <div style={{ display: "flex", gap: 2 }}>
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} size={14} fill={s <= Math.floor(accessory.rating) ? "#FBBF24" : "transparent"} color={s <= Math.floor(accessory.rating) ? "#FBBF24" : "rgba(255,255,255,0.15)"} />
+                  <Star key={s} size={14} fill={s <= Math.floor(accessory.rating) ? "#FBBF24" : "transparent"} color={s <= Math.floor(accessory.rating) ? "#FBBF24" : "var(--text-3)"} />
                 ))}
               </div>
               <span style={{ color: COLORS.text, fontWeight: 700, fontSize: 14 }}>{accessory.rating}</span>
@@ -1689,7 +1689,7 @@ export function AccessoryDetailPage({
                 </span>
               </div>
               <div style={{ marginTop: 8 }}>
-                <span style={{ background: "rgba(16,185,129,0.12)", color: "#10B981", fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 100 }}>
+                <span style={{ background: "var(--success-bg)", color: "var(--success)", fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 100 }}>
                   You save ₹{savings.toLocaleString("en-IN")}
                 </span>
               </div>
@@ -1710,8 +1710,8 @@ export function AccessoryDetailPage({
               <button
                 onClick={handleAdd}
                 style={{
-                  background: added ? "#10B981" : "linear-gradient(135deg, #3B82F6, #38BDF8)",
-                  color: "#000",
+                  background: added ? "var(--success)" : "linear-gradient(135deg, var(--accent-2), var(--accent))",
+                  color: "var(--text-inverse)",
                   border: "none",
                   borderRadius: 14,
                   padding: "12px 18px",
@@ -1726,8 +1726,8 @@ export function AccessoryDetailPage({
               <button
                 onClick={() => onWishlist(accessory.id)}
                 style={{
-                  background: isWished ? "rgba(239,68,68,0.12)" : COLORS.cardBg,
-                  color: isWished ? "#EF4444" : COLORS.text,
+                  background: isWished ? "var(--error-bg)" : COLORS.cardBg,
+                  color: isWished ? "var(--error)" : COLORS.text,
                   border: `1px solid ${isWished ? "rgba(239,68,68,0.3)" : COLORS.cardBorder}`,
                   borderRadius: 14,
                   padding: "12px 18px",
@@ -1737,12 +1737,12 @@ export function AccessoryDetailPage({
                   fontFamily: "'Sora', sans-serif",
                 }}
               >
-                <Heart size={14} fill={isWished ? "#EF4444" : "transparent"} style={{ display: "inline", marginRight: 8 }} />
+                <Heart size={14} fill={isWished ? "var(--error)" : "transparent"} style={{ display: "inline", marginRight: 8 }} />
                 {isWished ? "Wishlisted" : "Add to Wishlist"}
               </button>
             </div>
 
-            <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 18, padding: 18 }}>
+            <div style={{ background: "var(--border)", border: `1px solid ${COLORS.cardBorder}`, borderRadius: 18, padding: 18 }}>
               <div style={{ color: COLORS.muted, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
                 Key Specs
               </div>
@@ -1759,8 +1759,8 @@ export function AccessoryDetailPage({
 
 const policyWrap: React.CSSProperties = {
   minHeight: "100vh",
-  background: "#0a0d16",
-  color: "#E8EDF5",
+  background: "var(--bg)",
+  color: "var(--text-2)",
   fontFamily: "'Inter', sans-serif",
 };
 
@@ -1774,12 +1774,12 @@ const policyH1: React.CSSProperties = {
   fontFamily: "'Sora', sans-serif",
   fontSize: 30,
   fontWeight: 800,
-  color: "#fff",
+  color: "var(--text)",
   marginBottom: 6,
 };
 
 const policySubtitle: React.CSSProperties = {
-  color: "#8B9BBE",
+  color: "var(--text-3)",
   fontSize: 13,
   marginBottom: 40,
 };
@@ -1788,22 +1788,22 @@ const policyH2: React.CSSProperties = {
   fontFamily: "'Sora', sans-serif",
   fontSize: 17,
   fontWeight: 700,
-  color: "#38BDF8",
+  color: "var(--accent)",
   marginTop: 36,
   marginBottom: 10,
-  borderBottom: "1px solid rgba(56,189,248,0.12)",
+  borderBottom: "1px solid var(--bg-active)",
   paddingBottom: 8,
 };
 
 const policyP: React.CSSProperties = {
-  color: "#B0BCCE",
+  color: "var(--text-2)",
   fontSize: 14,
   lineHeight: 1.8,
   marginBottom: 12,
 };
 
 const policyUl: React.CSSProperties = {
-  color: "#B0BCCE",
+  color: "var(--text-2)",
   fontSize: 14,
   lineHeight: 1.8,
   paddingLeft: 20,
@@ -1811,8 +1811,8 @@ const policyUl: React.CSSProperties = {
 };
 
 const policyCard: React.CSSProperties = {
-  background: "rgba(56,189,248,0.05)",
-  border: "1px solid rgba(56,189,248,0.15)",
+  background: "var(--bg-hover)",
+  border: "1px solid var(--bg-active)",
   borderRadius: 14,
   padding: "16px 20px",
   marginBottom: 16,
@@ -1821,8 +1821,8 @@ const policyCard: React.CSSProperties = {
 const policyBadge: React.CSSProperties = {
   display: "inline-block",
   background: "rgba(56,189,248,0.1)",
-  color: "#38BDF8",
-  border: "1px solid rgba(56,189,248,0.25)",
+  color: "var(--accent)",
+  border: "1px solid var(--border-focus)",
   borderRadius: 100,
   padding: "3px 12px",
   fontSize: 11,
@@ -1838,7 +1838,7 @@ export function PrivacyPolicyPage({ setPage }: { setPage: (p: string) => void })
   return (
     <div style={policyWrap}>
       <div style={policyInner}>
-        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "#8B9BBE", cursor: "pointer", fontSize: 13, marginBottom: 28, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
+        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", fontSize: 13, marginBottom: 28, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
           ← Back to Home
         </button>
         <span style={policyBadge}>Legal</span>
@@ -1850,20 +1850,20 @@ export function PrivacyPolicyPage({ setPage }: { setPage: (p: string) => void })
         <p style={policyP}>By using our website or making a purchase, you agree to the terms of this Privacy Policy.</p>
 
         <h2 style={policyH2}>Information We Collect</h2>
-        <p style={policyP}><strong style={{ color: "#E8EDF5" }}>Personal information you provide:</strong></p>
+        <p style={policyP}><strong style={{ color: "var(--text)" }}>Personal information you provide:</strong></p>
         <ul style={policyUl}>
           <li>Full name, email address, phone number</li>
           <li>Shipping and billing address</li>
           <li>Payment details (processed securely via Razorpay — we do not store card/UPI/banking credentials)</li>
         </ul>
-        <p style={policyP}><strong style={{ color: "#E8EDF5" }}>Information collected automatically:</strong></p>
+        <p style={policyP}><strong style={{ color: "var(--text)" }}>Information collected automatically:</strong></p>
         <ul style={policyUl}>
           <li>IP address and location data</li>
           <li>Browser type and device information</li>
           <li>Pages visited and time spent on site</li>
           <li>Cookies and similar tracking technologies</li>
         </ul>
-        <p style={policyP}><strong style={{ color: "#E8EDF5" }}>Information from third parties:</strong><br />When you sign in via Google or Apple, we receive your name and email from those providers as per their respective privacy policies.</p>
+        <p style={policyP}><strong style={{ color: "var(--text)" }}>Information from third parties:</strong><br />When you sign in via Google or Apple, we receive your name and email from those providers as per their respective privacy policies.</p>
 
         <h2 style={policyH2}>How We Use Your Information</h2>
         <ul style={policyUl}>
@@ -1878,15 +1878,15 @@ export function PrivacyPolicyPage({ setPage }: { setPage: (p: string) => void })
 
         <h2 style={policyH2}>Payment Processing</h2>
         <div style={policyCard}>
-          <p style={{ ...policyP, marginBottom: 0 }}>All payments on Laptopkart are processed securely through <strong style={{ color: "#38BDF8" }}>Razorpay Payment Gateway</strong>. We do not store your credit card, debit card, or UPI credentials on our servers. Razorpay's handling of your payment data is governed by Razorpay's Privacy Policy.</p>
+          <p style={{ ...policyP, marginBottom: 0 }}>All payments on Laptopkart are processed securely through <strong style={{ color: "var(--accent)" }}>Razorpay Payment Gateway</strong>. We do not store your credit card, debit card, or UPI credentials on our servers. Razorpay's handling of your payment data is governed by Razorpay's Privacy Policy.</p>
         </div>
 
         <h2 style={policyH2}>Sharing of Information</h2>
         <p style={policyP}>We do not sell or rent your personal data to third parties. We may share data only with:</p>
         <ul style={policyUl}>
-          <li><strong style={{ color: "#E8EDF5" }}>Razorpay</strong> – for payment processing</li>
-          <li><strong style={{ color: "#E8EDF5" }}>Shipping Partners</strong> – (BlueDart, DTDC, ST Courier, etc.) for order delivery</li>
-          <li><strong style={{ color: "#E8EDF5" }}>Legal Authorities</strong> – when required by law or to protect our rights</li>
+          <li><strong style={{ color: "var(--text)" }}>Razorpay</strong> – for payment processing</li>
+          <li><strong style={{ color: "var(--text)" }}>Shipping Partners</strong> – (BlueDart, DTDC, ST Courier, etc.) for order delivery</li>
+          <li><strong style={{ color: "var(--text)" }}>Legal Authorities</strong> – when required by law or to protect our rights</li>
         </ul>
 
         <h2 style={policyH2}>Cookies</h2>
@@ -1901,11 +1901,11 @@ export function PrivacyPolicyPage({ setPage }: { setPage: (p: string) => void })
           <li>Withdraw consent for marketing communications</li>
           <li>Request a copy of your data</li>
         </ul>
-        <p style={policyP}>To exercise these rights, contact us at <strong style={{ color: "#38BDF8" }}>srivasavibusiness09@gmail.com</strong>.</p>
+        <p style={policyP}>To exercise these rights, contact us at <strong style={{ color: "var(--accent)" }}>srivasavibusiness09@gmail.com</strong>.</p>
 
         <h2 style={policyH2}>Contact</h2>
         <div style={policyCard}>
-          <p style={{ ...policyP, marginBottom: 4 }}><strong style={{ color: "#E8EDF5" }}>Laptopkart</strong></p>
+          <p style={{ ...policyP, marginBottom: 4 }}><strong style={{ color: "var(--text)" }}>Laptopkart</strong></p>
           <p style={{ ...policyP, marginBottom: 4 }}>Salem, Tamil Nadu, India</p>
           <p style={{ ...policyP, marginBottom: 4 }}>📧 srivasavibusiness09@gmail.com</p>
           <p style={{ ...policyP, marginBottom: 0 }}>📞 +91 97503 31313</p>
@@ -1925,23 +1925,23 @@ export function RefundPolicyPage({ setPage }: { setPage: (p: string) => void }) 
     fontSize: 13,
   };
   const thStyle: React.CSSProperties = {
-    background: "rgba(56,189,248,0.08)",
-    color: "#38BDF8",
+    background: "var(--bg-active)",
+    color: "var(--accent)",
     padding: "10px 16px",
     textAlign: "left",
     fontWeight: 700,
-    border: "1px solid rgba(56,189,248,0.15)",
+    border: "1px solid var(--bg-active)",
   };
   const tdStyle: React.CSSProperties = {
-    color: "#B0BCCE",
+    color: "var(--text-2)",
     padding: "10px 16px",
-    border: "1px solid rgba(255,255,255,0.06)",
+    border: "1px solid var(--border)",
   };
 
   return (
     <div style={policyWrap}>
       <div style={policyInner}>
-        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "#8B9BBE", cursor: "pointer", fontSize: 13, marginBottom: 28, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
+        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", fontSize: 13, marginBottom: 28, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
           ← Back to Home
         </button>
         <span style={policyBadge}>Legal</span>
@@ -1952,14 +1952,14 @@ export function RefundPolicyPage({ setPage }: { setPage: (p: string) => void }) 
         <p style={policyP}>At Laptopkart, we stand behind the quality of every refurbished device we sell. All our products are thoroughly tested, graded, and quality-checked before dispatch. Please read this policy carefully before placing an order.</p>
 
         <h2 style={policyH2}>Eligibility for Returns</h2>
-        <p style={policyP}>You may request a return or replacement within <strong style={{ color: "#10B981" }}>7 days of delivery</strong> if:</p>
+        <p style={policyP}>You may request a return or replacement within <strong style={{ color: "var(--success)" }}>7 days of delivery</strong> if:</p>
         <ul style={policyUl}>
-          <li>The product received is <strong style={{ color: "#E8EDF5" }}>physically damaged</strong> or has a manufacturing defect</li>
-          <li>The product is <strong style={{ color: "#E8EDF5" }}>not as described</strong> (wrong model, specification mismatch)</li>
-          <li>The product is <strong style={{ color: "#E8EDF5" }}>Dead on Arrival (DOA)</strong> — does not power on or function at all</li>
+          <li>The product received is <strong style={{ color: "var(--text)" }}>physically damaged</strong> or has a manufacturing defect</li>
+          <li>The product is <strong style={{ color: "var(--text)" }}>not as described</strong> (wrong model, specification mismatch)</li>
+          <li>The product is <strong style={{ color: "var(--text)" }}>Dead on Arrival (DOA)</strong> — does not power on or function at all</li>
         </ul>
 
-        <p style={policyP}><strong style={{ color: "#EF4444" }}>Non-returnable conditions:</strong></p>
+        <p style={policyP}><strong style={{ color: "var(--error)" }}>Non-returnable conditions:</strong></p>
         <ul style={policyUl}>
           <li>Products returned after 7 days from delivery date</li>
           <li>Physical damage caused by the customer after delivery (drops, liquid damage)</li>
@@ -1976,7 +1976,7 @@ export function RefundPolicyPage({ setPage }: { setPage: (p: string) => void }) 
           ["Step 4", "If approved, we will arrange a free reverse pickup from your address"],
         ].map(([step, desc]) => (
           <div key={step} style={{ ...policyCard, display: "flex", gap: 16, alignItems: "flex-start", marginBottom: 10 }}>
-            <span style={{ background: "rgba(56,189,248,0.15)", color: "#38BDF8", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 800, whiteSpace: "nowrap", flexShrink: 0 }}>{step}</span>
+            <span style={{ background: "var(--bg-active)", color: "var(--accent)", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 800, whiteSpace: "nowrap", flexShrink: 0 }}>{step}</span>
             <p style={{ ...policyP, marginBottom: 0 }}>{desc}</p>
           </div>
         ))}
@@ -1984,9 +1984,9 @@ export function RefundPolicyPage({ setPage }: { setPage: (p: string) => void }) 
         <h2 style={policyH2}>Refund Timeline</h2>
         <p style={policyP}>Once the returned product is received and inspected:</p>
         <ul style={policyUl}>
-          <li><strong style={{ color: "#10B981" }}>Defect confirmed:</strong> Full refund to original payment method within 5–7 business days</li>
-          <li><strong style={{ color: "#F59E0B" }}>Product found working:</strong> No refund; product returned to customer</li>
-          <li><strong style={{ color: "#8B9BBE" }}>Minor issues:</strong> Partial refund may be issued at our discretion</li>
+          <li><strong style={{ color: "var(--success)" }}>Defect confirmed:</strong> Full refund to original payment method within 5–7 business days</li>
+          <li><strong style={{ color: "var(--warning)" }}>Product found working:</strong> No refund; product returned to customer</li>
+          <li><strong style={{ color: "var(--text-3)" }}>Minor issues:</strong> Partial refund may be issued at our discretion</li>
         </ul>
         <table style={tableStyle}>
           <thead>
@@ -2011,12 +2011,12 @@ export function RefundPolicyPage({ setPage }: { setPage: (p: string) => void }) 
 
         <h2 style={policyH2}>Warranty</h2>
         <div style={policyCard}>
-          <p style={{ ...policyP, marginBottom: 0 }}>All refurbished products sold on Laptopkart come with a <strong style={{ color: "#10B981" }}>minimum 1-year warranty</strong> (unless stated otherwise in the product listing). Warranty covers hardware defects and component failures under normal usage. It does not cover physical damage caused by the customer.</p>
+          <p style={{ ...policyP, marginBottom: 0 }}>All refurbished products sold on Laptopkart come with a <strong style={{ color: "var(--success)" }}>minimum 1-year warranty</strong> (unless stated otherwise in the product listing). Warranty covers hardware defects and component failures under normal usage. It does not cover physical damage caused by the customer.</p>
         </div>
 
         <h2 style={policyH2}>Cancellations</h2>
         <ul style={policyUl}>
-          <li>Orders can be cancelled <strong style={{ color: "#E8EDF5" }}>before dispatch</strong> free of charge</li>
+          <li>Orders can be cancelled <strong style={{ color: "var(--text)" }}>before dispatch</strong> free of charge</li>
           <li>Once dispatched, orders cannot be cancelled; follow the return process after delivery</li>
           <li>To cancel, contact us immediately at srivasavibusiness09@gmail.com or +91 97503 31313</li>
         </ul>
@@ -2037,7 +2037,7 @@ export function TermsOfUsePage({ setPage }: { setPage: (p: string) => void }) {
   return (
     <div style={policyWrap}>
       <div style={policyInner}>
-        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "#8B9BBE", cursor: "pointer", fontSize: 13, marginBottom: 28, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
+        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", fontSize: 13, marginBottom: 28, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
           ← Back to Home
         </button>
         <span style={policyBadge}>Legal</span>
@@ -2049,7 +2049,7 @@ export function TermsOfUsePage({ setPage }: { setPage: (p: string) => void }) {
 
         <h2 style={policyH2}>About Laptopkart</h2>
         <div style={policyCard}>
-          <p style={{ ...policyP, marginBottom: 4 }}><strong style={{ color: "#E8EDF5" }}>Laptopkart</strong> — Refurbished Laptops, Desktops & Accessories</p>
+          <p style={{ ...policyP, marginBottom: 4 }}><strong style={{ color: "var(--text)" }}>Laptopkart</strong> — Refurbished Laptops, Desktops & Accessories</p>
           <p style={{ ...policyP, marginBottom: 4 }}>Salem, Tamil Nadu, India</p>
           <p style={{ ...policyP, marginBottom: 4 }}>📧 srivasavibusiness09@gmail.com</p>
           <p style={{ ...policyP, marginBottom: 0 }}>📞 +91 97503 31313</p>
@@ -2084,7 +2084,7 @@ export function TermsOfUsePage({ setPage }: { setPage: (p: string) => void }) {
 
         <h2 style={policyH2}>Payment Terms</h2>
         <div style={policyCard}>
-          <p style={{ ...policyP, marginBottom: 0 }}>All payments are processed through <strong style={{ color: "#38BDF8" }}>Razorpay</strong>, a secure third-party payment gateway. By making a payment, you agree to Razorpay's Terms of Service and Privacy Policy. Laptopkart does not store any sensitive payment information (card numbers, CVV, banking credentials).</p>
+          <p style={{ ...policyP, marginBottom: 0 }}>All payments are processed through <strong style={{ color: "var(--accent)" }}>Razorpay</strong>, a secure third-party payment gateway. By making a payment, you agree to Razorpay's Terms of Service and Privacy Policy. Laptopkart does not store any sensitive payment information (card numbers, CVV, banking credentials).</p>
         </div>
 
         <h2 style={policyH2}>Intellectual Property</h2>
@@ -2100,7 +2100,7 @@ export function TermsOfUsePage({ setPage }: { setPage: (p: string) => void }) {
         <p style={policyP}>Our total liability to you for any claim shall not exceed the amount paid for the specific product in question.</p>
 
         <h2 style={policyH2}>Governing Law & Disputes</h2>
-        <p style={policyP}>These Terms of Use shall be governed by the laws of India. Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the courts located in <strong style={{ color: "#E8EDF5" }}>Salem, Tamil Nadu</strong>.</p>
+        <p style={policyP}>These Terms of Use shall be governed by the laws of India. Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the courts located in <strong style={{ color: "var(--text)" }}>Salem, Tamil Nadu</strong>.</p>
         <p style={policyP}>In the event of any dispute, we encourage you to first contact us directly at srivasavibusiness09@gmail.com. We will make every effort to resolve disputes amicably.</p>
 
         <h2 style={policyH2}>Amendments</h2>
@@ -2108,7 +2108,7 @@ export function TermsOfUsePage({ setPage }: { setPage: (p: string) => void }) {
 
         <h2 style={policyH2}>Contact Us</h2>
         <div style={policyCard}>
-          <p style={{ ...policyP, marginBottom: 4 }}><strong style={{ color: "#E8EDF5" }}>Laptopkart</strong></p>
+          <p style={{ ...policyP, marginBottom: 4 }}><strong style={{ color: "var(--text)" }}>Laptopkart</strong></p>
           <p style={{ ...policyP, marginBottom: 4 }}>Salem, Tamil Nadu, India</p>
           <p style={{ ...policyP, marginBottom: 4 }}>📧 srivasavibusiness09@gmail.com</p>
           <p style={{ ...policyP, marginBottom: 0 }}>📞 +91 97503 31313 &nbsp;(10 AM – 7 PM, Mon–Sat)</p>

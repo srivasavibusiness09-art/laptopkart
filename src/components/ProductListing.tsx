@@ -99,7 +99,7 @@ export default function ProductListing({
         return (
           <div key={f.key}>
             <div style={{
-              color: COLORS.text, fontSize: 12, fontWeight: 700,
+              color: "var(--text)", fontSize: 12, fontWeight: 700,
               letterSpacing: "0.06em", textTransform: "uppercase",
               marginBottom: 12, fontFamily: "'Sora', sans-serif",
             }}>{f.label}</div>
@@ -112,10 +112,10 @@ export default function ProductListing({
                     onClick={() => setFilter(f.key, opt)}
                     style={{
                       display: "flex", justifyContent: "space-between", alignItems: "center",
-                      background: active ? "rgba(0, 229, 255, 0.08)" : "transparent",
-                      border: `1px solid ${active ? "rgba(0, 229, 255, 0.35)" : "rgba(255, 255, 255, 0.07)"}`,
+                      background: active ? "var(--bg-active)" : "transparent",
+                      border: `1px solid ${active ? "var(--border-focus)" : "var(--border)"}`,
                       borderRadius: 10, padding: "9px 14px",
-                      cursor: "pointer", color: active ? "#00E5FF" : COLORS.muted,
+                      cursor: "pointer", color: active ? "var(--accent)" : "var(--text-2)",
                       fontSize: 13, fontWeight: active ? 700 : 400,
                       transition: "all 0.2s", textAlign: "left",
                     }}
@@ -133,20 +133,20 @@ export default function ProductListing({
       {/* Price slider */}
       <div>
         <div style={{
-          color: COLORS.text, fontSize: 12, fontWeight: 700,
+          color: "var(--text)", fontSize: 12, fontWeight: 700,
           letterSpacing: "0.06em", textTransform: "uppercase",
           marginBottom: 6, fontFamily: "'Sora', sans-serif",
         }}>Max Price</div>
-        <div style={{ color: "#00E5FF", fontSize: 20, fontWeight: 800, fontFamily: "'Sora', sans-serif", marginBottom: 10 }}>
+        <div style={{ color: "var(--accent)", fontSize: 20, fontWeight: 800, fontFamily: "'Sora', sans-serif", marginBottom: 10 }}>
           ₹{filters.priceMax.toLocaleString("en-IN")}
         </div>
         <input
           type="range" min={10000} max={200000} step={5000}
           value={filters.priceMax}
           onChange={(e) => setFilters((f) => ({ ...f, priceMax: Number(e.target.value) }))}
-          style={{ width: "100%", accentColor: "#00E5FF" }}
+          style={{ width: "100%", accentColor: "var(--accent)" }}
         />
-        <div style={{ display: "flex", justifyContent: "space-between", color: COLORS.muted, fontSize: 11, marginTop: 4 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-2)", fontSize: 11, marginTop: 4 }}>
           <span>₹10K</span><span>₹2L</span>
         </div>
       </div>
@@ -154,25 +154,25 @@ export default function ProductListing({
   );
 
   return (
-    <main style={{ background: COLORS.darkBg, minHeight: "100vh" }}>
+    <main style={{ background: "var(--bg)", minHeight: "100vh" }}>
       {/* Page header */}
       <div style={{
-        background: COLORS.background,
-        borderBottom: "1px solid rgba(56,150,240,0.08)",
+        background: "var(--bg-1)",
+        borderBottom: "1px solid var(--border)",
         padding: isMobile ? "28px 18px 20px" : "40px 24px 28px",
       }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ color: COLORS.muted, fontSize: 13, marginBottom: 6 }}>
+          <div style={{ color: "var(--text-2)", fontSize: 13, marginBottom: 6 }}>
             Shop / All Laptops
           </div>
           <h1 style={{
             fontFamily: "'Sora', sans-serif",
             fontSize: "clamp(28px, 4vw, 48px)", fontWeight: 800,
-            color: COLORS.text, letterSpacing: "-0.03em",
+            color: "var(--text)", letterSpacing: "-0.03em",
             margin: "0 0 20px",
           }}>
             {initialCategory === "Desktops" ? "All Desktops" : (initialCategory && initialCategory !== "All" && initialCategory !== "Offers" && initialCategory !== "Laptops") ? `${initialCategory} Laptops` : "All Laptops"}
-            <span style={{ color: COLORS.muted, fontWeight: 400, fontSize: "0.5em", marginLeft: 12 }}>
+            <span style={{ color: "var(--text-2)", fontWeight: 400, fontSize: "0.5em", marginLeft: 12 }}>
               {filtered.length} products
             </span>
           </h1>
@@ -182,7 +182,7 @@ export default function ProductListing({
             <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
               <Search size={14} style={{
                 position: "absolute", left: 13, top: "50%",
-                transform: "translateY(-50%)", color: COLORS.muted,
+                transform: "translateY(-50%)", color: "var(--text-2)",
               }} />
               <input
                 value={search}
@@ -192,14 +192,14 @@ export default function ProductListing({
                 }}
                 placeholder={`Search ${initialCategory === "Desktops" ? "desktops" : "laptops"}, specs…`}
                 style={{
-                  width: "100%", background: COLORS.cardBg,
-                  border: `1px solid ${COLORS.cardBorder}`,
+                  width: "100%", background: "var(--bg-2)",
+                  border: "1px solid var(--border)",
                   borderRadius: 12, padding: "11px 14px 11px 38px",
-                  color: COLORS.text, fontSize: 14, outline: "none",
+                  color: "var(--text)", fontSize: 14, outline: "none",
                   boxSizing: "border-box", transition: "border-color 0.2s",
                 }}
-                onFocus={(e) => { e.target.style.borderColor = "rgba(56,189,248,0.4)"; }}
-                onBlur={(e) => { e.target.style.borderColor = COLORS.cardBorder; }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--border-hi)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
               />
             </div>
 
@@ -216,10 +216,10 @@ export default function ProductListing({
                 onClick={() => setDrawerOpen(true)}
                 style={{
                   display: "flex", alignItems: "center", gap: 7,
-                  background: activeCount > 0 ? "rgba(56,189,248,0.10)" : COLORS.cardBg,
-                  border: `1px solid ${activeCount > 0 ? "rgba(56,189,248,0.32)" : COLORS.cardBorder}`,
+                  background: activeCount > 0 ? "var(--bg-active)" : "var(--bg-2)",
+                  border: `1px solid ${activeCount > 0 ? "var(--border-focus)" : "var(--border)"}`,
                   borderRadius: 12, padding: "11px 16px",
-                  color: activeCount > 0 ? COLORS.green : COLORS.muted,
+                  color: activeCount > 0 ? COLORS.green : "var(--text-2)",
                   cursor: "pointer", fontSize: 14, fontWeight: 600,
                 }}
               >
@@ -235,7 +235,7 @@ export default function ProductListing({
                   display: "flex", alignItems: "center", gap: 5,
                   background: "transparent", border: "1px solid rgba(239,68,68,0.2)",
                   borderRadius: 12, padding: "11px 14px",
-                  color: "#EF4444", cursor: "pointer", fontSize: 13,
+                  color: "var(--error)", cursor: "pointer", fontSize: 13,
                 }}
               >
                 <X size={13} />Clear All
@@ -259,7 +259,7 @@ export default function ProductListing({
                 padding: 24,
                 position: "sticky",
                 top: 72,
-                border: "1px solid rgba(0, 229, 255, 0.12)",
+                border: "1px solid var(--bg-active)",
               }}
             >
               <div style={{
@@ -267,17 +267,17 @@ export default function ProductListing({
                 alignItems: "center", marginBottom: 24,
               }}>
                 <div style={{
-                  color: COLORS.text, fontWeight: 800, fontSize: 15,
+                  color: "var(--text)", fontWeight: 800, fontSize: 15,
                   fontFamily: "'Sora', sans-serif",
                   display: "flex", alignItems: "center", gap: 7,
                 }}>
-                  <SlidersHorizontal size={15} color="#00E5FF" />
+                  <SlidersHorizontal size={15} color="var(--accent)" />
                   Filters
                 </div>
                 {activeCount > 0 && (
                   <button onClick={clearAll} style={{
                     background: "transparent", border: "none",
-                    color: "#EF4444", cursor: "pointer", fontSize: 12,
+                    color: "var(--error)", cursor: "pointer", fontSize: 12,
                     display: "flex", alignItems: "center", gap: 4,
                   }}>
                     <X size={11} />Clear
@@ -295,20 +295,20 @@ export default function ProductListing({
                 <div style={{
                   display: "flex", justifyContent: "center", alignItems: "center",
                   width: 96, height: 96, borderRadius: "50%",
-                  background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,150,240,0.12)",
+                  background: "var(--bg)", border: "1px solid var(--border)",
                   margin: "0 auto 24px",
-                  boxShadow: "0 0 30px rgba(56,189,248,0.05)",
+                  boxShadow: "0 0 30px rgba(0,0,0,0.05)",
                 }}>
                   <Search size={36} color={COLORS.green} />
                 </div>
-                <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 700 }}>
+                <h3 style={{ color: "var(--text)", fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 700 }}>
                   No products found
                 </h3>
-                <p style={{ color: COLORS.muted, marginTop: 8, marginBottom: 20 }}>
+                <p style={{ color: "var(--text-2)", marginTop: 8, marginBottom: 20 }}>
                   Try adjusting your filters or search term
                 </p>
                 <button onClick={clearAll} style={{
-                  background: COLORS.green, color: "#000",
+                  background: COLORS.green, color: "var(--text-inverse)",
                   border: "none", borderRadius: 100,
                   padding: "12px 28px", fontWeight: 700, cursor: "pointer",
                 }}>
@@ -337,7 +337,7 @@ export default function ProductListing({
                       onClick={() => setVisibleCount((prev) => prev + 20)}
                       style={{
                         background: "transparent",
-                        border: `1px solid ${COLORS.cardBorder}`,
+                        border: "1px solid var(--border)",
                         borderRadius: 14,
                         padding: "12px 28px",
                         color: COLORS.green,
@@ -348,12 +348,12 @@ export default function ProductListing({
                         transition: "all 0.2s"
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "rgba(56,189,248,0.06)";
+                        e.currentTarget.style.background = "var(--bg-1)";
                         e.currentTarget.style.borderColor = COLORS.green;
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.borderColor = COLORS.cardBorder;
+                        e.currentTarget.style.borderColor = "var(--border)";
                       }}
                     >
                       Load More Products ({filtered.length - visibleCount} remaining)
@@ -372,14 +372,14 @@ export default function ProductListing({
           <div
             onClick={() => setDrawerOpen(false)}
             style={{
-              position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)",
+              position: "fixed", inset: 0, background: "var(--bg-overlay)",
               backdropFilter: "blur(6px)", zIndex: 99,
             }}
           />
           <div style={{
             position: "fixed", bottom: 0, left: 0, right: 0,
-            background: COLORS.cardBg, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-            border: `1px solid ${COLORS.cardBorder}`, zIndex: 100,
+            background: "var(--bg-2)", borderTopLeftRadius: 24, borderTopRightRadius: 24,
+            border: "1px solid var(--border)", zIndex: 100,
             padding: "24px 18px 40px",
             maxHeight: "85vh", overflowY: "auto",
           }}>
@@ -387,14 +387,14 @@ export default function ProductListing({
               display: "flex", justifyContent: "space-between",
               alignItems: "center", marginBottom: 24,
             }}>
-              <div style={{ color: COLORS.text, fontWeight: 800, fontSize: 18, fontFamily: "'Sora', sans-serif" }}>
+              <div style={{ color: "var(--text)", fontWeight: 800, fontSize: 18, fontFamily: "'Sora', sans-serif" }}>
                 Filters
               </div>
               <button onClick={() => setDrawerOpen(false)} style={{
-                background: COLORS.background, border: `1px solid ${COLORS.cardBorder}`,
+                background: "var(--bg-1)", border: "1px solid var(--border)",
                 borderRadius: 10, width: 36, height: 36,
                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                color: COLORS.muted,
+                color: "var(--text-2)",
               }}>
                 <X size={16} />
               </button>
@@ -404,7 +404,7 @@ export default function ProductListing({
               onClick={() => setDrawerOpen(false)}
               style={{
                 width: "100%", marginTop: 28,
-                background: COLORS.green, color: "#000",
+                background: COLORS.green, color: "var(--text-inverse)",
                 border: "none", borderRadius: 14,
                 padding: "16px", fontWeight: 800, fontSize: 16,
                 cursor: "pointer", fontFamily: "'Sora', sans-serif",

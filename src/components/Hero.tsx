@@ -34,7 +34,7 @@ export default function Hero({ setPage }: HeroProps) {
   return (
     <section style={{
       minHeight: isMobile ? "auto" : "100vh",
-      background: `linear-gradient(160deg, #070A13 0%, #0C1020 50%, #080C16 100%)`,
+      background: `linear-gradient(160deg, var(--bg) 0%, var(--bg-1) 50%, var(--bg) 100%)`,
       display: "flex", alignItems: "center",
       position: "relative", overflow: "hidden",
       padding: isMobile ? "58px 18px 48px" : "60px 40px 48px",
@@ -61,14 +61,14 @@ export default function Hero({ setPage }: HeroProps) {
         <div style={{
           position: "absolute", bottom: "5%", left: "35%",
           width: "30vw", height: "30vw",
-          background: "radial-gradient(circle, rgba(0,229,255,0.08) 0%, transparent 70%)",
+          background: "radial-gradient(circle, var(--bg-active) 0%, transparent 70%)",
           borderRadius: "50%", filter: "blur(50px)",
           animation: "pulse-glow 9s ease-in-out infinite 3s",
         }} />
         {/* Grid pattern overlay */}
         <div style={{
           position: "absolute", inset: 0,
-          backgroundImage: "linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px)",
+          backgroundImage: "linear-gradient(var(--bg-hover) 1px, transparent 1px), linear-gradient(90deg, var(--bg-hover) 1px, transparent 1px)",
           backgroundSize: "60px 60px",
           maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 35%, transparent 100%)",
           WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 35%, transparent 100%)",
@@ -91,7 +91,7 @@ export default function Hero({ setPage }: HeroProps) {
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             background: "rgba(56,189,248,0.1)",
-            border: "1px solid rgba(56,189,248,0.25)",
+            border: "1px solid var(--border-focus)",
             borderRadius: 100, padding: "6px 16px",
             marginBottom: 28,
           }}>
@@ -105,7 +105,7 @@ export default function Hero({ setPage }: HeroProps) {
             fontFamily: "'Sora', sans-serif",
             fontSize: isMobile ? "clamp(32px,9vw,48px)" : "clamp(44px,5.5vw,76px)",
             fontWeight: 800,
-            color: COLORS.text,
+            color: "var(--text)",
             lineHeight: 1.05,
             letterSpacing: "-0.035em",
             margin: "0 0 24px",
@@ -117,14 +117,14 @@ export default function Hero({ setPage }: HeroProps) {
               color: "transparent",
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
-              backgroundImage: "linear-gradient(135deg, #38BDF8 0%, #6366F1 60%, #22D3EE 100%)",
+              backgroundImage: "linear-gradient(135deg, var(--accent) 0%, #6366F1 60%, #22D3EE 100%)",
             }}>
               Brand New
             </span>
           </h1>
 
           <p style={{
-            color: COLORS.muted, fontSize: isMobile ? 15 : 17,
+            color: "var(--text-2)", fontSize: isMobile ? 15 : 17,
             lineHeight: 1.7, marginBottom: 36,
             maxWidth: 460,
           }}>
@@ -162,8 +162,8 @@ export default function Hero({ setPage }: HeroProps) {
                   key={s.label}
                   onClick={isRating ? () => window.open("https://www.google.com/search?sca_esv=ce1d5cfef616b7b3&sxsrf=APpeQnuTASXjQwtK9sKHf3ZLeQIyDKcjtw:1784182931333&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_7Fu1hy_kn6p6tOiB4gun8BpQ6luC6cnVUQGJPQVmdN_nCrVrUobwP9phq5L2XR0tDv625Beget30GhGzC91E5a0tXRRiG9KIKQ-nAgJIt-eDFjZfA%3D%3D&q=Sri+Vasavi+Business+Systems+Reviews&sa=X&ved=2ahUKEwiFi9iux9aVAxVzTmwGHcL5KPYQ0bkNegQIExAI&biw=1536&bih=730&dpr=1.25", "_blank") : undefined}
                   style={{
-                    background: "rgba(56,189,248,0.02)",
-                    border: isRating ? "1px solid rgba(245,158,11,0.25)" : "1px solid rgba(56,189,248,0.08)",
+                    background: "var(--bg-hover)",
+                    border: isRating ? "1px solid var(--warning-border)" : "1px solid var(--bg-active)",
                     borderRadius: 14,
                     padding: "16px 12px",
                     textAlign: "center",
@@ -174,11 +174,11 @@ export default function Hero({ setPage }: HeroProps) {
                   <div style={{
                     fontFamily: "'Sora', sans-serif",
                     fontSize: 22, fontWeight: 800,
-                    color: isRating ? "#F59E0B" : COLORS.green, marginBottom: 3,
+                    color: isRating ? "var(--warning)" : "var(--accent)", marginBottom: 3,
                   }}>
                     {s.label === "Devices Sold" ? `${Math.min(count, 5000).toLocaleString("en-IN")}+` : s.value}
                   </div>
-                  <div style={{ color: COLORS.muted, fontSize: 11, letterSpacing: "0.02em" }}>
+                  <div style={{ color: "var(--text-2)", fontSize: 11, letterSpacing: "0.02em" }}>
                     {s.label}
                   </div>
                 </Card>
@@ -207,7 +207,7 @@ export default function Hero({ setPage }: HeroProps) {
                 width: 380, height: 380,
                 borderRadius: 28,
                 overflow: "hidden",
-                border: "1px solid rgba(0,229,255,0.20)",
+                border: "1px solid var(--border-focus)",
                 animation: "float 5s ease-in-out infinite",
                 position: "relative",
                 zIndex: 1,
@@ -221,26 +221,26 @@ export default function Hero({ setPage }: HeroProps) {
               {/* Overlay badge top-right */}
               <div style={{
                 position: "absolute", top: 16, right: 16,
-                background: "rgba(13,17,23,0.80)", backdropFilter: "blur(12px)",
+                background: "var(--bg-2)", backdropFilter: "blur(12px)",
                 borderRadius: 12, padding: "10px 14px",
-                border: "1px solid rgba(56,189,248,0.18)",
+                border: "1px solid var(--border)",
               }}>
-                <div style={{ color: COLORS.green, fontSize: 12, fontWeight: 700 }}>✓ Quality Checked</div>
-                <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>Multi-point inspection</div>
+                <div style={{ color: "var(--accent)", fontSize: 12, fontWeight: 700 }}>✓ Quality Checked</div>
+                <div style={{ color: "var(--text-2)", fontSize: 10, marginTop: 2 }}>Multi-point inspection</div>
               </div>
               {/* Bottom badge */}
               <div
                 onClick={() => window.open("https://www.google.com/search?sca_esv=ce1d5cfef616b7b3&sxsrf=APpeQnuTASXjQwtK9sKHf3ZLeQIyDKcjtw:1784182931333&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_7Fu1hy_kn6p6tOiB4gun8BpQ6luC6cnVUQGJPQVmdN_nCrVrUobwP9phq5L2XR0tDv625Beget30GhGzC91E5a0tXRRiG9KIKQ-nAgJIt-eDFjZfA%3D%3D&q=Sri+Vasavi+Business+Systems+Reviews&sa=X&ved=2ahUKEwiFi9iux9aVAxVzTmwGHcL5KPYQ0bkNegQIExAI&biw=1536&bih=730&dpr=1.25", "_blank")}
                 style={{
                   position: "absolute", bottom: 16, left: 16,
-                  background: "rgba(13,17,23,0.80)", backdropFilter: "blur(12px)",
+                  background: "var(--bg-2)", backdropFilter: "blur(12px)",
                   borderRadius: 12, padding: "10px 14px",
-                  border: "1px solid rgba(245,158,11,0.25)",
+                  border: "1px solid var(--warning-border)",
                   cursor: "pointer",
                 }}
               >
-                <div style={{ color: "#F59E0B", fontSize: 12, fontWeight: 700 }}>★ 4.9 / 5 Rating</div>
-                <div style={{ color: COLORS.muted, fontSize: 10, marginTop: 2 }}>100+ Reviews</div>
+                <div style={{ color: "var(--warning)", fontSize: 12, fontWeight: 700 }}>★ 4.9 / 5 Rating</div>
+                <div style={{ color: "var(--text-2)", fontSize: 10, marginTop: 2 }}>100+ Reviews</div>
               </div>
             </Card>
           </div>
@@ -252,13 +252,13 @@ export default function Hero({ setPage }: HeroProps) {
         <div style={{
           position: "absolute", bottom: 36, left: "50%",
           transform: "translateX(-50%)",
-          textAlign: "center", opacity: 0.5,
+          textAlign: "center", opacity: 0.8,
           animation: "floatHint 2.5s ease-in-out infinite",
         }}>
-          <div style={{ color: COLORS.muted, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
+          <div style={{ color: "var(--text)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6, fontWeight: 600 }}>
             Scroll
           </div>
-          <div style={{ width: 1, height: 32, background: "linear-gradient(to bottom, rgba(56,189,248,0.5), transparent)", margin: "0 auto" }} />
+          <div style={{ width: 1, height: 32, background: "linear-gradient(to bottom, var(--accent), transparent)", margin: "0 auto" }} />
         </div>
       )}
 

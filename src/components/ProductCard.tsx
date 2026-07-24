@@ -58,9 +58,9 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
         onClick={(e) => { e.stopPropagation(); onWishlist(product.id); }}
         style={{
           position: "absolute", top: isMobile ? 8 : 12, right: isMobile ? 8 : 12, zIndex: 2,
-          background: isWished ? "rgba(239,68,68,0.15)" : "rgba(13,17,23,0.60)",
+          background: isWished ? "var(--error-bg)" : "var(--bg-2)",
           backdropFilter: "blur(8px)",
-          border: `1px solid ${isWished ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.08)"}`,
+          border: `1px solid ${isWished ? "rgba(239,68,68,0.3)" : "var(--border)"}`,
           cursor: "pointer", borderRadius: "50%",
           width: isMobile ? 28 : 34, height: isMobile ? 28 : 34,
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -69,8 +69,8 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
       >
         <Heart
           size={isMobile ? 12 : 15}
-          fill={isWished ? "#EF4444" : "transparent"}
-          color={isWished ? "#EF4444" : "rgba(255,255,255,0.5)"}
+          fill={isWished ? "var(--error)" : "transparent"}
+          color={isWished ? "var(--error)" : "var(--text-3)"}
         />
       </button>
 
@@ -78,7 +78,7 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
       <div
         style={{
           height: isMobile ? 110 : 190, overflow: "hidden", position: "relative",
-          background: `linear-gradient(135deg, ${COLORS.background} 0%, ${COLORS.darkBg} 100%)`,
+          background: "var(--bg)",
         }}
       >
         <img
@@ -97,13 +97,13 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
         />
         <div style={{
           position: "absolute", inset: 0,
-          background: hovered ? "rgba(56,189,248,0.02)" : "transparent",
+          background: hovered ? "var(--bg-hover)" : "transparent",
           transition: "background 0.3s",
         }} />
         {isOutOfStock && (
           <div style={{
             position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-            background: "rgba(13,17,23,0.6)", color: "#EF4444", fontWeight: 800, fontSize: 13, textTransform: "uppercase"
+            background: "color-mix(in srgb, var(--bg) 60%, transparent)", color: "var(--error)", fontWeight: 800, fontSize: 13, textTransform: "uppercase"
           }}>
             Out of Stock
           </div>
@@ -115,11 +115,11 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
         {/* Grade + warranty chips */}
         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 8, marginBottom: isMobile ? 6 : 9 }}>
           <Badge type="condition" text={product.condition === "Brand New" ? "Brand New" : `Grade ${product.grade}`} />
-          <span style={{ color: COLORS.muted, fontSize: isMobile ? 10 : 11 }}>{product.warranty}</span>
+          <span style={{ color: "var(--text-2)", fontSize: isMobile ? 10 : 11 }}>{product.warranty}</span>
         </div>
 
         <h3 style={{
-          color: COLORS.text, fontFamily: "'Sora', sans-serif",
+          color: "var(--text)", fontFamily: "'Sora', sans-serif",
           fontSize: isMobile ? 12 : 14, fontWeight: 700, margin: "0 0 5px",
           letterSpacing: "-0.01em",
           lineHeight: 1.3,
@@ -128,7 +128,7 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
           {product.name}
         </h3>
         <p style={{
-          color: COLORS.muted, fontSize: isMobile ? 10 : 11, margin: "0 0 8px", lineHeight: 1.4,
+          color: "var(--text-2)", fontSize: isMobile ? 10 : 11, margin: "0 0 8px", lineHeight: 1.4,
           overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
         }}>
           {product.specs}
@@ -136,7 +136,7 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
 
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: isMobile ? 8 : 12 }}>
           <RatingStars rating={product.rating} />
-          <span style={{ color: COLORS.muted, fontSize: isMobile ? 10 : 11 }}>({product.reviews})</span>
+          <span style={{ color: "var(--text-2)", fontSize: isMobile ? 10 : 11 }}>({product.reviews})</span>
         </div>
 
         <div style={{
@@ -144,7 +144,7 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
           alignItems: "flex-end",
           justifyContent: "space-between",
           gap: 8,
-          borderTop: "1px solid rgba(255,255,255,0.03)",
+          borderTop: "1px solid var(--border)",
           paddingTop: 12,
           marginTop: 12,
         }}>

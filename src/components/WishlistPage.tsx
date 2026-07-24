@@ -30,7 +30,7 @@ export default function WishlistPage({ wishlist, onAddToCart, setPage, onWishlis
         <button
           onClick={() => setPage("listing")}
           style={{
-            background: COLORS.green, color: COLORS.black, border: "none",
+            background: COLORS.green, color: "var(--text-inverse)", border: "none",
             borderRadius: 12, padding: "14px 28px", fontWeight: 700,
             fontSize: 15, cursor: "pointer", marginTop: 20,
           }}
