@@ -201,11 +201,11 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   ].filter(([, v]) => v);
 
   const trustBadges = [
-    { icon: <Shield size={14} color={COLORS.green} />, text: product.warranty ?? "1 Year Warranty" },
-    { icon: <RefreshCw size={14} color={COLORS.green} />, text: "7 Day Returns" },
+    { icon: <Shield size={16} color="var(--accent)" />, text: product.warranty ?? "1 Year Warranty" },
+    { icon: <RefreshCw size={16} color="var(--accent)" />, text: "7 Day Returns" },
     product.condition === "Brand New"
-      ? { icon: <Zap size={14} color={COLORS.green} />, text: "Brand New" }
-      : { icon: <BadgeCheck size={14} color={COLORS.green} />, text: "Grade " + product.grade },
+      ? { icon: <Zap size={16} color="var(--accent)" />, text: "Brand New" }
+      : { icon: <BadgeCheck size={16} color="var(--accent)" />, text: "Grade " + product.grade },
   ];
 
   // --- Layout Blocks Defined as JSX Constants for Clean Conditional Reordering ---
@@ -341,14 +341,29 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   const trustBadgesJSX = (
     <div className="pd-trust-grid">
       {trustBadges.map((b) => (
-        <div key={b.text} style={{
-          background: COLORS.background,
-          border: `1px solid ${COLORS.cardBorder}`,
-          borderRadius: 12,
-          padding: "10px 8px", textAlign: "center",
-        }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 5 }}>{b.icon}</div>
-          <div style={{ color: COLORS.muted, fontSize: 10, fontWeight: 500 }}>{b.text}</div>
+        <div 
+          key={b.text} 
+          style={{
+            background: "var(--bg-2)",
+            border: "1px solid var(--border-hi)",
+            borderRadius: 16,
+            padding: "16px 10px", 
+            textAlign: "center",
+            boxShadow: "var(--shadow-sm)",
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+            cursor: "default",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.borderColor = "var(--border-focus)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "none";
+            e.currentTarget.style.borderColor = "var(--border-hi)";
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>{b.icon}</div>
+          <div style={{ color: "var(--text)", fontSize: 11, fontWeight: 700, fontFamily: "'Sora', sans-serif" }}>{b.text}</div>
         </div>
       ))}
     </div>
@@ -826,45 +841,42 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
           padding: 0 24px 80px;
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 56px;
+          gap: 16px 56px;
           align-items: start;
         }
         
-        .pd-gallery-col {
-          order: 1;
+        .pd-left-col {
           grid-column: 1;
-          grid-row: 1;
+          grid-row: 1 / span 3;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          min-width: 0;
+        }
+        
+        .pd-gallery-col {
           min-width: 0;
         }
         
         .pd-info-col {
-          order: 2;
           grid-column: 2;
           grid-row: 1 / span 3;
           min-width: 0;
         }
         
         .pd-about-col {
-          order: 3;
-          grid-column: 1;
-          grid-row: 3;
-          margin-top: 24px;
           min-width: 0;
         }
         
         .pd-badges-col {
-          order: 4;
-          grid-column: 1;
-          grid-row: 2;
-          margin-top: 16px;
           min-width: 0;
         }
         
         .pd-trust-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 8px;
-          margin-top: 16px;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+          margin-top: 0;
         }
         
         .pd-related-section {
@@ -880,6 +892,9 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
         }
         
         @media (max-width: 768px) {
+          .pd-left-col {
+            display: contents;
+          }
           .pd-breadcrumbs {
             padding: 16px 20px 0;
           }
@@ -911,7 +926,8 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             margin-top: 0;
           }
           .pd-trust-grid {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
           }
           .pd-related-section {
             padding: 48px 18px;
@@ -924,24 +940,26 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
 
       {/* ── Main content ───────────────────────── */}
       <div className="pd-main-grid">
-        {/* 1. Image Gallery */}
-        <div className="pd-gallery-col">
-          {galleryJSX}
+        <div className="pd-left-col">
+          {/* 1. Image Gallery */}
+          <div className="pd-gallery-col">
+            {galleryJSX}
+          </div>
+
+          {/* 4. Trust Badges row */}
+          <div className="pd-badges-col">
+            {trustBadgesJSX}
+          </div>
+
+          {/* 3. About this Laptop Card */}
+          <div className="pd-about-col">
+            {aboutCardJSX}
+          </div>
         </div>
 
         {/* 2. Product Name, Price, Rating, Cart, Buy Now, Tabs */}
         <div className="pd-info-col">
           {productInfoJSX}
-        </div>
-
-        {/* 3. About this Laptop Card */}
-        <div className="pd-about-col">
-          {aboutCardJSX}
-        </div>
-
-        {/* 4. Trust Badges row */}
-        <div className="pd-badges-col">
-          {trustBadgesJSX}
         </div>
       </div>
 

@@ -10,6 +10,7 @@ import LandingPage from "@/components/LandingPage";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Homepage from "@/components/Homepage";
+import WhatsAppWidget from "@/components/WhatsAppWidget";
 import ProductListing from "@/components/ProductListing";
 import ProductDetail from "@/components/ProductDetail";
 import CartPage from "@/components/CartPage";
@@ -776,6 +777,8 @@ export default function App() {
           >✕</button>
         </div>
       )}
+
+      <WhatsAppWidget />
 
       {/* Global Animation Styles */}
       <style>{`

@@ -15,11 +15,14 @@ const companyLinks = ["About Us", "Blog", "Careers", "Press", "Partners"];
 const supportLinks = ["Warranty", "Returns", "Contact", "FAQs", "Shipping", "Track Order"];
 
 const social = [
-  { icon: <FaFacebook size={14} />, label: "Facebook" },
-  { icon: <FaInstagram size={14} />, label: "Instagram" },
-  { icon: <FaXTwitter size={14} />, label: "X / Twitter" },
-  { icon: <FaYoutube size={14} />, label: "YouTube" },
-  { icon: <FaLinkedin size={14} />, label: "LinkedIn" },
+  { icon: <FaFacebook size={14} />, label: "Facebook", href: "https://www.facebook.com/profile.php?id=61552204101896" },
+  { icon: <FaInstagram size={14} />, label: "Instagram", href: "https://www.instagram.com/svbs_laptops/" },
+  { icon: <FaLinkedin size={14} />, label: "LinkedIn", href: "https://www.linkedin.com/company/sri-vasavi-business-systems-salem/?originalSubdomain=in" },
+  { 
+    icon: <span style={{ fontSize: 10, fontWeight: 900, fontFamily: "'Sora', sans-serif" }}>iM</span>, 
+    label: "IndiaMart", 
+    href: "https://www.indiamart.com/srivasavi-business-systems/profile.html?srsltid=AfmBOorrv1vQ7krai6fcOQJ1QmPLGjGMZQeZ_Vk85Bcka_EYvlAl-fdh" 
+  },
 ];
 
 export default function Footer({ setPage }: FooterProps) {
@@ -96,7 +99,7 @@ export default function Footer({ setPage }: FooterProps) {
     <footer style={{
       background: "var(--bg-footer)",
       borderTop: "1px solid var(--border)",
-      padding: isMobile ? "48px 18px 24px" : "72px 40px 32px",
+      padding: isMobile ? "32px 18px 20px" : "72px 40px 32px",
       marginTop: 0,
     }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -105,8 +108,8 @@ export default function Footer({ setPage }: FooterProps) {
         <div style={{
           display: "grid",
           gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr 1fr 1fr 1.2fr",
-          gap: isMobile ? 36 : 48,
-          marginBottom: 48,
+          gap: isMobile ? 28 : 48,
+          marginBottom: isMobile ? 28 : 48,
         }}>
 
           {/* Brand column */}
@@ -143,28 +146,35 @@ export default function Footer({ setPage }: FooterProps) {
             </div>
             {/* Social */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {social.map(({ icon, label }) => (
-                <button key={label} aria-label={label} style={{
-                  background: "var(--bg)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8, width: 34, height: 34,
-                  cursor: "pointer", color: "var(--text-2)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  transition: "all 0.2s",
-                }}
+              {social.map(({ icon, label, href }) => (
+                <a 
+                  key={label} 
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label} 
+                  style={{
+                    background: "var(--bg)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 8, width: 34, height: 34,
+                    cursor: "pointer", color: "var(--text-2)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "all 0.2s",
+                    textDecoration: "none",
+                  }}
                   onMouseEnter={(e) => {
-                    const b = e.currentTarget as HTMLButtonElement;
-                    b.style.color = COLORS.green;
-                    b.style.borderColor = "var(--border-hi)";
-                    b.style.background = "var(--bg-1)";
+                    const b = e.currentTarget as HTMLAnchorElement;
+                    b.style.color = "var(--accent-2)";
+                    b.style.borderColor = "var(--border-focus)";
+                    b.style.background = "var(--bg-active)";
                   }}
                   onMouseLeave={(e) => {
-                    const b = e.currentTarget as HTMLButtonElement;
+                    const b = e.currentTarget as HTMLAnchorElement;
                     b.style.color = "var(--text-2)";
                     b.style.borderColor = "var(--border)";
                     b.style.background = "var(--bg)";
                   }}
-                >{icon}</button>
+                >{icon}</a>
               ))}
             </div>
           </div>
