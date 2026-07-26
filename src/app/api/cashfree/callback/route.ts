@@ -1,41 +1,44 @@
 import { NextResponse } from "next/server";
-import { StandardCheckoutClient, Env } from "@phonepe-pg/pg-sdk-node";
+import { Cashfree, CFEnvironment } from "cashfree-pg";
 import { doc, updateDoc, getDoc, increment } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 async function handleVerification(req: Request) {
+  const isProd = process.env.CASHFREE_ENV?.toLowerCase() === "production";
+  const requestHost = req.headers.get("host") || "localhost:3000";
+  const protocol = isProd ? "https" : (req.headers.get("x-forwarded-proto") || "http");
+  const baseUrl = `${protocol}://${requestHost}`;
+
   try {
     const { searchParams } = new URL(req.url);
-    const orderId = searchParams.get("orderId");
+    const orderId = searchParams.get("order_id");
 
     if (!orderId) {
-      console.error("[PhonePe Callback] Missing orderId query parameter.");
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+      console.error("[Cashfree Callback] Missing orderId query parameter.");
       return NextResponse.redirect(`${baseUrl}/#checkout?payment_status=error`, 302);
     }
 
-    const clientId = process.env.PHONEPE_CLIENT_ID?.trim() || "PGTESTPAYUAT";
-    const clientSecret = process.env.PHONEPE_CLIENT_SECRET?.trim() || "099eb0cd-02cf-4e2a-8aca-3e6c6aff0399";
-    const clientVersion = parseInt(process.env.PHONEPE_CLIENT_VERSION?.trim() || "1");
-    const isProd = process.env.PHONEPE_ENV === "production";
-    const env = isProd ? Env.PRODUCTION : Env.SANDBOX;
+    const appId = process.env.CASHFREE_APP_ID?.trim() || "";
+    const secretKey = process.env.CASHFREE_SECRET_KEY?.trim() || "";
+    const isProd = process.env.CASHFREE_ENV?.toLowerCase() === "production";
+    const env = isProd ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
 
-    // Initialize PhonePe SDK Client
-    const client = StandardCheckoutClient.getInstance(clientId, clientSecret, clientVersion, env);
+    // Initialize Cashfree PG SDK Client
+    const cashfree = new Cashfree(env, appId, secretKey);
 
-    // Query status directly from PhonePe API to avoid request tampering
-    const response = await client.getOrderStatus(orderId);
-    console.log(`[PhonePe Callback] Status check response for #${orderId}:`, response);
+    // Fetch order directly from Cashfree API to verify payment status securely
+    const response = await cashfree.PGFetchOrder(orderId);
+    const cashfreeOrder = response.data;
+    console.log(`[Cashfree Callback] Status check response for #${orderId}:`, cashfreeOrder);
 
     const orderRef = doc(db, "orders", orderId);
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-    // Standard states returned are COMPLETED / SUCCESS / FAILED
-    if (response.state === "COMPLETED" || response.state === "SUCCESS") {
+    // Cashfree order_status can be: PAID, ACTIVE, EXPIRED, TERMINATED
+    if (cashfreeOrder.order_status === "PAID") {
       await updateDoc(orderRef, {
         status: "Paid",
-        phonepeTransactionId: response.orderId || "",
-        paymentMethod: "PhonePe"
+        cashfreeTransactionId: cashfreeOrder.cf_order_id || "",
+        paymentMethod: "Cashfree"
       });
 
       // Decrease stock for items in the order
@@ -58,10 +61,10 @@ async function handleVerification(req: Request) {
           }
         }
       } catch (stockErr) {
-        console.error("[PhonePe Callback] Failed to decrease stock:", stockErr);
+        console.error("[Cashfree Callback] Failed to decrease stock:", stockErr);
       }
 
-      // Trigger Push Notification to Admin (No emojis, per user request)
+      // Trigger Push Notification to Admin
       try {
         await fetch(`${baseUrl}/api/send-admin-push`, {
           method: "POST",
@@ -70,11 +73,11 @@ async function handleVerification(req: Request) {
           },
           body: JSON.stringify({
             title: "New Laptop Booked",
-            body: `Order ${orderId} has been successfully paid and booked.`,
+            body: `Order ${orderId} has been successfully paid and booked via Cashfree.`,
           }),
         });
       } catch (pushErr) {
-        console.error("[PhonePe Callback] Failed to trigger admin push notification:", pushErr);
+        console.error("[Cashfree Callback] Failed to trigger admin push notification:", pushErr);
       }
 
       return NextResponse.redirect(`${baseUrl}/#checkout?payment_status=success&orderId=${orderId}`, 302);
@@ -86,8 +89,7 @@ async function handleVerification(req: Request) {
       return NextResponse.redirect(`${baseUrl}/#checkout?payment_status=failed&orderId=${orderId}`, 302);
     }
   } catch (error: any) {
-    console.error("[PhonePe Callback] Verification failed:", error);
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    console.error("[Cashfree Callback] Verification failed:", error?.response?.data || error);
     return NextResponse.redirect(`${baseUrl}/#checkout?payment_status=error`, 302);
   }
 }

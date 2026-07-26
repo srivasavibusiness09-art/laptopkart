@@ -62,16 +62,16 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
   const total = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
   const isMobile = useIsMobile();
 
-  const [phonepeStatus, setPhonepeStatus] = useState<{ status: string; orderId: string } | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<{ status: string; orderId: string } | null>(null);
 
-  // Monitor returned URL parameters from PhonePe redirect callback
+  // Monitor returned URL parameters from payment redirect callback
   useEffect(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       const status = urlParams.get("payment_status");
       const rOrderId = urlParams.get("orderId");
       if (status && rOrderId) {
-        setPhonepeStatus({ status, orderId: rOrderId });
+        setPaymentStatus({ status, orderId: rOrderId });
         setOrderId(rOrderId);
         setStep(2); // Auto-navigate to receipt step
         if (status === "success") {
@@ -216,8 +216,8 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
 
       setIsProcessing(true);
       try {
-        // Trigger server-side PhonePe redirection link generation
-        const res = await fetch("/api/phonepe/initiate", {
+        // Trigger server-side Cashfree session generation
+        const res = await fetch("/api/cashfree/initiate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -232,12 +232,13 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
         });
 
         if (!res.ok) {
-          throw new Error("Unable to reach PhonePe backend gateway.");
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || "Unable to reach Cashfree backend gateway.");
         }
 
         const data = await res.json();
-        if (data.redirectUrl) {
-          // Update default address details inside users doc for subsequent orders prior to redirection
+        if (data.paymentSessionId) {
+          // Update default address details inside users doc for subsequent orders prior to checkout
           await setDoc(doc(db, "users", user.uid), {
             phone: address.phone,
             street: address.street,
@@ -246,13 +247,20 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
             pincode: address.pincode
           }, { merge: true });
 
-          // Redirect browser location directly to PhonePe hosted pay page
-          window.location.href = data.redirectUrl;
+          // Initialize client SDK and checkout using the session ID
+          const cashfree = (window as any).Cashfree({
+            mode: (process.env.NEXT_PUBLIC_CASHFREE_ENV || "sandbox").toLowerCase()
+          });
+
+          cashfree.checkout({
+            paymentSessionId: data.paymentSessionId,
+            redirectTarget: "_self"
+          });
         } else {
-          throw new Error(data.error || "Failed to retrieve transaction redirection URL.");
+          throw new Error(data.error || "Failed to retrieve Cashfree payment session.");
         }
       } catch (err: any) {
-        console.error("PhonePe payment flow initiation failed:", err);
+        console.error("Cashfree payment flow initiation failed:", err);
         alert(err.message || "Failed to initiate payment. Please try again.");
         setIsProcessing(false);
       }
@@ -335,7 +343,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
 
           {/* Step 2: Success / Failure */}
           {step === 2 && (
-            phonepeStatus?.status === "failed" || phonepeStatus?.status === "error" ? (
+            paymentStatus?.status === "failed" || paymentStatus?.status === "error" ? (
               <div style={{ textAlign: "center", padding: "40px 0" }}>
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
                   <X size={80} color="var(--error)" strokeWidth={1.5} />
@@ -343,7 +351,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
                 <h2 style={{ color: "var(--error)", fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 28, marginBottom: 12 }}>Payment Failed</h2>
                 <p style={{ color: COLORS.text, fontSize: 16, marginBottom: 8 }}>Transaction for Order #LK-{orderId} was unsuccessful.</p>
                 <p style={{ color: COLORS.muted, marginBottom: 32 }}>Please try checking out again or contact customer support if money was debited.</p>
-                <button onClick={() => { setStep(1); setPhonepeStatus(null); }} style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                <button onClick={() => { setStep(1); setPaymentStatus(null); }} style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
                   Retry Payment
                 </button>
               </div>
