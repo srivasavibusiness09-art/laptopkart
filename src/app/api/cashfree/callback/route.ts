@@ -15,7 +15,7 @@ async function handleVerification(req: Request) {
 
     if (!orderId) {
       console.error("[Cashfree Callback] Missing orderId query parameter.");
-      return NextResponse.redirect(`${baseUrl}/#checkout?payment_status=error`, 302);
+      return NextResponse.redirect(`${baseUrl}/?payment_status=error#checkout`, 302);
     }
 
     const appId = process.env.CASHFREE_APP_ID?.trim() || "";
@@ -80,17 +80,17 @@ async function handleVerification(req: Request) {
         console.error("[Cashfree Callback] Failed to trigger admin push notification:", pushErr);
       }
 
-      return NextResponse.redirect(`${baseUrl}/#checkout?payment_status=success&orderId=${orderId}`, 302);
+      return NextResponse.redirect(`${baseUrl}/?payment_status=success&orderId=${orderId}#checkout`, 302);
     } else {
       await updateDoc(orderRef, {
         status: "Failed"
       });
 
-      return NextResponse.redirect(`${baseUrl}/#checkout?payment_status=failed&orderId=${orderId}`, 302);
+      return NextResponse.redirect(`${baseUrl}/?payment_status=failed&orderId=${orderId}#checkout`, 302);
     }
   } catch (error: any) {
     console.error("[Cashfree Callback] Verification failed:", error?.response?.data || error);
-    return NextResponse.redirect(`${baseUrl}/#checkout?payment_status=error`, 302);
+    return NextResponse.redirect(`${baseUrl}/?payment_status=error#checkout`, 302);
   }
 }
 

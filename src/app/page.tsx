@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { COLORS, products, accessoriesList, initialBanners } from "@/data/products";
 import type { Product } from "@/data/products";
 import { auth } from "@/lib/firebase";
@@ -35,7 +35,7 @@ import {
 
 import { BadgeCheck, Heart, Shield, Star } from "lucide-react";
 
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface CartItem extends Product {
@@ -197,8 +197,148 @@ export default function App() {
   const [listingCategory, setListingCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
+  /* Global authentication states */
+  const [user, setUser] = useState<any>(null);
+  const [pendingAction, setPendingAction] = useState<any>(null);
+  const [statusNotification, setStatusNotification] = useState<any>(null);
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<number[]>([]);
+
+  const isCartLoaded = useRef(false);
+  const isWishlistLoaded = useRef(false);
+
+  // 1. Initial load of guest cart/wishlist from localStorage on client mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const guestCart = localStorage.getItem("laptopkart_guest_cart");
+      const guestWishlist = localStorage.getItem("laptopkart_guest_wishlist");
+      if (guestCart) {
+        try { setCart(JSON.parse(guestCart)); } catch (e) {}
+      }
+      if (guestWishlist) {
+        try { setWishlist(JSON.parse(guestWishlist)); } catch (e) {}
+      }
+      // If there is no user currently loading, mark as loaded so we can write guest changes
+      if (!auth.currentUser) {
+        isCartLoaded.current = true;
+        isWishlistLoaded.current = true;
+      }
+    }
+  }, []);
+
+  // 2. Fetch and merge cart/wishlist from Firestore when user authentication state changes
+  useEffect(() => {
+    if (user) {
+      isCartLoaded.current = false;
+      isWishlistLoaded.current = false;
+
+      const userDocRef = doc(db, "users", user.uid);
+      getDoc(userDocRef)
+        .then(async (docSnap) => {
+          let dbCart: CartItem[] = [];
+          let dbWishlist: number[] = [];
+
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            dbCart = data.cart || [];
+            dbWishlist = data.wishlist || [];
+          }
+
+          // Merge local guest items (currently in state) with Firestore data
+          let mergedCart = [...dbCart];
+          let cartChanged = false;
+
+          if (cart.length > 0) {
+            cart.forEach((guestItem) => {
+              const existingIdx = mergedCart.findIndex((i) => i.id === guestItem.id);
+              if (existingIdx > -1) {
+                const limit = guestItem.stock !== undefined ? guestItem.stock : 5;
+                const newQty = Math.min((mergedCart[existingIdx].qty || 1) + (guestItem.qty || 1), limit);
+                mergedCart[existingIdx] = { ...mergedCart[existingIdx], qty: newQty };
+              } else {
+                mergedCart.push(guestItem);
+              }
+            });
+            cartChanged = true;
+          }
+
+          let mergedWishlist = [...dbWishlist];
+          let wishlistChanged = false;
+
+          if (wishlist.length > 0) {
+            wishlist.forEach((guestId) => {
+              if (!mergedWishlist.includes(guestId)) {
+                mergedWishlist.push(guestId);
+              }
+            });
+            wishlistChanged = true;
+          }
+
+          setCart(mergedCart);
+          setWishlist(mergedWishlist);
+
+          isCartLoaded.current = true;
+          isWishlistLoaded.current = true;
+
+          // If guest items were merged, write immediately to Firestore
+          if (cartChanged || wishlistChanged) {
+            const updateObj: any = {};
+            if (cartChanged) updateObj.cart = mergedCart;
+            if (wishlistChanged) updateObj.wishlist = mergedWishlist;
+            await setDoc(userDocRef, updateObj, { merge: true });
+          }
+
+          // Clear guest local storage
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("laptopkart_guest_cart");
+            localStorage.removeItem("laptopkart_guest_wishlist");
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching user data from Firestore:", err);
+          isCartLoaded.current = true;
+          isWishlistLoaded.current = true;
+        });
+    } else {
+      // If user logs out, reset state to empty
+      setCart([]);
+      setWishlist([]);
+      isCartLoaded.current = true;
+      isWishlistLoaded.current = true;
+    }
+  }, [user]);
+
+  // 3. Save cart changes automatically (Firestore if logged in, localStorage if guest)
+  useEffect(() => {
+    if (!isCartLoaded.current) return;
+
+    if (user) {
+      const userDocRef = doc(db, "users", user.uid);
+      setDoc(userDocRef, { cart }, { merge: true })
+        .catch((err) => console.error("Error saving cart to Firestore:", err));
+    } else {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("laptopkart_guest_cart", JSON.stringify(cart));
+      }
+    }
+  }, [cart, user]);
+
+  // 4. Save wishlist changes automatically (Firestore if logged in, localStorage if guest)
+  useEffect(() => {
+    if (!isWishlistLoaded.current) return;
+
+    if (user) {
+      const userDocRef = doc(db, "users", user.uid);
+      setDoc(userDocRef, { wishlist }, { merge: true })
+        .catch((err) => console.error("Error saving wishlist to Firestore:", err));
+    } else {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("laptopkart_guest_wishlist", JSON.stringify(wishlist));
+      }
+    }
+  }, [wishlist, user]);
+
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
   const [viewAccessory, setViewAccessory] = useState<any | null>(null);
 
@@ -367,10 +507,7 @@ export default function App() {
     };
   }, []);
 
-  /* Global authentication states */
-  const [user, setUser] = useState<any>(null);
-  const [pendingAction, setPendingAction] = useState<any>(null);
-  const [statusNotification, setStatusNotification] = useState<any>(null);
+
 
   // Sync and persist Firebase Auth session state on mount
   useEffect(() => {
@@ -489,12 +626,7 @@ export default function App() {
   };
 
   const handleAddToCart = (product: Product) => {
-    if (!user) {
-      setPendingAction({ type: "cart", payload: product });
-      handleNavigate("login");
-      return;
-    }
-    const limit = product.stock !== undefined ? product.stock : 1;
+    const limit = product.stock !== undefined ? product.stock : 5;
     if (limit <= 0) {
       triggerStoreAlert("error", "Sorry, this item is out of stock.");
       return;
