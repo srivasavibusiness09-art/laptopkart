@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Cashfree, CFEnvironment } from "cashfree-pg";
-import { doc, updateDoc, getDoc, increment } from "firebase/firestore";
+import { doc, updateDoc, getDoc, increment, arrayUnion } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 async function handleVerification(req: Request) {
@@ -62,6 +62,27 @@ async function handleVerification(req: Request) {
         }
       } catch (stockErr) {
         console.error("[Cashfree Callback] Failed to decrease stock:", stockErr);
+      }
+
+      // Sync Coupon usage if any
+      try {
+        const orderSnap = await getDoc(orderRef);
+        if (orderSnap.exists()) {
+          const orderData = orderSnap.data();
+          if (orderData.couponCode) {
+            const couponRef = doc(db, "coupons", orderData.couponCode);
+            const phone = orderData.address?.phone || "";
+            if (phone) {
+              await updateDoc(couponRef, {
+                usedCount: increment(1),
+                usedBy: arrayUnion(phone)
+              });
+              console.log(`[Cashfree Callback] Marked coupon ${orderData.couponCode} as used by ${phone}`);
+            }
+          }
+        }
+      } catch (couponErr) {
+        console.error("[Cashfree Callback] Failed to sync coupon usage:", couponErr);
       }
 
       // Trigger Push Notification to Admin

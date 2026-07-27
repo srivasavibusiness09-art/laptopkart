@@ -5,7 +5,7 @@ import { db } from "@/lib/firebase";
 
 export async function POST(req: Request) {
   try {
-    const { amount, orderId, email, phone, userId, address, cart } = await req.json();
+    const { amount, orderId, email, phone, userId, address, cart, couponCode, discountAmount } = await req.json();
 
     // Server-side stock verification
     for (const item of cart) {
@@ -44,7 +44,9 @@ export async function POST(req: Request) {
       status: "Pending Payment",
       paymentMethod: "cashfree",
       email,
-      uid: userId
+      uid: userId,
+      couponCode: couponCode || null,
+      discountAmount: discountAmount || 0
     };
     await setDoc(doc(db, "orders", orderId), newOrder);
 

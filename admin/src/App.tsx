@@ -30,7 +30,8 @@ import {
   Maximize2,
   Cpu,
   User,
-  Menu
+  Menu,
+  Tag
 } from 'lucide-react';
 
 // compressImage removed (using storage.ts module)
@@ -194,7 +195,7 @@ export const DEFAULT_BANNERS: Banner[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests' | 'coupons'>('overview');
   const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed' | 'unpaid'>('active');
   const [ordersPage, setOrdersPage] = useState(0);
 
@@ -232,6 +233,7 @@ export default function App() {
   const [accessoryModal, setAccessoryModal] = useState<{ open: boolean, mode: 'add' | 'edit', item?: AccessoryProduct }>({ open: false, mode: 'add' });
   const [subscribersSearch, setSubscribersSearch] = useState('');
   const [sellRequests, setSellRequests] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<any[]>([]);
   const [sellSearch, setSellSearch] = useState('');
   const [sellStatusFilter, setSellStatusFilter] = useState('all');
   const [sellDetailModal, setSellDetailModal] = useState<{ open: boolean, item?: any }>({ open: false });
@@ -289,6 +291,14 @@ export default function App() {
   const [videoUrl, setVideoUrl] = useState("");
   const [videoOrientation, setVideoOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [uploadingVideo, setUploadingVideo] = useState(false);
+
+  // Form states - Coupons
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscountType, setCouponDiscountType] = useState<"flat" | "percentage">("flat");
+  const [couponDiscount, setCouponDiscount] = useState("");
+  const [couponMaxDiscount, setCouponMaxDiscount] = useState("");
+  const [couponMinCartValue, setCouponMinCartValue] = useState("");
+  const [couponMaxUses, setCouponMaxUses] = useState("");
 
   // Live snapshot database listeners for Products, Accessories, Banners, and Orders
   useEffect(() => {
@@ -409,6 +419,19 @@ export default function App() {
       }
     );
 
+    // 8. Subscribe to Coupons
+    const unsubscribeCoupons = onSnapshot(
+      query(collection(db, "coupons")),
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        setCoupons(list);
+      },
+      (error) => console.error("[Firestore] Coupons read failed:", error)
+    );
+
     return () => {
       unsubscribeProducts();
       unsubscribeAccessories();
@@ -417,6 +440,7 @@ export default function App() {
       unsubscribeVideo();
       unsubscribeSubscribers();
       unsubscribeSellRequests();
+      unsubscribeCoupons();
     };
   }, []);
 
@@ -1230,6 +1254,53 @@ export default function App() {
     }
   };
 
+  // Coupon Actions
+  const handleAddCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponCode.trim() || !couponDiscount) {
+      return triggerAlert('danger', 'Coupon Code and Discount are required.');
+    }
+    const code = couponCode.trim().toUpperCase();
+    const minVal = Number(couponMinCartValue);
+    const uses = Number(couponMaxUses);
+    const disc = Number(couponDiscount);
+    const maxDisc = Number(couponMaxDiscount);
+
+    try {
+      await setDoc(doc(db, "coupons", code), {
+        code,
+        discountType: couponDiscountType,
+        discount: disc,
+        maxDiscountAmount: maxDisc > 0 ? maxDisc : null,
+        minCartValue: minVal > 0 ? minVal : 0,
+        maxUses: uses > 0 ? uses : null,
+        usedCount: 0,
+        usedBy: [],
+        createdAt: new Date().toISOString()
+      });
+      triggerAlert('success', `Coupon ${code} created successfully.`);
+      setCouponCode("");
+      setCouponDiscount("");
+      setCouponMaxDiscount("");
+      setCouponMinCartValue("");
+      setCouponMaxUses("");
+    } catch (err) {
+      console.error(err);
+      triggerAlert('danger', 'Failed to create coupon.');
+    }
+  };
+
+  const handleDeleteCoupon = async (code: string) => {
+    if (!window.confirm(`Delete coupon ${code}?`)) return;
+    try {
+      await deleteDoc(doc(db, "coupons", code));
+      triggerAlert('success', 'Coupon deleted.');
+    } catch (err) {
+      console.error(err);
+      triggerAlert('danger', 'Failed to delete coupon.');
+    }
+  };
+
   const handleSendAutomatedBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     if (subscribers.length === 0) {
@@ -1327,6 +1398,7 @@ export default function App() {
             { id: 'video', label: 'Promo Video', icon: <Video size={18} /> },
             { id: 'subscribers', label: 'Newsletter', icon: <Mail size={18} /> },
             { id: 'sell_requests', label: 'Sell Requests', icon: <RefreshCw size={18} /> },
+            { id: 'coupons', label: 'Coupons', icon: <Tag size={18} /> },
           ].map(tab => (
             <button
               key={tab.id}
@@ -2969,6 +3041,139 @@ export default function App() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* COUPONS TAB */}
+        {activeTab === 'coupons' && (
+          <div className="fade-in">
+            <div style={{ marginBottom: 32 }}>
+              <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+                Coupon Manager
+              </h1>
+              <p style={{ color: '#8B9BBE', fontSize: 15 }}>
+                Create discount codes with usage limits tied securely to customer mobile numbers.
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr', gap: 32 }}>
+              {/* Left Column: Coupon Registry */}
+              <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflowX: 'auto', height: 'fit-content' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(56, 189, 248, 0.12)' }}>
+                      <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Coupon Code</th>
+                      <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Discount</th>
+                      <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Usage</th>
+                      <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {coupons.map(c => (
+                      <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <td style={{ padding: '18px 24px', color: '#fff', fontSize: 14, fontWeight: 800 }}>{c.code}</td>
+                        <td style={{ padding: '18px 24px' }}>
+                          <span style={{ background: 'rgba(56,189,248,0.1)', color: '#38BDF8', padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+                            {c.discountType === 'percentage' ? `${c.discount}% OFF` : `₹${c.discount.toLocaleString('en-IN')}`}
+                          </span>
+                        </td>
+                        <td style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 13 }}>
+                          <div style={{ fontWeight: 600, color: '#fff' }}>{c.usedCount || 0} {c.maxUses ? `/ ${c.maxUses}` : 'Uses'}</div>
+                          {c.minCartValue ? <div style={{ fontSize: 11, marginTop: 4 }}>Min: ₹{c.minCartValue.toLocaleString('en-IN')}</div> : null}
+                        </td>
+                        <td style={{ padding: '18px 24px', textAlign: 'right' }}>
+                          <button
+                            onClick={() => handleDeleteCoupon(c.code)}
+                            style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 10, padding: 8, cursor: 'pointer' }}
+                            title="Delete Coupon"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {coupons.length === 0 && (
+                      <tr>
+                        <td colSpan={4} style={{ padding: 40, textAlign: 'center', color: '#8B9BBE', fontSize: 14 }}>
+                          No active coupons.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Right Column: Create Coupon Form */}
+              <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, padding: 32, height: 'fit-content' }}>
+                <h2 style={{ fontFamily: 'Sora', fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Plus size={20} color="#38BDF8" /> Create Coupon
+                </h2>
+                <form onSubmit={handleAddCoupon} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Coupon Code (e.g. SAVE10)</label>
+                    <input
+                      type="text" required value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                      className="form-input" placeholder="Enter alphanumeric code"
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Type</label>
+                      <select value={couponDiscountType} onChange={e => setCouponDiscountType(e.target.value as 'flat' | 'percentage')} className="form-input" style={{ width: '100%' }}>
+                        <option value="flat">Flat Amount (₹)</option>
+                        <option value="percentage">Percentage (%)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{couponDiscountType === 'flat' ? 'Amount (₹)' : 'Percentage (%)'}</label>
+                      <input
+                        type="number" required value={couponDiscount} onChange={e => setCouponDiscount(e.target.value)}
+                        className="form-input" placeholder={couponDiscountType === 'flat' ? "e.g. 500" : "e.g. 10"}
+                      />
+                    </div>
+                  </div>
+
+                  {couponDiscountType === 'percentage' && (
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Max Discount Cap (₹) (Optional)</label>
+                      <input
+                        type="number" value={couponMaxDiscount} onChange={e => setCouponMaxDiscount(e.target.value)}
+                        className="form-input" placeholder="e.g. 2000"
+                      />
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Min Cart Value (₹)</label>
+                      <input
+                        type="number" value={couponMinCartValue} onChange={e => setCouponMinCartValue(e.target.value)}
+                        className="form-input" placeholder="Optional"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Max Total Uses</label>
+                      <input
+                        type="number" value={couponMaxUses} onChange={e => setCouponMaxUses(e.target.value)}
+                        className="form-input" placeholder="Optional"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    style={{
+                      background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', color: '#fff', border: 'none',
+                      padding: '16px 0', borderRadius: 12, fontWeight: 800, fontSize: 15, cursor: 'pointer',
+                      marginTop: 10, fontFamily: 'Sora'
+                    }}
+                  >
+                    Generate Coupon
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         )}

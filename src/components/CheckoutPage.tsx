@@ -59,7 +59,25 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
   const [orderId, setOrderId] = useState(() =>
     Math.floor(100000 + Math.random() * 900000).toString()
   );
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
+
   const total = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
+  
+  let discount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.discountType === "percentage") {
+      discount = Math.round((total * appliedCoupon.discount) / 100);
+      if (appliedCoupon.maxDiscountAmount && discount > appliedCoupon.maxDiscountAmount) {
+        discount = appliedCoupon.maxDiscountAmount;
+      }
+    } else {
+      discount = appliedCoupon.discount;
+    }
+  }
+  const finalTotal = Math.max(0, total - discount);
   const isMobile = useIsMobile();
 
   const [paymentStatus, setPaymentStatus] = useState<{ status: string; orderId: string } | null>(null);
@@ -125,6 +143,45 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
     throw new Error("Failed to generate a unique Order ID.");
   };
 
+  const handleApplyCoupon = async () => {
+    setCouponError(null);
+    setCouponSuccess(null);
+    if (!address.phone) {
+      setCouponError("Please enter your phone number in Step 1 first.");
+      return;
+    }
+    if (!couponInput.trim()) {
+      setCouponError("Please enter a coupon code.");
+      return;
+    }
+    const code = couponInput.trim().toUpperCase();
+    try {
+      const cSnap = await getDoc(doc(db, "coupons", code));
+      if (!cSnap.exists()) {
+        setCouponError("Invalid coupon code.");
+        return;
+      }
+      const cData = cSnap.data();
+      if (cData.minCartValue && total < cData.minCartValue) {
+        setCouponError(`Minimum purchase of ₹${cData.minCartValue.toLocaleString('en-IN')} required.`);
+        return;
+      }
+      if (cData.maxUses && cData.usedCount >= cData.maxUses) {
+        setCouponError("This coupon has expired or reached max uses.");
+        return;
+      }
+      if (cData.usedBy && cData.usedBy.includes(address.phone)) {
+        setCouponError("You have already used this coupon code.");
+        return;
+      }
+      setAppliedCoupon({ ...cData, code });
+      setCouponSuccess("Coupon applied successfully!");
+    } catch (e) {
+      console.error(e);
+      setCouponError("Failed to apply coupon.");
+    }
+  };
+
   const handleNext = async () => {
     // If they choose payment, launch Razorpay Checkout flow
     if (step === 1) {
@@ -146,6 +203,31 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
         }
       } catch (stockErr) {
         console.error("Stock validation failed:", stockErr);
+      }
+
+      // Re-validate coupon right before paying
+      if (appliedCoupon) {
+        if (!address.phone) {
+          alert("Please enter your phone number to use this coupon.");
+          setIsProcessing(false);
+          return;
+        }
+        try {
+          const cSnap = await getDoc(doc(db, "coupons", appliedCoupon.code));
+          if (!cSnap.exists()) {
+            alert("Coupon is no longer valid.");
+            setIsProcessing(false);
+            return;
+          }
+          const cData = cSnap.data();
+          if (cData.usedBy && cData.usedBy.includes(address.phone)) {
+            alert("You have already used this coupon code.");
+            setIsProcessing(false);
+            return;
+          }
+        } catch (e) {
+          console.error("Coupon validation error", e);
+        }
       }
 
       let finalOrderId = orderId;
@@ -170,12 +252,14 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
               qty: item.qty || 1,
               img: item.img
             })),
-            total,
+            total: finalTotal,
             address,
             status: "Pending (COD)",
             paymentMethod: "cod",
             email: user.email,
-            uid: user.uid
+            uid: user.uid,
+            couponCode: appliedCoupon?.code || null,
+            discountAmount: discount
           };
           const orderRef = doc(db, "orders", finalOrderId);
           await setDoc(orderRef, newOrder);
@@ -221,13 +305,15 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            amount: total,
+            amount: finalTotal,
             orderId: finalOrderId,
             email: user.email,
             phone: address.phone,
             userId: user.uid,
             address,
-            cart
+            cart,
+            couponCode: appliedCoupon?.code || null,
+            discountAmount: discount
           })
         });
 
@@ -397,9 +483,56 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
               <span style={{ color: COLORS.green, fontWeight: 700 }}>₹{(item.price * (item.qty || 1)).toLocaleString('en-IN')}</span>
             </div>
           ))}
-          <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 8 }}>
+
+          {/* Coupon Section */}
+          <div style={{ marginTop: 16, marginBottom: 16, borderTop: `1px solid ${COLORS.cardBorder}`, paddingTop: 16 }}>
+            {!appliedCoupon ? (
+              <div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="text"
+                    placeholder="Enter Coupon Code"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    style={{ ...inputStyle, textTransform: "uppercase" }}
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 10, padding: "0 16px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+                  >
+                    Apply
+                  </button>
+                </div>
+                {couponError && <div style={{ color: "var(--error)", fontSize: 12, marginTop: 8 }}>{couponError}</div>}
+              </div>
+            ) : (
+              <div style={{ background: "rgba(56, 189, 248, 0.1)", border: `1px dashed ${COLORS.green}`, padding: 12, borderRadius: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ color: COLORS.green, fontWeight: 700, fontSize: 14 }}>{appliedCoupon.code} Applied</div>
+                    <div style={{ color: COLORS.green, fontSize: 12 }}>{couponSuccess}</div>
+                  </div>
+                  <button onClick={() => { setAppliedCoupon(null); setCouponInput(""); setCouponSuccess(null); }} style={{ background: "transparent", border: "none", color: "var(--error)", cursor: "pointer", padding: 4 }}>
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 8, paddingBottom: appliedCoupon ? 8 : 0 }}>
+            <span style={{ color: COLORS.text, fontWeight: 600 }}>Subtotal</span>
+            <span style={{ color: COLORS.text, fontWeight: 600 }}>₹{total.toLocaleString('en-IN')}</span>
+          </div>
+          {appliedCoupon && (
+            <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: 8 }}>
+              <span style={{ color: COLORS.green, fontWeight: 600 }}>Discount ({appliedCoupon.code})</span>
+              <span style={{ color: COLORS.green, fontWeight: 600 }}>- ₹{discount.toLocaleString('en-IN')}</span>
+            </div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 8, borderTop: `1px solid ${COLORS.cardBorder}` }}>
             <span style={{ color: COLORS.text, fontWeight: 700 }}>Total</span>
-            <span style={{ color: COLORS.green, fontWeight: 800, fontSize: 18 }}>₹{total.toLocaleString('en-IN')}</span>
+            <span style={{ color: COLORS.green, fontWeight: 800, fontSize: 18 }}>₹{finalTotal.toLocaleString('en-IN')}</span>
           </div>
         </div>
       </div>
