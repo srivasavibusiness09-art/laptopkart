@@ -1166,7 +1166,7 @@ export function WhyRefurbishedPage() {
 
 export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
   const isMobile = useIsMobile();
-  const [form, setForm] = useState({ title: "", category: "Buying Guide", content: "" });
+  const [form, setForm] = useState({ title: "", category: "Buying Guide", customCategory: "", content: "" });
   const [submitted, setSubmitted] = useState(false);
 
   const COVER_TEMPLATES = [
@@ -1194,7 +1194,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
 
       await setDoc(doc(db, "blogs", docId), {
         title: form.title,
-        category: form.category,
+        category: form.category === "Other" ? (form.customCategory || "Other") : form.category,
         content: form.content,
         coverUrl: activeCoverUrl,
         createdAt: new Date().toISOString(),
@@ -1270,11 +1270,23 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
           <div style={{ marginBottom: 40 }}>
             <div style={{ fontSize: 13, color: "#60A5FA", fontWeight: 700, marginBottom: 10 }}>STEP 2 • CATEGORY</div>
             <Dropdown
-              options={["Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News"].map(c => ({ value: c, label: c }))}
+              options={["Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News", "Other"].map(c => ({ value: c, label: c }))}
               value={form.category}
               onChange={val => setForm(f => ({ ...f, category: val }))}
-              style={{ width: "100%" }}
+              style={{ width: "100%", marginBottom: form.category === "Other" ? 16 : 0 }}
             />
+            {form.category === "Other" && (
+              <input
+                value={form.customCategory}
+                onChange={e => setForm(f => ({ ...f, customCategory: e.target.value }))}
+                placeholder="Enter custom category..."
+                style={{
+                  width: "100%", background: "var(--input-bg, rgba(255,255,255,0.05))", border: "1px solid var(--border)", 
+                  outline: "none", color: "var(--text)", padding: "14px 16px", borderRadius: 12, fontSize: 15,
+                  fontFamily: "'Inter', sans-serif"
+                }}
+              />
+            )}
           </div>
 
           {/* Step 3: Cover Image */}
@@ -1293,7 +1305,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
             }}>
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(transparent, var(--bg-overlay))", borderRadius: 20 }} />
               <div style={{ position: "absolute", bottom: 24, left: 24, right: 24, color: "var(--text)" }}>
-                <div style={{ fontSize: 13, opacity: 0.9 }}>{form.category}</div>
+                <div style={{ fontSize: 13, opacity: 0.9 }}>{form.category === "Other" ? (form.customCategory || "Other") : form.category}</div>
                 <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>{form.title || "Your Blog Title"}</div>
               </div>
             </div>
