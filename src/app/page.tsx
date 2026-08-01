@@ -6,7 +6,7 @@ import type { Product } from "@/data/products";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
-import LandingPage from "@/components/LandingPage";
+import LandingIntro from "@/components/LandingIntro";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Homepage from "@/components/Homepage";
@@ -214,10 +214,10 @@ export default function App() {
       const guestCart = localStorage.getItem("laptopkart_guest_cart");
       const guestWishlist = localStorage.getItem("laptopkart_guest_wishlist");
       if (guestCart) {
-        try { setCart(JSON.parse(guestCart)); } catch (e) {}
+        try { setCart(JSON.parse(guestCart)); } catch (e) { }
       }
       if (guestWishlist) {
-        try { setWishlist(JSON.parse(guestWishlist)); } catch (e) {}
+        try { setWishlist(JSON.parse(guestWishlist)); } catch (e) { }
       }
       // If there is no user currently loading, mark as loaded so we can write guest changes
       if (!auth.currentUser) {
@@ -346,6 +346,7 @@ export default function App() {
   const [productsList, setProductsList] = useState<Product[]>(products);
   const [accessories, setAccessories] = useState<any[]>(accessoriesList);
   const [banners, setBanners] = useState<any[]>(initialBanners);
+  const [heroPosters, setHeroPosters] = useState<any[]>([]);
   const [customerReviews, setCustomerReviews] = useState<any[]>([]);
 
   const [storeAlert, setStoreAlert] = useState<{ type: "success" | "warning" | "error"; message: string } | null>(null);
@@ -365,9 +366,10 @@ export default function App() {
     let productsReady = false;
     let accessoriesReady = false;
     let bannersReady = false;
+    let heroPostersReady = false;
 
     const checkAllReady = () => {
-      if (productsReady && accessoriesReady && bannersReady) {
+      if (productsReady && accessoriesReady && bannersReady && heroPostersReady) {
         setFirestoreReady(true);
       }
     };
@@ -457,10 +459,32 @@ export default function App() {
       }
     );
 
+    // Subscribe to Hero Posters
+    const heroPostersQuery = query(collection(db, "heroPosters"));
+    const unsubscribeHeroPosters = onSnapshot(
+      heroPostersQuery,
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push(doc.data());
+        });
+        setHeroPosters(list);
+        heroPostersReady = true;
+        checkAllReady();
+      },
+      (error) => {
+        console.error("[Firestore] ❌ Hero Posters read failed:", error.code, error.message);
+        setHeroPosters([]);
+        heroPostersReady = true;
+        checkAllReady();
+      }
+    );
+
     return () => {
       unsubscribeProducts();
       unsubscribeAccessories();
       unsubscribeBanners();
+      unsubscribeHeroPosters();
       unsubscribeReviews();
     };
   }, []);
@@ -600,8 +624,8 @@ export default function App() {
       if (page === "checkout") {
         setPendingAction({ type: "checkout" });
         handleNavigate("login");
-      } else if (page === "write-blog") {
-        setPendingAction({ type: "write-blog" });
+      } else if (page.startsWith("write-blog")) {
+        setPendingAction({ type: page });
         handleNavigate("login");
       } else if (page === "profile") {
         setPendingAction({ type: "profile" });
@@ -626,6 +650,11 @@ export default function App() {
   };
 
   const handleAddToCart = (product: Product) => {
+    if (!user) {
+      setPendingAction({ type: "cart", payload: product });
+      handleNavigate("login");
+      return;
+    }
     const limit = product.stock !== undefined ? product.stock : 5;
     if (limit <= 0) {
       triggerStoreAlert("error", "Sorry, this item is out of stock.");
@@ -680,8 +709,8 @@ export default function App() {
         handleNavigate("checkout");
       } else if (pendingAction.type === "profile") {
         handleNavigate("profile");
-      } else if (pendingAction.type === "write-blog") {
-        handleNavigate("write-blog");
+      } else if (pendingAction.type.startsWith("write-blog")) {
+        handleNavigate(pendingAction.type);
       }
       setPendingAction(null);
     } else {
@@ -699,10 +728,7 @@ export default function App() {
     handleNavigate("accessory-detail");
   };
 
-  /* ── Landing experience ─────────────────────────────── */
-  if (showLanding) {
-    return <LandingPage onEnterStore={handleEnterStore} />;
-  }
+  const isInitialHome = showLanding && page === "home";
 
   /* ── Main store experience ──────────────────────────── */
   return (
@@ -715,6 +741,8 @@ export default function App() {
         overflowX: "hidden",
       }}
     >
+      {isInitialHome && <LandingIntro onEnterStore={handleEnterStore} />}
+
       <Navbar
         setPage={handleNavigate}
         cart={cart}
@@ -733,6 +761,7 @@ export default function App() {
         <Homepage
           products={productsList}
           banners={banners}
+          heroPosters={heroPosters}
           setPage={handleNavigate}
           onViewProduct={handleViewProduct}
           onAddToCart={handleAddToCart}
@@ -796,8 +825,8 @@ export default function App() {
         <ProfilePage user={user} setUser={setUser} setPage={handleNavigate} triggerAlert={triggerStoreAlert} />
       )}
       {page === "why-refurbished" && <WhyRefurbishedPage />}
-      {page === "write-blog" && user && (
-        <WriteBlogPage setPage={handleNavigate} />
+      {page.startsWith("write-blog") && user && (
+        <WriteBlogPage setPage={handleNavigate} editPostId={page.replace("write-blog", "").replace("-", "") || undefined} />
       )}
       {page === "privacy-policy" && <PrivacyPolicyPage setPage={handleNavigate} />}
       {page === "refund-policy" && <RefundPolicyPage setPage={handleNavigate} />}
@@ -889,8 +918,8 @@ export default function App() {
         <div style={{
           position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)", zIndex: 12000,
           background: storeAlert.type === "success" ? "linear-gradient(135deg, #10B981, #059669)"
-                    : storeAlert.type === "warning" ? "linear-gradient(135deg, #F59E0B, #D97706)"
-                    : "linear-gradient(135deg, #EF4444, #DC2626)",
+            : storeAlert.type === "warning" ? "linear-gradient(135deg, #F59E0B, #D97706)"
+              : "linear-gradient(135deg, #EF4444, #DC2626)",
           color: "#fff", padding: "14px 28px", borderRadius: 16,
           boxShadow: "0 20px 40px rgba(0,0,0,0.35)",
           display: "flex", alignItems: "center", gap: 12, fontWeight: 700, fontSize: 13,
@@ -898,13 +927,13 @@ export default function App() {
           animation: "slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1)"
         }}>
           <span style={{ fontSize: 16 }}>
-            {storeAlert.type === "success" ? "✓" 
-             : storeAlert.type === "warning" ? "⚠" 
-             : "✕"}
+            {storeAlert.type === "success" ? "✓"
+              : storeAlert.type === "warning" ? "⚠"
+                : "✕"}
           </span>
           <span>{storeAlert.message}</span>
-          <button 
-            onClick={() => setStoreAlert(null)} 
+          <button
+            onClick={() => setStoreAlert(null)}
             style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer", marginLeft: 10, fontSize: 12 }}
           >✕</button>
         </div>

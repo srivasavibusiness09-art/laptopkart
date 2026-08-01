@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ArrowRight } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { COLORS } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
-import Button from "./common/Button";
 import Card from "./common/Card";
 
-interface HeroProps { setPage: (p: string) => void }
+interface HeroProps {
+  setPage: (p: string) => void;
+  banners?: any[];
+}
 
 const stats = [
   { value: "5K+", label: "Devices Sold" },
@@ -16,258 +18,225 @@ const stats = [
   { value: "4.9★", label: "Rating" },
 ];
 
-export default function Hero({ setPage }: HeroProps) {
-  const [count, setCount] = useState(0);
-  const [visible, setVisible] = useState(false);
+export function HeroBanner({ setPage, banners = [] }: HeroProps) {
   const isMobile = useIsMobile();
+  const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Ensure we have at least one banner to show
+  const activeBanners = banners
+
+  const nextSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % activeBanners.length);
+  }, [activeBanners.length]);
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + activeBanners.length) % activeBanners.length);
+  };
+
+  // Auto-scroll logic (5 seconds)
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 80);
-    return () => clearTimeout(t);
-  }, []);
+    if (activeBanners.length <= 1) return;
+    const interval = setInterval(nextSlide, 5000);
+    return () => clearInterval(interval);
+  }, [nextSlide, activeBanners.length]);
 
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        overflow: "hidden",
+        background: "var(--bg-1)",
+        cursor: "pointer",
+      }}
+      onClick={() => setPage("listing")}
+    >
+      <div style={{
+        display: "flex",
+        transform: `translateX(-${currentIndex * 100}%)`,
+        transition: "transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)",
+        willChange: "transform"
+      }}>
+        {activeBanners.map((b, idx) => (
+          <div key={idx} style={{ flex: "0 0 100%", width: "100%", position: "relative" }}>
+            <img
+              src={isMobile && b.mobileSrc ? b.mobileSrc : b.src}
+              alt={b.title || `Banner ${idx + 1}`}
+              style={{
+                width: "100%",
+                height: "auto",
+                display: "block"
+              }}
+            />
+
+            {/* Fallback banner overlay if the admin hasn't uploaded any banners yet */}
+            {activeBanners.length === 1 && !banners.length && (
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%)",
+                display: "flex", alignItems: "center",
+                padding: isMobile ? "0 24px" : "0 80px",
+              }}>
+                <div style={{ maxWidth: 600 }}>
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    background: "rgba(56,189,248,0.2)",
+                    border: "1px solid rgba(56,189,248,0.4)",
+                    borderRadius: 100, padding: "6px 16px",
+                    marginBottom: 24,
+                  }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.green, animation: "pulse-glow 2s ease-in-out infinite" }} />
+                    <span style={{ color: COLORS.green, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                      Save Up To 70% Off
+                    </span>
+                  </div>
+                  <h1 style={{
+                    fontFamily: "'Sora', sans-serif",
+                    fontSize: isMobile ? "32px" : "56px",
+                    fontWeight: 800, color: "#FFFFFF",
+                    lineHeight: 1.1, margin: "0 0 16px",
+                  }}>
+                    Refurbished Tech That Feels <span style={{ color: "var(--accent)" }}>Brand New</span>
+                  </h1>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation Arrows */}
+      {activeBanners.length > 1 && !isMobile && (
+        <>
+          <button
+            onClick={(e) => { e.stopPropagation(); prevSlide(); }}
+            style={{
+              position: "absolute", left: 24, top: "50%", transform: "translateY(-50%)",
+              width: 48, height: 48, borderRadius: "50%",
+              background: "rgba(255, 255, 255, 0.9)",
+              border: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              color: "#000", zIndex: 10,
+              transition: "all 0.2s ease"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-50%) scale(1.1)"}
+            onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(-50%) scale(1)"}
+          >
+            <ChevronLeft size={28} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); nextSlide(); }}
+            style={{
+              position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)",
+              width: 48, height: 48, borderRadius: "50%",
+              background: "rgba(255, 255, 255, 0.9)",
+              border: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              color: "#000", zIndex: 10,
+              transition: "all 0.2s ease"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-50%) scale(1.1)"}
+            onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(-50%) scale(1)"}
+          >
+            <ChevronRight size={28} />
+          </button>
+        </>
+      )}
+
+      {/* Pagination Dots */}
+      {activeBanners.length > 1 && (
+        <div style={{
+          position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)",
+          display: "flex", gap: 8, zIndex: 10,
+        }}>
+          {activeBanners.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); }}
+              style={{
+                width: currentIndex === idx ? 24 : 8,
+                height: 8, borderRadius: 4,
+                background: currentIndex === idx ? "var(--accent)" : "rgba(255,255,255,0.5)",
+                border: "none", cursor: "pointer",
+                transition: "all 0.3s ease",
+                padding: 0,
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function HeroStats() {
+  const isMobile = useIsMobile();
+  const [count, setCount] = useState(0);
+
+  // Counter animation for stats
   useEffect(() => {
     const t = setInterval(() => setCount((c) => (c < 50000 ? c + 1618 : 50000)), 28);
     return () => clearInterval(t);
   }, []);
 
   return (
-    <section style={{
-      minHeight: isMobile ? "auto" : "100vh",
-      background: `linear-gradient(160deg, var(--bg) 0%, var(--bg-1) 50%, var(--bg) 100%)`,
-      display: "flex", alignItems: "center",
-      position: "relative", overflow: "hidden",
-      padding: isMobile ? "58px 18px 48px" : "60px 40px 48px",
+    <div style={{
+      maxWidth: 1200, margin: "0 auto", width: "100%",
+      padding: isMobile ? "24px 16px 24px" : "40px 24px 40px",
     }}>
-      {/* Ambient background orbs */}
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        {/* Blue orb — right */}
-        <div style={{
-          position: "absolute", top: "15%", left: "55%",
-          width: "55vw", height: "55vw",
-          background: "radial-gradient(circle, rgba(41,121,255,0.16) 0%, transparent 65%)",
-          borderRadius: "50%", filter: "blur(60px)",
-          animation: "pulse-glow 5s ease-in-out infinite",
-        }} />
-        {/* Indigo orb — left */}
-        <div style={{
-          position: "absolute", top: "40%", left: "-10%",
-          width: "45vw", height: "45vw",
-          background: "radial-gradient(circle, rgba(124,77,255,0.12) 0%, transparent 65%)",
-          borderRadius: "50%", filter: "blur(60px)",
-          animation: "pulse-glow 7s ease-in-out infinite 1.5s",
-        }} />
-        {/* Cyan accent — bottom */}
-        <div style={{
-          position: "absolute", bottom: "5%", left: "35%",
-          width: "30vw", height: "30vw",
-          background: "radial-gradient(circle, var(--bg-active) 0%, transparent 70%)",
-          borderRadius: "50%", filter: "blur(50px)",
-          animation: "pulse-glow 9s ease-in-out infinite 3s",
-        }} />
-        {/* Grid pattern overlay */}
-        <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "linear-gradient(var(--bg-hover) 1px, transparent 1px), linear-gradient(90deg, var(--bg-hover) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-          maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 35%, transparent 100%)",
-          WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 35%, transparent 100%)",
-        }} />
-      </div>
-
       <div style={{
-        maxWidth: 1200, margin: "0 auto", width: "100%",
         display: "grid",
-        gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-        gap: isMobile ? 40 : 80, alignItems: "center",
-        opacity: visible ? 1 : 0,
-        transition: "opacity 0.8s ease",
-        position: "relative", zIndex: 1,
+        gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+        gap: isMobile ? 8 : 24,
       }}>
-
-        {/* Left: Text */}
-        <div>
-          {/* Badge */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            background: "rgba(56,189,248,0.1)",
-            border: "1px solid var(--border-focus)",
-            borderRadius: 100, padding: "6px 16px",
-            marginBottom: 28,
-          }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.green, animation: "pulse-glow 2s ease-in-out infinite" }} />
-            <span style={{ color: COLORS.green, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-              Save Up To 70% Off
-            </span>
-          </div>
-
-          <h1 style={{
-            fontFamily: "'Sora', sans-serif",
-            fontSize: isMobile ? "clamp(32px,9vw,48px)" : "clamp(44px,5.5vw,76px)",
-            fontWeight: 800,
-            color: "var(--text)",
-            lineHeight: 1.05,
-            letterSpacing: "-0.035em",
-            margin: "0 0 24px",
-          }}>
-            Refurbished Tech
-            <br />
-            That Feels{" "}
-            <span style={{
-              color: "transparent",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              backgroundImage: "linear-gradient(135deg, var(--accent) 0%, #6366F1 60%, #22D3EE 100%)",
-            }}>
-              Brand New
-            </span>
-          </h1>
-
-          <p style={{
-            color: "var(--text-2)", fontSize: isMobile ? 15 : 17,
-            lineHeight: 1.7, marginBottom: 36,
-            maxWidth: 460,
-          }}>
-            Every device undergoes a rigorous quality check.
-            Premium performance at a fraction of the cost.
-          </p>
-
-          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 48 }}>
-            <Button
-              onClick={() => setPage("listing")}
-              size="lg"
-            >
-              Shop Laptops <ArrowRight size={16} />
-            </Button>
-            <Button
-              onClick={() => setPage("why-refurbished")}
-              variant="ghost"
-              size="lg"
-            >
-              Why Refurbished?
-            </Button>
-          </div>
-
-          {/* Stats */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
-            gap: 14,
-            marginTop: isMobile ? 24 : 0,
-          }}>
-            {stats.map((s, i) => {
-              const isRating = s.label === "Rating";
-              return (
-                <Card
-                  key={s.label}
-                  onClick={isRating ? () => window.open("https://www.google.com/search?sca_esv=ce1d5cfef616b7b3&sxsrf=APpeQnuTASXjQwtK9sKHf3ZLeQIyDKcjtw:1784182931333&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_7Fu1hy_kn6p6tOiB4gun8BpQ6luC6cnVUQGJPQVmdN_nCrVrUobwP9phq5L2XR0tDv625Beget30GhGzC91E5a0tXRRiG9KIKQ-nAgJIt-eDFjZfA%3D%3D&q=Sri+Vasavi+Business+Systems+Reviews&sa=X&ved=2ahUKEwiFi9iux9aVAxVzTmwGHcL5KPYQ0bkNegQIExAI&biw=1536&bih=730&dpr=1.25", "_blank") : undefined}
-                  style={{
-                    background: "var(--bg-hover)",
-                    border: isRating ? "1px solid var(--warning-border)" : "1px solid var(--bg-active)",
-                    borderRadius: 14,
-                    padding: "16px 12px",
-                    textAlign: "center",
-                    animation: `fadeUp 0.6s ease ${i * 0.1}s both`,
-                    cursor: isRating ? "pointer" : "default",
-                  }}
-                >
-                  <div style={{
-                    fontFamily: "'Sora', sans-serif",
-                    fontSize: 22, fontWeight: 800,
-                    color: isRating ? "var(--warning)" : "var(--accent)", marginBottom: 3,
-                  }}>
-                    {s.label === "Devices Sold" ? `${Math.min(count, 5000).toLocaleString("en-IN")}+` : s.value}
-                  </div>
-                  <div style={{ color: "var(--text-2)", fontSize: 11, letterSpacing: "0.02em" }}>
-                    {s.label}
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right: Floating product image */}
-        {!isMobile && (
-          <div style={{ display: "flex", justifyContent: "center", position: "relative" }}>
-            {/* Glow blob */}
-            <div style={{
-              position: "absolute",
-              width: "80%", height: "80%",
-              background: "radial-gradient(circle, rgba(59,130,246,0.20) 0%, rgba(99,102,241,0.10) 50%, transparent 70%)",
-              borderRadius: "50%",
-              filter: "blur(40px)",
-              animation: "pulse-glow 4s ease-in-out infinite",
-            }} />
-
-            {/* Product card */}
+        {stats.map((s, i) => {
+          const isRating = s.label === "Rating";
+          return (
             <Card
-              hoverable={true}
+              key={s.label}
+              onClick={isRating ? () => window.open("https://www.google.com/search?q=Laptopkart+Reviews", "_blank") : undefined}
               style={{
-                width: 380, height: 380,
-                borderRadius: 28,
-                overflow: "hidden",
-                border: "1px solid var(--border-focus)",
-                animation: "float 5s ease-in-out infinite",
-                position: "relative",
-                zIndex: 1,
+                background: "var(--bg-2)",
+                border: isRating ? "1px solid var(--warning-border)" : "1px solid var(--border)",
+                borderRadius: 16,
+                padding: isMobile ? "12px 8px" : "24px 16px",
+                textAlign: "center",
+                animation: `fadeUp 0.6s ease ${i * 0.1}s both`,
+                cursor: isRating ? "pointer" : "default",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
               }}
             >
-              <img
-                src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=85&auto=format&fit=crop"
-                alt="Premium refurbished laptop"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-              {/* Overlay badge top-right */}
               <div style={{
-                position: "absolute", top: 16, right: 16,
-                background: "var(--bg-2)", backdropFilter: "blur(12px)",
-                borderRadius: 12, padding: "10px 14px",
-                border: "1px solid var(--border)",
+                fontFamily: "'Sora', sans-serif",
+                fontSize: isMobile ? 20 : 28, fontWeight: 800,
+                color: isRating ? "var(--warning)" : "var(--accent)",
+                marginBottom: 6,
               }}>
-                <div style={{ color: "var(--accent)", fontSize: 12, fontWeight: 700 }}>✓ Quality Checked</div>
-                <div style={{ color: "var(--text-2)", fontSize: 10, marginTop: 2 }}>Multi-point inspection</div>
+                {s.label === "Devices Sold" ? `${Math.min(count, 5000).toLocaleString("en-IN")}+` : s.value}
               </div>
-              {/* Bottom badge */}
-              <div
-                onClick={() => window.open("https://www.google.com/search?sca_esv=ce1d5cfef616b7b3&sxsrf=APpeQnuTASXjQwtK9sKHf3ZLeQIyDKcjtw:1784182931333&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_7Fu1hy_kn6p6tOiB4gun8BpQ6luC6cnVUQGJPQVmdN_nCrVrUobwP9phq5L2XR0tDv625Beget30GhGzC91E5a0tXRRiG9KIKQ-nAgJIt-eDFjZfA%3D%3D&q=Sri+Vasavi+Business+Systems+Reviews&sa=X&ved=2ahUKEwiFi9iux9aVAxVzTmwGHcL5KPYQ0bkNegQIExAI&biw=1536&bih=730&dpr=1.25", "_blank")}
-                style={{
-                  position: "absolute", bottom: 16, left: 16,
-                  background: "var(--bg-2)", backdropFilter: "blur(12px)",
-                  borderRadius: 12, padding: "10px 14px",
-                  border: "1px solid var(--warning-border)",
-                  cursor: "pointer",
-                }}
-              >
-                <div style={{ color: "var(--warning)", fontSize: 12, fontWeight: 700 }}>★ 4.9 / 5 Rating</div>
-                <div style={{ color: "var(--text-2)", fontSize: 10, marginTop: 2 }}>100+ Reviews</div>
+              <div style={{ color: "var(--text-2)", fontSize: isMobile ? 12 : 14, fontWeight: 500, letterSpacing: "0.02em" }}>
+                {s.label}
               </div>
             </Card>
-          </div>
-        )}
+          );
+        })}
       </div>
+    </div>
+  );
+}
 
-      {/* Scroll indicator (desktop) */}
-      {!isMobile && (
-        <div style={{
-          position: "absolute", bottom: 36, left: "50%",
-          transform: "translateX(-50%)",
-          textAlign: "center", opacity: 0.8,
-          animation: "floatHint 2.5s ease-in-out infinite",
-        }}>
-          <div style={{ color: "var(--text)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6, fontWeight: 600 }}>
-            Scroll
-          </div>
-          <div style={{ width: 1, height: 32, background: "linear-gradient(to bottom, var(--accent), transparent)", margin: "0 auto" }} />
-        </div>
-      )}
-
-      <style>{`
-        @keyframes floatHint {
-          0%,100%{ transform:translateX(-50%) translateY(0); }
-          50%    { transform:translateX(-50%) translateY(8px); }
-        }
-      `}</style>
+export default function Hero({ setPage, banners = [] }: HeroProps) {
+  const isMobile = useIsMobile();
+  return (
+    <section style={{
+      width: "100%",
+      background: "var(--bg)",
+      paddingBottom: isMobile ? 8 : 60,
+    }}>
+      <HeroBanner setPage={setPage} banners={banners} />
+      <HeroStats />
     </section>
   );
 }

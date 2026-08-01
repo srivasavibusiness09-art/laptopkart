@@ -275,11 +275,11 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert }: Props
               padding: "16px 0", fontWeight: 800, fontSize: 16,
               cursor: "pointer", fontFamily: "'Sora', sans-serif",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              boxShadow: "0 0 40px var(--border-focus)",
+              boxShadow: "0 0 40px rgba(118, 194, 39, 0.35)",
               transition: "all 0.2s",
             }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 60px var(--border-focus)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 40px var(--border-focus)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 60px rgba(118, 194, 39, 0.50)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 40px rgba(118, 194, 39, 0.35)"; }}
             >
               Proceed to Checkout <ArrowRight size={16} />
             </button>

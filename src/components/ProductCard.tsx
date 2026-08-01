@@ -165,6 +165,8 @@ export default function ProductCard({ product, onView, onAddToCart, onWishlist, 
               minHeight: isMobile ? 32 : 40,
               borderRadius: 12,
               flexShrink: 0,
+              background: "var(--accent)",
+              border: "1px solid var(--accent)",
             }}
           >
             {isOutOfStock ? (

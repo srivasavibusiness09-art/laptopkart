@@ -627,7 +627,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             fontFamily: "'Sora', sans-serif",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
             transition: "all 0.25s ease",
-            boxShadow: (product.stock !== undefined ? product.stock : 1) <= 0 ? "none" : "0 0 40px var(--border-focus)",
+            boxShadow: (product.stock !== undefined ? product.stock : 1) <= 0 ? "none" : "0 0 40px rgba(118, 194, 39, 0.35)",
           }}
         >
           {(product.stock !== undefined ? product.stock : 1) <= 0 ? (

@@ -310,7 +310,6 @@ export const navLinks = [
   "Blog",
   "Accessories",
   "Resell Laptop",
-  "About",
 ] as const;
 
 export interface AccessoryProduct {

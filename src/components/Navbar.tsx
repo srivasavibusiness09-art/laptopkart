@@ -29,7 +29,7 @@ const linkIcons: Record<string, React.ReactNode> = {
 
 const getTarget = (link: string) => ({
   Laptops: "listing:Laptops", Desktops: "listing:Desktops", Accessories: "accessories",
-  About: "about", Blog: "blog", Offers: "listing:Offers", "Resell Laptop": "resell",
+  Blog: "blog", Offers: "listing:Offers", "Resell Laptop": "resell",
 } as Record<string, string>)[link] ?? "home";
 
 export default function Navbar({ setPage, cart, wishlist, user, onSearch, searchQuery = "" }: NavbarProps) {
@@ -86,9 +86,9 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
         transition: "background 0.3s ease",
       }}>
         <div style={{
-          maxWidth: "100%", margin: "0 auto",
+          maxWidth: 1280, margin: "0 auto",
           padding: isMobile ? "0 12px" : "0 24px",
-          display: "flex", alignItems: "center",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
           height: 60, gap: isMobile ? 8 : 16,
         }}>
           {/* Logo */}
@@ -118,28 +118,25 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
           {!isMobile && (
             <div style={{
               display: "flex",
-              justifyContent: "flex-start",
-              gap: 4,
+              justifyContent: "center",
+              gap: 2,
+              flex: 1,
               minWidth: 0,
-              marginLeft: 28,
-              marginRight: "auto",
-              flexShrink: 0,
             }}>
               {navLinks
-                .filter((link) => !searchActive || (link !== "Resell Laptop" && link !== "About"))
                 .map((link) => (
                   <button
                     key={link}
                     title={link}
-                    className={link === "Resell Laptop" ? "nav-link-resell" : link === "About" ? "nav-link-about" : ""}
+                    className={link === "Resell Laptop" ? "nav-link-resell" : ""}
                     onClick={() => handleNavClick(link)}
                     style={{
-                      padding: "6px 10px", background: "transparent",
+                      padding: "4px 6px", background: "transparent",
                       border: "none",
                       color: link === "Offers" ? "var(--warning)" : "var(--text-2)",
-                      cursor: "pointer", fontSize: 14, fontWeight: 500,
+                      cursor: "pointer", fontSize: 12, fontWeight: 500,
                       whiteSpace: "nowrap", letterSpacing: "0.01em",
-                      display: "flex", alignItems: "center", gap: 3,
+                      display: "flex", alignItems: "center", gap: 2,
                       transition: "color 0.2s",
                       borderRadius: 6,
                     }}
@@ -161,74 +158,11 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
           )}
 
           {/* Action buttons */}
-          <div style={{ display: "flex", gap: 6, marginLeft: "auto", alignItems: "center", flexShrink: 0 }}>
-            {/* Expandable Search Input */}
-            {searchActive ? (
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                position: "relative",
-                width: isMobile ? 110 : 260,
-                height: 34,
-                transition: "width 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-              }}>
-                <input
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    onSearch?.(e.target.value);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      onSearch?.(search);
-                    }
-                  }}
-                  autoFocus
-                  placeholder="Search..."
-                  style={{
-                    width: "100%",
-                    background: "var(--bg-1)",
-                    border: "1px solid var(--border-hi)",
-                    borderRadius: 8,
-                    padding: "6px 26px 6px 10px",
-                    color: "var(--text)",
-                    fontSize: isMobile ? 16 : 12,
-                    lineHeight: "20px",
-                    margin: 0,
-                    outline: "none",
-                    WebkitAppearance: "none",
-                    height: 34,
-                    boxSizing: "border-box",
-                  }}
-                />
-                <button
-                  onClick={() => {
-                    setSearch("");
-                    onSearch?.("");
-                    setSearchActive(false);
-                  }}
-                  style={{
-                    position: "absolute",
-                    right: 8,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "transparent",
-                    border: "none",
-                    color: "var(--text-2)",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    padding: 0,
-                  }}
-                >
-                  <X size={12} />
-                </button>
-              </div>
-            ) : (
-              <IconBtn onClick={() => setSearchActive(true)}>
-                <Search size={isMobile ? 16 : 14} color="var(--text-2)" />
-              </IconBtn>
-            )}
+          <div style={{ display: "flex", gap: 2, alignItems: "center", flexShrink: 0 }}>
+            {/* Search Toggle Button */}
+            <IconBtn onClick={() => setSearchActive(!searchActive)}>
+              <Search size={isMobile ? 16 : 14} color="var(--text-2)" />
+            </IconBtn>
 
             {isMobile ? (
               <>
@@ -403,6 +337,59 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
             }
           }
         `}</style>
+        {/* Search Dropdown Overlay */}
+        <div
+          className={`absolute top-full left-0 w-full bg-white border-b border-border-base shadow-md transition-all duration-300 ease-in-out origin-top ${
+            searchActive
+              ? 'scale-y-100 opacity-100'
+              : 'scale-y-0 opacity-0 pointer-events-none'
+          }`}
+          style={{ 
+            position: 'absolute', top: '100%', left: 0, width: '100%', 
+            background: 'var(--bg-1)', borderBottom: '1px solid var(--border-hi)',
+            transition: 'all 0.3s ease-in-out',
+            transformOrigin: 'top',
+            transform: searchActive ? 'scaleY(1)' : 'scaleY(0)',
+            opacity: searchActive ? 1 : 0,
+            pointerEvents: searchActive ? 'auto' : 'none',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <div style={{ maxWidth: '100%', margin: '0 auto', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                onSearch?.(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSearch?.(search);
+              }}
+              autoFocus={searchActive}
+              placeholder="Search products, blogs, and more..."
+              style={{
+                flex: 1,
+                background: "var(--bg-2)",
+                border: "1px solid var(--border-hi)",
+                borderRadius: 8,
+                padding: "10px 16px",
+                color: "var(--text)",
+                fontSize: 14,
+                outline: "none",
+              }}
+            />
+            <button
+              onClick={() => {
+                setSearchActive(false);
+                setSearch("");
+                onSearch?.("");
+              }}
+              style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-2)", padding: 8, display: 'flex', alignItems: 'center' }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
       </nav>
     </>
   );

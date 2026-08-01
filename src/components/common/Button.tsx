@@ -73,11 +73,11 @@ export default function Button({
       case "primary":
       default:
         return {
-          background: "linear-gradient(135deg, var(--accent-2) 0%, #1D4ED8 100%)",
+          background: btnHovered ? "#000000" : "var(--text)",
           color: "#FFFFFF",
           border: "none",
           boxShadow: btnHovered 
-            ? "0 4px 14px rgba(37, 99, 235, 0.22)" 
+            ? "0 8px 20px rgba(0, 0, 0, 0.15)" 
             : "0 2px 8px rgba(0, 0, 0, 0.12)",
           transform: btnHovered ? "scale(1.01) translateY(-1px)" : "none",
         };

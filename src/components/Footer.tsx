@@ -11,17 +11,17 @@ import { db } from "@/lib/firebase";
 interface FooterProps { setPage: (p: string) => void }
 
 const shopLinks = ["Laptops", "Desktops", "MacBooks", "Gaming", "Accessories", "Offers"];
-const companyLinks = ["About Us", "Blog", "Careers", "Press", "Partners"];
+const companyLinks = ["About Us", "Blog", "Careers"];
 const supportLinks = ["Warranty", "Returns", "Contact", "FAQs", "Shipping", "Track Order"];
 
 const social = [
   { icon: <FaFacebook size={14} />, label: "Facebook", href: "https://www.facebook.com/profile.php?id=61552204101896" },
   { icon: <FaInstagram size={14} />, label: "Instagram", href: "https://www.instagram.com/svbs_laptops/" },
   { icon: <FaLinkedin size={14} />, label: "LinkedIn", href: "https://www.linkedin.com/company/sri-vasavi-business-systems-salem/?originalSubdomain=in" },
-  { 
-    icon: <span style={{ fontSize: 10, fontWeight: 900, fontFamily: "'Sora', sans-serif" }}>iM</span>, 
-    label: "IndiaMart", 
-    href: "https://www.indiamart.com/srivasavi-business-systems/profile.html?srsltid=AfmBOorrv1vQ7krai6fcOQJ1QmPLGjGMZQeZ_Vk85Bcka_EYvlAl-fdh" 
+  {
+    icon: <span style={{ fontSize: 10, fontWeight: 900, fontFamily: "'Sora', sans-serif" }}>iM</span>,
+    label: "IndiaMart",
+    href: "https://www.indiamart.com/srivasavi-business-systems/profile.html?srsltid=AfmBOorrv1vQ7krai6fcOQJ1QmPLGjGMZQeZ_Vk85Bcka_EYvlAl-fdh"
   },
 ];
 
@@ -61,7 +61,7 @@ export default function Footer({ setPage }: FooterProps) {
     if (l === "macbooks") return "listing:MacBooks";
     if (l === "gaming") return "listing:Gaming";
     if (l === "accessories") return "accessories";
-    if (l === "about us" || l === "careers" || l === "press" || l === "partners") return "about";
+    if (l === "about us" || l === "careers") return "about";
     if (l === "blog") return "blog";
     if (l === "contact") return "contact";
     if (l === "sell laptop" || l === "resell laptop") return "resell";
@@ -147,12 +147,12 @@ export default function Footer({ setPage }: FooterProps) {
             {/* Social */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {social.map(({ icon, label, href }) => (
-                <a 
-                  key={label} 
+                <a
+                  key={label}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={label} 
+                  aria-label={label}
                   style={{
                     background: "var(--bg)",
                     border: "1px solid var(--border)",

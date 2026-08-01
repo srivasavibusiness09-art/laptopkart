@@ -361,6 +361,11 @@ export function BlogDetail({ postId, setPage }: { postId: string; setPage: (p: s
           <button onClick={() => setPage("blog")} style={{ color: COLORS.muted, background: "transparent", border: "none", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
             ← Back to Blogs
           </button>
+          {auth.currentUser && (auth.currentUser.displayName === post.author || post.authorEmail === auth.currentUser.email || auth.currentUser.email === "srivasavibusiness09@gmail.com") && (
+            <button onClick={() => setPage(`write-blog-${post.id}`)} style={{ color: "var(--accent-2)", background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.25)", padding: "8px 16px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+              Edit Blog
+            </button>
+          )}
         </div>
         <div style={{ height: 300, backgroundImage: `url(${post.coverUrl})`, backgroundSize: "cover", backgroundPosition: "center", borderRadius: 12, marginBottom: 24 }} />
         <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 28 : 36, fontWeight: 800, color: "var(--text)", marginBottom: 12 }}>{post.title}</h2>
@@ -825,7 +830,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
           display: "flex",
           position: "relative",
           marginBottom: 24,
-          background: "rgba(13,17,23,0.6)",
+          background: "var(--bg-3)",
           border: "1px solid var(--border)",
           borderRadius: 14,
           padding: 4,
@@ -844,14 +849,14 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
           }} />
           <button onClick={() => setMode("login")} style={{
             flex: 1, position: "relative", zIndex: 2, background: "transparent", border: "none",
-            color: mode === "login" ? "#000" : COLORS.muted, cursor: "pointer", fontWeight: 700,
+            color: mode === "login" ? "#000" : "var(--text-2)", cursor: "pointer", fontWeight: 700,
             fontSize: 13, fontFamily: "'Sora', sans-serif", transition: "color 0.3s",
           }}>
             Login
           </button>
           <button onClick={() => setMode("signup")} style={{
             flex: 1, position: "relative", zIndex: 2, background: "transparent", border: "none",
-            color: mode === "signup" ? "#000" : COLORS.muted, cursor: "pointer", fontWeight: 700,
+            color: mode === "signup" ? "#000" : "var(--text-2)", cursor: "pointer", fontWeight: 700,
             fontSize: 13, fontFamily: "'Sora', sans-serif", transition: "color 0.3s",
           }}>
             Sign Up
@@ -868,48 +873,48 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
         <form onSubmit={handleEmailAuth}>
           {mode === "signup" && (
             <div style={{ marginBottom: 16 }}>
-              <label style={{ color: COLORS.muted, fontSize: 12, fontWeight: 600, marginBottom: 6, display: "block" }}>Full Name</label>
+              <label style={{ color: "var(--text-2)", fontSize: 12, fontWeight: 600, marginBottom: 6, display: "block" }}>Full Name</label>
               <div className="glass-input" style={{
                 display: "flex", alignItems: "center", gap: 10,
-                background: "rgba(13,17,23,0.5)",
+                background: "var(--bg-hover)",
                 border: "1px solid var(--border)",
                 borderRadius: 12, padding: "0 14px", height: 46,
                 transition: "all 0.25s",
               }}>
-                <User size={15} color={COLORS.muted} />
+                <User size={15} color="var(--text-3)" />
                 <input
                   placeholder="John Doe"
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  style={{ flex: 1, background: "transparent", border: "none", color: COLORS.text, fontSize: 14, outline: "none" }}
+                  style={{ flex: 1, background: "transparent", border: "none", color: "var(--text)", fontSize: 14, outline: "none" }}
                 />
               </div>
             </div>
           )}
 
           <div style={{ marginBottom: 16 }}>
-            <label style={{ color: COLORS.muted, fontSize: 12, fontWeight: 600, marginBottom: 6, display: "block" }}>Email Address</label>
+            <label style={{ color: "var(--text-2)", fontSize: 12, fontWeight: 600, marginBottom: 6, display: "block" }}>Email Address</label>
             <div className="glass-input" style={{
               display: "flex", alignItems: "center", gap: 10,
-              background: "rgba(13,17,23,0.5)",
+              background: "var(--bg-hover)",
               border: "1px solid var(--border)",
               borderRadius: 12, padding: "0 14px", height: 46,
               transition: "all 0.25s",
             }}>
-              <Mail size={15} color={COLORS.muted} />
+              <Mail size={15} color="var(--text-3)" />
               <input
                 type="email"
                 placeholder="you@example.com"
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                style={{ flex: 1, background: "transparent", border: "none", color: COLORS.text, fontSize: 14, outline: "none" }}
+                style={{ flex: 1, background: "transparent", border: "none", color: "var(--text)", fontSize: 14, outline: "none" }}
               />
             </div>
           </div>
 
           <div style={{ marginBottom: 24 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <label style={{ color: COLORS.muted, fontSize: 12, fontWeight: 600, display: "block" }}>Password</label>
+              <label style={{ color: "var(--text-2)", fontSize: 12, fontWeight: 600, display: "block" }}>Password</label>
               {mode === "login" && (
                 <button
                   type="button"
@@ -922,18 +927,18 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
             </div>
             <div className="glass-input" style={{
               display: "flex", alignItems: "center", gap: 10,
-              background: "rgba(13,17,23,0.5)",
+              background: "var(--bg-hover)",
               border: "1px solid var(--border)",
               borderRadius: 12, padding: "0 14px", height: 46,
               transition: "all 0.25s",
             }}>
-              <Lock size={15} color={COLORS.muted} />
+              <Lock size={15} color="var(--text-3)" />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={form.password}
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                style={{ flex: 1, background: "transparent", border: "none", color: COLORS.text, fontSize: 14, outline: "none" }}
+                style={{ flex: 1, background: "transparent", border: "none", color: "var(--text)", fontSize: 14, outline: "none" }}
               />
               <button
                 type="button"
@@ -1164,10 +1169,11 @@ export function WhyRefurbishedPage() {
   );
 }
 
-export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
+export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) => void, editPostId?: string }) {
   const isMobile = useIsMobile();
   const [form, setForm] = useState({ title: "", category: "Buying Guide", customCategory: "", content: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(!!editPostId);
 
   const COVER_TEMPLATES = [
     { name: "Cyberpunk Tech", url: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80" },
@@ -1180,6 +1186,36 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
   const [selectedCover, setSelectedCover] = useState(COVER_TEMPLATES[0].url);
   const [customCoverUrl, setCustomCoverUrl] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [originalBlog, setOriginalBlog] = useState<any>(null);
+
+  useEffect(() => {
+    if (editPostId) {
+      const q = query(collection(db, "blogs"));
+      const unsub = onSnapshot(q, (snapshot) => {
+        const docData = snapshot.docs.find((d) => d.id === editPostId);
+        if (docData) {
+          const data = docData.data();
+          setOriginalBlog({ id: docData.id, ...data });
+          setForm({
+            title: data.title || "",
+            category: ["Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News"].includes(data.category) ? data.category : "Other",
+            customCategory: ["Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News"].includes(data.category) ? "" : data.category,
+            content: data.content || "",
+          });
+          if (data.coverUrl) {
+            if (COVER_TEMPLATES.find(c => c.url === data.coverUrl)) {
+              setSelectedCover(data.coverUrl);
+            } else {
+              setShowCustomInput(true);
+              setCustomCoverUrl(data.coverUrl);
+            }
+          }
+          setLoadingEdit(false);
+        }
+      });
+      return () => unsub();
+    }
+  }, [editPostId]);
 
   const activeCoverUrl = showCustomInput ? (customCoverUrl || COVER_TEMPLATES[0].url) : selectedCover;
 
@@ -1189,19 +1225,20 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
     setSubmitted(true);
 
     try {
-      const docId = doc(collection(db, "blogs")).id;
-      const authorName = auth.currentUser?.displayName || auth.currentUser?.email?.split("@")[0] || "Contest Writer";
+      const docId = originalBlog ? originalBlog.id : doc(collection(db, "blogs")).id;
+      const authorName = originalBlog ? originalBlog.author : (auth.currentUser?.displayName || auth.currentUser?.email?.split("@")[0] || "Contest Writer");
+      const authorEmail = originalBlog ? originalBlog.authorEmail : (auth.currentUser?.email || "N/A");
 
       await setDoc(doc(db, "blogs", docId), {
         title: form.title,
         category: form.category === "Other" ? (form.customCategory || "Other") : form.category,
         content: form.content,
         coverUrl: activeCoverUrl,
-        createdAt: new Date().toISOString(),
+        createdAt: originalBlog ? originalBlog.createdAt : new Date().toISOString(),
         readTime: `${Math.max(1, Math.ceil(form.content.split(/\s+/).length / 200))} min read`,
         author: authorName,
-        authorEmail: auth.currentUser?.email || "N/A",
-      });
+        authorEmail: authorEmail,
+      }, { merge: true });
     } catch (err) {
       console.error("Firestore blog write error: ", err);
     }
@@ -1229,15 +1266,19 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
     }, 30);
   };
 
+  if (loadingEdit) {
+    return <div style={{ width: "100vw", minHeight: "100vh", padding: "40px", background: "var(--bg)", color: "var(--text)" }}>Loading editor...</div>;
+  }
+
   return (
-    <div style={{ width: "100%", minHeight: "100%", padding: isMobile ? "20px 14px" : "40px 20px", background: "#0a0c14", color: "var(--text)" }}>
+    <div style={{ width: "100%", minHeight: "100%", padding: isMobile ? "20px 14px" : "40px 20px", background: "var(--bg)", color: "var(--text)" }}>
       {submitted ? (
         // Success Screen (unchanged but nicer)
         <div style={{ textAlign: "center", marginTop: "15vh" }}>
           <div style={{ margin: "0 auto 24px", width: 80, height: 80, background: "var(--success-bg)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <CheckCircle2 size={48} color="var(--success)" />
           </div>
-          <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12 }}>Blog Published!</h2>
+          <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12 }}>{originalBlog ? "Blog Updated!" : "Blog Published!"}</h2>
           <p style={{ color: COLORS.muted, maxWidth: 420, margin: "0 auto 32px" }}>Your story is now live in the blog section.</p>
         </div>
       ) : (
@@ -1246,8 +1287,8 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
             <button onClick={() => setPage("blog")} style={{ color: COLORS.muted, background: "transparent", border: "none", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
               ← Back to Blogs
             </button>
-            <button onClick={handleSubmit} style={{ background: "linear-gradient(135deg, var(--accent-2), #2563EB)", color: "var(--text)", border: "none", padding: "12px 32px", borderRadius: 12, fontWeight: 700, cursor: "pointer" }}>
-              Publish Blog
+            <button onClick={handleSubmit} style={{ background: "linear-gradient(135deg, var(--accent-2), #2563EB)", color: "white", border: "none", padding: "12px 32px", borderRadius: 12, fontWeight: 700, cursor: "pointer" }}>
+              {originalBlog ? "Update Blog" : "Publish Blog"}
             </button>
           </div>
 
@@ -1281,7 +1322,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
                 onChange={e => setForm(f => ({ ...f, customCategory: e.target.value }))}
                 placeholder="Enter custom category..."
                 style={{
-                  width: "100%", background: "var(--input-bg, rgba(255,255,255,0.05))", border: "1px solid var(--border)", 
+                  width: "100%", background: "var(--bg-1)", border: "1px solid var(--border)", 
                   outline: "none", color: "var(--text)", padding: "14px 16px", borderRadius: 12, fontSize: 15,
                   fontFamily: "'Inter', sans-serif"
                 }}
@@ -1336,7 +1377,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
                 placeholder="https://images.unsplash.com/..."
                 value={customCoverUrl}
                 onChange={e => setCustomCoverUrl(e.target.value)}
-                style={{ marginTop: 12, width: "100%", padding: "14px", background: "#1f2937", border: "1px solid #60A5FA", borderRadius: 12, color: "var(--text)" }}
+                style={{ marginTop: 12, width: "100%", padding: "14px", background: "var(--bg-1)", border: "1px solid var(--accent-2)", borderRadius: 12, color: "var(--text)" }}
               />
             )}
           </div>
@@ -1345,7 +1386,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
           <div>
             <div style={{ fontSize: 13, color: "#60A5FA", fontWeight: 700, marginBottom: 12 }}>STEP 4 • WRITE CONTENT</div>
 
-            <div style={{ background: "#1f2937", borderRadius: 16, padding: 12, marginBottom: 16 }}>
+            <div style={{ background: "var(--bg-1)", borderRadius: 16, padding: 12, marginBottom: 16 }}>
               {[
                 { label: "Bold", before: "**", after: "**" },
                 { label: "H2", before: "## ", after: "" },
@@ -1354,7 +1395,7 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
                 { label: "Quote", before: "> ", after: "" },
               ].map((b, i) => (
                 <button key={i} onClick={() => insertFormat(b.before, b.after)}
-                  style={{ margin: "4px", padding: "8px 16px", background: "#374151", border: "none", borderRadius: 8, color: "var(--text)", fontWeight: 600 }}>
+                  style={{ margin: "4px", padding: "8px 16px", background: "var(--bg-active)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)", fontWeight: 600, cursor: "pointer" }}>
                   {b.label}
                 </button>
               ))}
@@ -1366,9 +1407,9 @@ export function WriteBlogPage({ setPage }: { setPage: (p: string) => void }) {
               onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
               placeholder="Start writing your story here..."
               style={{
-                width: "100%", minHeight: 480, background: "#111827", border: "1px solid #374151",
-                borderRadius: 16, padding: 24, fontSize: 17, lineHeight: 1.8, color: "#e2e8f0",
-                resize: "vertical", outline: "none"
+                width: "100%", minHeight: 480, background: "var(--bg)", border: "1px solid var(--border)",
+                borderRadius: 16, padding: 24, fontSize: 17, lineHeight: 1.8, color: "var(--text)",
+                resize: "vertical", outline: "none", fontWeight: 500
               }}
             />
           </div>

@@ -195,7 +195,7 @@ export const DEFAULT_BANNERS: Banner[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests' | 'coupons'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'hero_posters' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests' | 'coupons'>('overview');
   const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed' | 'unpaid'>('active');
   const [ordersPage, setOrdersPage] = useState(0);
 
@@ -212,6 +212,7 @@ export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [accessories, setAccessories] = useState<AccessoryProduct[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [heroPosters, setHeroPosters] = useState<any[]>([]);
   const [blogs, setBlogs] = useState<any[]>([]);
   const [subscribers, setSubscribers] = useState<any[]>([]);
 
@@ -246,10 +247,12 @@ export default function App() {
   const [broadcastBody, setBroadcastBody] = useState('');
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
   const [bannerModal, setBannerModal] = useState<{ open: boolean }>({ open: false });
+  const [heroPosterModal, setHeroPosterModal] = useState<{ open: boolean }>({ open: false });
 
   // Form states - Product
   const [productForm, setProductForm] = useState<Partial<Product>>({
     name: '', brand: 'Dell', category: 'Business', price: 0, mrp: 0,
+    rating: 4.8, reviews: 125,
     condition: 'Refurbished', grade: 'A+', warranty: '1 Year Warranty',
     specs: '', img: '', processor: '', ram: '8GB', storage: '256GB SSD', badge: 'Top Rated', stock: 1,
     deviceType: 'Laptop', amazon_url: '', flipkart_url: '', croma_url: ''
@@ -283,6 +286,11 @@ export default function App() {
     title: '',
     desc: '',
     target: 'listing',
+  });
+
+  // Form states - Hero Poster
+  const [heroPosterForm, setHeroPosterForm] = useState<{ src: string; mobileSrc?: string; title: string; target: string; }>({
+    src: '', mobileSrc: '', title: '', target: 'listing'
   });
 
   // Form states - Promo Video
@@ -353,7 +361,20 @@ export default function App() {
       }
     );
 
-    // 4. Subscribe to Blogs
+    // 4. Subscribe to Hero Posters
+    const unsubscribeHeroPosters = onSnapshot(
+      query(collection(db, "heroPosters")),
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ docId: doc.id, ...doc.data() });
+        });
+        setHeroPosters(list);
+      },
+      (error) => console.error("[Firestore] Hero Posters read failed:", error)
+    );
+
+    // 5. Subscribe to Blogs
     const unsubscribeBlogs = onSnapshot(
       query(collection(db, "blogs")),
       (snapshot) => {
@@ -436,6 +457,7 @@ export default function App() {
       unsubscribeProducts();
       unsubscribeAccessories();
       unsubscribeBanners();
+      unsubscribeHeroPosters();
       unsubscribeBlogs();
       unsubscribeVideo();
       unsubscribeSubscribers();
@@ -459,7 +481,7 @@ export default function App() {
 
       // Register service worker explicitly
       const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      
+
       // Get registration token
       const currentToken = await getToken(messaging, {
         vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
@@ -626,6 +648,49 @@ export default function App() {
       triggerAlert('danger', 'Error uploading banner image.');
     } finally {
       setUploadingBanner(false);
+    }
+  };
+
+  const [uploadingHeroPoster, setUploadingHeroPoster] = useState(false);
+  const [uploadingHeroPosterMobile, setUploadingHeroPosterMobile] = useState(false);
+
+  const handleHeroPosterImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingHeroPoster(true);
+    try {
+      const url = await uploadProductImage(files[0]);
+      setHeroPosterForm(prev => ({
+        ...prev,
+        src: url
+      }));
+      triggerAlert('success', 'Hero poster image uploaded successfully.');
+    } catch (err) {
+      console.error(err);
+      triggerAlert('danger', 'Error uploading hero poster image.');
+    } finally {
+      setUploadingHeroPoster(false);
+    }
+  };
+
+  const handleHeroPosterMobileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingHeroPosterMobile(true);
+    try {
+      const url = await uploadProductImage(files[0]);
+      setHeroPosterForm(prev => ({
+        ...prev,
+        mobileSrc: url
+      }));
+      triggerAlert('success', 'Mobile hero poster image uploaded successfully.');
+    } catch (err) {
+      console.error(err);
+      triggerAlert('danger', 'Error uploading mobile hero poster image.');
+    } finally {
+      setUploadingHeroPosterMobile(false);
     }
   };
 
@@ -1148,6 +1213,48 @@ export default function App() {
     }
   };
 
+  const handleHeroPosterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!heroPosterForm.title?.trim()) {
+      return triggerAlert('danger', 'Poster title is required');
+    }
+    if (!heroPosterForm.src?.trim()) {
+      return triggerAlert('danger', 'Please upload or provide a poster image');
+    }
+
+    const docId = heroPosterForm.title
+      .replace(/[^a-zA-Z0-9]/g, "_")
+      .toLowerCase()
+      .trim() || doc(collection(db, "heroPosters")).id;
+
+    const hData = {
+      src: heroPosterForm.src,
+      mobileSrc: heroPosterForm.mobileSrc || '',
+      title: heroPosterForm.title.trim(),
+      target: heroPosterForm.target || 'listing',
+    };
+
+    try {
+      await setDoc(doc(db, "heroPosters", docId), hData);
+      triggerAlert('success', 'Hero poster published successfully!');
+
+      setHeroPosterForm({ src: '', mobileSrc: '', title: '', target: 'listing' });
+      setHeroPosterModal({ open: false });
+    } catch (err) {
+      console.error(err);
+      triggerAlert('danger', 'Error publishing hero poster.');
+    }
+  };
+
+  const handleDeleteHeroPoster = (docId: string) => {
+    if (confirm('Are you sure you want to delete this hero poster?')) {
+      deleteDoc(doc(db, "heroPosters", docId))
+        .then(() => triggerAlert('success', 'Hero poster deleted!'))
+        .catch(() => triggerAlert('danger', 'Failed to delete hero poster.'));
+    }
+  };
+
   const handleBannerDelete = (title: string) => {
     if (confirm('Are you sure you want to delete this slide banner?')) {
       const docId = title.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
@@ -1393,6 +1500,7 @@ export default function App() {
             { id: 'products', label: 'Laptops & PCs', icon: <Laptop size={18} /> },
             { id: 'accessories', label: 'Accessories', icon: <Keyboard size={18} /> },
             { id: 'banners', label: 'Offers & Contests', icon: <ImageIcon size={18} /> },
+            { id: 'hero_posters', label: 'Hero Posters', icon: <ImageIcon size={18} /> },
             { id: 'orders', label: 'Customer Orders', icon: <FileText size={18} /> },
             { id: 'blogs', label: 'Tech Blogs', icon: <BookOpen size={18} /> },
             { id: 'video', label: 'Promo Video', icon: <Video size={18} /> },
@@ -1465,10 +1573,10 @@ export default function App() {
             animation: 'fadeIn 0.3s ease'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ 
-                background: 'rgba(245, 158, 11, 0.2)', 
-                color: '#F59E0B', 
-                padding: 10, 
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.2)',
+                color: '#F59E0B',
+                padding: 10,
                 borderRadius: 12,
                 display: 'flex',
                 alignItems: 'center',
@@ -1481,14 +1589,14 @@ export default function App() {
                   {notificationPermission === 'denied' ? 'Notification Bar Blocked' : 'Enable Mobile Notifications'}
                 </h4>
                 <p style={{ color: '#8B9BBE', fontSize: 12, margin: '4px 0 0 0', lineHeight: 1.4, fontFamily: 'Outfit' }}>
-                  {notificationPermission === 'denied' 
+                  {notificationPermission === 'denied'
                     ? 'Browser notifications are blocked. Please reset site permissions in your Chrome browser settings to receive order alerts in your mobile notification bar.'
                     : 'Get real-time order alerts pushed directly to your phone\'s notification bar, even when the browser is closed.'}
                 </p>
               </div>
             </div>
             {notificationPermission !== 'denied' && (
-              <button 
+              <button
                 onClick={requestNotificationPermission}
                 style={{
                   background: '#F59E0B',
@@ -1728,6 +1836,7 @@ export default function App() {
                 onClick={() => {
                   setProductForm({
                     name: '', brand: 'Dell', category: 'Business', price: 0, mrp: 0,
+                    rating: 4.8, reviews: 125,
                     condition: 'Refurbished', grade: 'A+', warranty: '1 Year Warranty',
                     specs: '', img: '', processor: '', ram: '8GB', storage: '256GB SSD', badge: 'Top Rated',
                     deviceType: 'Laptop'
@@ -1993,6 +2102,73 @@ export default function App() {
           </div>
         )}
 
+        {/* ── Tab: HERO POSTERS MANAGER ── */}
+        {activeTab === 'hero_posters' && (
+          <div className="fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+              <div>
+                <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+                  Hero Posters
+                </h1>
+                <p style={{ color: '#8B9BBE', fontSize: 15 }}>
+                  Manage the main homepage carousel slider images.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setHeroPosterForm({
+                    src: '',
+                    title: '',
+                    target: 'listing',
+                  });
+                  setHeroPosterModal({ open: true });
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', color: '#000',
+                  border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 800,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Sora'
+                }}
+              >
+                <Plus size={16} /> Add Hero Poster
+              </button>
+            </div>
+
+            {/* Grid display */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: 24 }}>
+              {heroPosters.map((hp) => (
+                <div key={hp.docId} style={{
+                  background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
+                  borderRadius: 20, overflow: 'hidden', display: 'flex', flexDirection: 'column'
+                }}>
+                  <div style={{ height: 250, overflow: 'hidden', position: 'relative' }}>
+                    <img src={hp.src} alt={hp.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h3 style={{ fontFamily: 'Sora', fontSize: 18, color: '#fff', margin: '0 0 6px' }}>{hp.title}</h3>
+                      <span style={{ fontSize: 11, color: '#38BDF8', fontWeight: 600 }}>Target view: {hp.target?.toUpperCase()}</span>
+                    </div>
+                    <div>
+                      <button
+                        onClick={() => handleDeleteHeroPoster(hp.docId)}
+                        style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}
+                      >
+                        <Trash2 size={13} /> Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {heroPosters.length === 0 && (
+                <div style={{ padding: 40, textAlign: 'center', color: '#8B9BBE' }}>
+                  No hero posters uploaded yet.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* ── Tab: CUSTOMER ORDERS MANAGER ── */}
         {activeTab === 'orders' && (() => {
           const activeOrders = orders.filter(ord => {
@@ -2007,9 +2183,9 @@ export default function App() {
             const status = ord.status || 'Pending';
             return status === 'Pending Payment' || status === 'Failed';
           });
-          const displayedOrders = 
-            ordersFilter === 'active' ? activeOrders : 
-            ordersFilter === 'completed' ? completedOrders : unpaidOrders;
+          const displayedOrders =
+            ordersFilter === 'active' ? activeOrders :
+              ordersFilter === 'completed' ? completedOrders : unpaidOrders;
 
           const PAGE_SIZE = 20;
           const totalPages = Math.ceil(displayedOrders.length / PAGE_SIZE);
@@ -2115,8 +2291,8 @@ export default function App() {
                       {ordersFilter === 'active'
                         ? 'No active customer orders to process. All set!'
                         : ordersFilter === 'completed'
-                        ? 'No completed or archived customer orders found.'
-                        : 'No unpaid or failed checkouts found.'}
+                          ? 'No completed or archived customer orders found.'
+                          : 'No unpaid or failed checkouts found.'}
                     </p>
                   </div>
                 ) : (
@@ -3348,6 +3524,24 @@ export default function App() {
                   </div>
 
                   <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Rating (out of 5)</label>
+                    <input
+                      type="number" required step="0.1" min="1" max="5" placeholder="e.g. 4.8"
+                      value={productForm.rating || ''} onChange={e => setProductForm({ ...productForm, rating: Number(e.target.value) })}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Reviews Count</label>
+                    <input
+                      type="number" required min="0" placeholder="e.g. 125"
+                      value={productForm.reviews || ''} onChange={e => setProductForm({ ...productForm, reviews: Number(e.target.value) })}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div>
                     <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Original MRP (₹)</label>
                     <input
                       type="number" required placeholder="e.g. 59999"
@@ -3903,6 +4097,131 @@ export default function App() {
         </div>
       )}
 
+      {/* ── Modal: Hero Poster Form ── */}
+      {heroPosterModal.open && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+        }}>
+          <div className="fade-in" style={{
+            background: '#131a24', border: '1px solid rgba(56,189,248,0.15)',
+            borderRadius: 24, width: '100%', maxWidth: 550, padding: 32,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.6)', maxHeight: '90vh', overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ fontFamily: 'Sora', fontSize: 22, color: '#fff', fontWeight: 800 }}>Add Hero Poster</h2>
+              <button onClick={() => setHeroPosterModal({ open: false })} style={{ background: 'transparent', border: 'none', color: '#8B9BBE', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleHeroPosterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Poster Title</label>
+                <input
+                  type="text" required placeholder="e.g. Diwali Mega Sale"
+                  value={heroPosterForm.title} onChange={e => setHeroPosterForm({ ...heroPosterForm, title: e.target.value })}
+                  className="form-input"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Click Destination Page</label>
+                <select
+                  value={heroPosterForm.target} onChange={e => setHeroPosterForm({ ...heroPosterForm, target: e.target.value })}
+                  className="form-input" style={{ background: '#0d1117' }}
+                >
+                  <option value="listing">Shop Laptops</option>
+                  <option value="accessories">Shop Accessories</option>
+                  <option value="resell">Sell Laptop</option>
+                  <option value="contact">Contact Us</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: 16 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Laptop/Desktop Poster</label>
+                  {heroPosterForm.src && (
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '1920/480', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
+                      <img src={heroPosterForm.src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  )}
+                  <div
+                    onClick={() => { if (!uploadingHeroPoster) document.getElementById('hero-poster-file-input')?.click(); }}
+                    style={{
+                      background: 'rgba(26, 34, 53, 0.4)', border: '2px dashed rgba(56,189,248,0.25)',
+                      borderRadius: 16, padding: '24px 20px', textAlign: 'center',
+                      cursor: uploadingHeroPoster ? 'wait' : 'pointer', transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <ImageIcon size={28} color="#38BDF8" style={{ marginBottom: 8 }} />
+                    <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
+                      {uploadingHeroPoster ? 'Uploading image...' : 'Browse files'}
+                    </div>
+                    <div style={{ color: '#8B9BBE', fontSize: 11, lineHeight: 1.5, marginTop: 4 }}>
+                      Recommended: 1920x480px (4:1 Ratio)
+                    </div>
+                    <input
+                      id="hero-poster-file-input" type="file" accept="image/*"
+                      disabled={uploadingHeroPoster} onChange={handleHeroPosterImageUpload} style={{ display: 'none' }}
+                    />
+                  </div>
+                  <div style={{ marginTop: 8 }}>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or enter image URL:</label>
+                    <input
+                      type="text" placeholder="Paste direct image link..."
+                      value={heroPosterForm.src || ''} onChange={e => setHeroPosterForm({ ...heroPosterForm, src: e.target.value })}
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Mobile Poster</label>
+                  {heroPosterForm.mobileSrc && (
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '3/2', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
+                      <img src={heroPosterForm.mobileSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  )}
+                  <div
+                    onClick={() => { if (!uploadingHeroPosterMobile) document.getElementById('hero-poster-mobile-file-input')?.click(); }}
+                    style={{
+                      background: 'rgba(26, 34, 53, 0.4)', border: '2px dashed rgba(56,189,248,0.25)',
+                      borderRadius: 16, padding: '24px 20px', textAlign: 'center',
+                      cursor: uploadingHeroPosterMobile ? 'wait' : 'pointer', transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <ImageIcon size={28} color="#38BDF8" style={{ marginBottom: 8 }} />
+                    <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
+                      {uploadingHeroPosterMobile ? 'Uploading image...' : 'Browse files'}
+                    </div>
+                    <div style={{ color: '#8B9BBE', fontSize: 11, lineHeight: 1.5, marginTop: 4 }}>
+                      Recommended: 800x600px (4:3 or 3:2 Ratio)
+                    </div>
+                    <input
+                      id="hero-poster-mobile-file-input" type="file" accept="image/*"
+                      disabled={uploadingHeroPosterMobile} onChange={handleHeroPosterMobileImageUpload} style={{ display: 'none' }}
+                    />
+                  </div>
+                  <div style={{ marginTop: 8 }}>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or enter image URL:</label>
+                    <input
+                      type="text" placeholder="Paste direct image link..."
+                      value={heroPosterForm.mobileSrc || ''} onChange={e => setHeroPosterForm({ ...heroPosterForm, mobileSrc: e.target.value })}
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
+                <button type="button" onClick={() => setHeroPosterModal({ open: false })} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8B9BBE', borderRadius: 12, padding: '12px 24px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 600 }}>Cancel</button>
+                <button type="submit" disabled={uploadingHeroPoster} style={{ background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', border: 'none', color: '#000', borderRadius: 12, padding: '12px 24px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 800 }}>Save Poster</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ── Modal: Banner Form ── */}
       {bannerModal.open && (
         <div style={{
@@ -4259,9 +4578,9 @@ export default function App() {
 
               {/* Right Column: Uploaded Device Photos Lightbox */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#38BDF8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    <ImageIcon size={14} /> Uploaded Photos ({Array.isArray(sellDetailModal.item.images) ? sellDetailModal.item.images.length : 0})
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#38BDF8', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <ImageIcon size={14} /> Uploaded Photos ({Array.isArray(sellDetailModal.item.images) ? sellDetailModal.item.images.length : 0})
+                </div>
 
                 {Array.isArray(sellDetailModal.item.images) && sellDetailModal.item.images.length > 0 ? (
                   <div>
