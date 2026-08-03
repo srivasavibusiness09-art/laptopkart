@@ -9,6 +9,7 @@ import { useIsMobile } from "@/lib/hooks";
 import Card from "./common/Card";
 import Button from "./common/Button";
 import Dropdown from "./common/Dropdown";
+import RequestProductModal from "./RequestProductModal";
 
 interface ProductListingProps {
   products: Product[];
@@ -48,6 +49,7 @@ export default function ProductListing({
   const [search, setSearch]   = useState(initialSearch);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20);
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -155,6 +157,7 @@ export default function ProductListing({
 
   return (
     <main style={{ background: "var(--bg)", minHeight: "100vh" }}>
+      <RequestProductModal isOpen={requestModalOpen} onClose={() => setRequestModalOpen(false)} />
       {/* Page header */}
       <div style={{
         background: "var(--bg-1)",
@@ -305,15 +308,22 @@ export default function ProductListing({
                   No products found
                 </h3>
                 <p style={{ color: "var(--text-2)", marginTop: 8, marginBottom: 20 }}>
-                  Try adjusting your filters or search term
+                  Try adjusting your filters or search term, or request a custom product.
                 </p>
-                <button onClick={clearAll} style={{
-                  background: COLORS.green, color: "var(--text-inverse)",
-                  border: "none", borderRadius: 100,
-                  padding: "12px 28px", fontWeight: 700, cursor: "pointer",
-                }}>
-                  Clear Filters
-                </button>
+                <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                  <button onClick={clearAll} style={{
+                    background: "var(--bg)", border: "1px solid var(--border)", color: "var(--text)",
+                    padding: "10px 24px", borderRadius: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter', sans-serif"
+                  }}>
+                    Clear Filters
+                  </button>
+                  <button onClick={() => setRequestModalOpen(true)} style={{
+                    background: COLORS.green, border: "1px solid var(--success)", color: "var(--text-inverse)",
+                    padding: "10px 24px", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'Inter', sans-serif"
+                  }}>
+                    Request Custom Product
+                  </button>
+                </div>
               </div>
             ) : (
               <>

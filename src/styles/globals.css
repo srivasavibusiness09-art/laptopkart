@@ -12,6 +12,7 @@
 /* ─── Design Tokens ──────────────────────────────────────── */
 :root {
   /* ☀️ Light Theme (Cream & Terracotta) */
+  color-scheme: light;
   /* Backgrounds — warm premium cream */
   --bg: #F5F2EE;
   --bg-1: #EBE6DF;
@@ -83,6 +84,7 @@
 
 .dark {
   /* 🌙 Dark Theme (Existing) */
+  color-scheme: dark;
   /* Backgrounds — deep tech voids */
   --bg: #040712;
   --bg-1: #0A0F1E;

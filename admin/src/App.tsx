@@ -31,12 +31,29 @@ import {
   Cpu,
   User,
   Menu,
-  Tag
+  Tag,
+  ClipboardList
 } from 'lucide-react';
 
 // compressImage removed (using storage.ts module)
 
-// Core Type Definitions
+// Reverting Coupon to any since it has dynamically varying fields in the codebase
+type Coupon = any;
+
+interface ProductRequest {
+  id: string;
+  deviceType: string;
+  brand: string;
+  specs: string;
+  budget: string;
+  name: string;
+  phone: string;
+  email: string;
+  notes: string;
+  status: string;
+  createdAt: string;
+}
+
 interface Product {
   id: number;
   name: string;
@@ -195,7 +212,7 @@ export const DEFAULT_BANNERS: Banner[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'hero_posters' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests' | 'coupons'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'hero_posters' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests' | 'coupons' | 'product_requests'>('overview');
   const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed' | 'unpaid'>('active');
   const [ordersPage, setOrdersPage] = useState(0);
 
@@ -234,7 +251,8 @@ export default function App() {
   const [accessoryModal, setAccessoryModal] = useState<{ open: boolean, mode: 'add' | 'edit', item?: AccessoryProduct }>({ open: false, mode: 'add' });
   const [subscribersSearch, setSubscribersSearch] = useState('');
   const [sellRequests, setSellRequests] = useState<any[]>([]);
-  const [coupons, setCoupons] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [productRequests, setProductRequests] = useState<ProductRequest[]>([]);
   const [sellSearch, setSellSearch] = useState('');
   const [sellStatusFilter, setSellStatusFilter] = useState('all');
   const [sellDetailModal, setSellDetailModal] = useState<{ open: boolean, item?: any }>({ open: false });
@@ -453,6 +471,10 @@ export default function App() {
       (error) => console.error("[Firestore] Coupons read failed:", error)
     );
 
+    const unsubProductRequests = onSnapshot(query(collection(db, "product_requests")), snap => {
+      setProductRequests(snap.docs.map(d => ({ id: d.id, ...d.data() } as ProductRequest)).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    });
+
     return () => {
       unsubscribeProducts();
       unsubscribeAccessories();
@@ -463,6 +485,7 @@ export default function App() {
       unsubscribeSubscribers();
       unsubscribeSellRequests();
       unsubscribeCoupons();
+      unsubProductRequests();
     };
   }, []);
 
@@ -1507,6 +1530,7 @@ export default function App() {
             { id: 'subscribers', label: 'Newsletter', icon: <Mail size={18} /> },
             { id: 'sell_requests', label: 'Sell Requests', icon: <RefreshCw size={18} /> },
             { id: 'coupons', label: 'Coupons', icon: <Tag size={18} /> },
+            { id: 'product_requests', label: 'Product Requests', icon: <ClipboardList size={18} /> },
           ].map(tab => (
             <button
               key={tab.id}
@@ -3350,6 +3374,107 @@ export default function App() {
                   </button>
                 </form>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab: PRODUCT REQUESTS ── */}
+        {activeTab === 'product_requests' && (
+          <div className="fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+              <div>
+                <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+                  Product Requests
+                </h1>
+                <p style={{ color: '#8B9BBE', fontSize: 15 }}>
+                  Customer requests for products not found on the store.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(56, 189, 248, 0.12)' }}>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Customer</th>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Device & Budget</th>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Specs & Notes</th>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Status</th>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productRequests.map(req => (
+                    <tr key={req.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <td style={{ padding: '18px 24px' }}>
+                        <div style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{req.name}</div>
+                        <div style={{ color: '#8B9BBE', fontSize: 12 }}>{req.phone}</div>
+                        {req.email && <div style={{ color: '#8B9BBE', fontSize: 12 }}>{req.email}</div>}
+                        <div style={{ color: '#8B9BBE', fontSize: 11, marginTop: 4 }}>{new Date(req.createdAt).toLocaleDateString()}</div>
+                      </td>
+                      <td style={{ padding: '18px 24px' }}>
+                        <div style={{ color: '#fff', fontWeight: 600, fontSize: 13 }}>{req.deviceType}</div>
+                        {req.brand && <div style={{ color: '#38BDF8', fontSize: 12 }}>Brand: {req.brand}</div>}
+                        <div style={{ color: '#10B981', fontSize: 13, marginTop: 4, fontWeight: 700 }}>{req.budget}</div>
+                      </td>
+                      <td style={{ padding: '18px 24px' }}>
+                        <div style={{ color: '#fff', fontSize: 13, marginBottom: 4 }}>{req.specs}</div>
+                        {req.notes && <div style={{ color: '#8B9BBE', fontSize: 12, fontStyle: 'italic', maxWidth: 250 }}>"{req.notes}"</div>}
+                      </td>
+                      <td style={{ padding: '18px 24px' }}>
+                        <span style={{
+                          background: req.status === 'Resolved' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                          color: req.status === 'Resolved' ? '#10B981' : '#F59E0B',
+                          padding: '6px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700
+                        }}>
+                          {req.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '18px 24px', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await setDoc(doc(db, "product_requests", req.id), { status: req.status === 'Pending' ? 'Resolved' : 'Pending' }, { merge: true });
+                              } catch (e) { console.error(e); }
+                            }}
+                            style={{
+                              background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)',
+                              padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer'
+                            }}
+                          >
+                            Mark {req.status === 'Pending' ? 'Resolved' : 'Pending'}
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (window.confirm('Are you sure you want to delete this request?')) {
+                                try {
+                                  await deleteDoc(doc(db, "product_requests", req.id));
+                                } catch (e) { console.error(e); }
+                              }
+                            }}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)',
+                              padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', gap: 6
+                            }}
+                            title="Delete Request"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {productRequests.length === 0 && (
+                    <tr>
+                      <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: '#8B9BBE', fontSize: 14 }}>
+                        No product requests found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

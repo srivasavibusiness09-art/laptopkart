@@ -133,7 +133,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                     style={{
                       padding: "4px 6px", background: "transparent",
                       border: "none",
-                      color: link === "Offers" ? "var(--warning)" : "var(--text-2)",
+                      color: link === "Offers" ? "var(--warning)" : "var(--text)",
                       cursor: "pointer", fontSize: 12, fontWeight: 500,
                       whiteSpace: "nowrap", letterSpacing: "0.01em",
                       display: "flex", alignItems: "center", gap: 2,
@@ -141,7 +141,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                       borderRadius: 6,
                     }}
                     onMouseEnter={(e) => { (e.currentTarget).style.color = "var(--text)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget).style.color = link === "Offers" ? "var(--warning)" : "var(--text-2)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget).style.color = link === "Offers" ? "var(--warning)" : "var(--text)"; }}
                   >
                     {linkIcons[link] && <span className="nav-link-icon">{linkIcons[link]}</span>}
                     {link === "Resell Laptop" ? (
@@ -161,16 +161,16 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
           <div style={{ display: "flex", gap: 2, alignItems: "center", flexShrink: 0 }}>
             {/* Search Toggle Button */}
             <IconBtn onClick={() => setSearchActive(!searchActive)}>
-              <Search size={isMobile ? 16 : 14} color="var(--text-2)" />
+              <Search size={isMobile ? 16 : 14} color="var(--text)" />
             </IconBtn>
 
             {isMobile ? (
               <>
                 <IconBtn onClick={() => go("wishlist")} count={wishlist.length} countColor="var(--error)">
-                  <Heart size={16} color={wishlist.length > 0 ? "var(--error)" : "var(--text-2)"} fill={wishlist.length > 0 ? "var(--error)" : "none"} />
+                  <Heart size={16} color={wishlist.length > 0 ? "var(--error)" : "var(--text)"} fill={wishlist.length > 0 ? "var(--error)" : "none"} />
                 </IconBtn>
                 <IconBtn onClick={() => go("cart")} count={cart.length} accent={cart.length > 0} countColor="#fff">
-                  <ShoppingCart size={16} color={cart.length > 0 ? "#000" : "var(--text-2)"} />
+                  <ShoppingCart size={16} color={cart.length > 0 ? "#000" : "var(--text)"} />
                 </IconBtn>
                 <ThemeToggle />
                 <IconBtn onClick={() => setMenuOpen((o) => !o)}>
@@ -180,16 +180,16 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
             ) : (
               <>
                 <IconBtn onClick={() => go("wishlist")} count={wishlist.length} countColor="var(--error)" label="Wishlist">
-                  <Heart size={14} color={wishlist.length > 0 ? "var(--error)" : "var(--text-2)"} fill={wishlist.length > 0 ? "var(--error)" : "none"} />
+                  <Heart size={14} color={wishlist.length > 0 ? "var(--error)" : "var(--text)"} fill={wishlist.length > 0 ? "var(--error)" : "none"} />
                 </IconBtn>
                 <IconBtn onClick={() => go("cart")} count={cart.length} accent={cart.length > 0} countColor="#fff" label={`Cart${cart.length > 0 ? ` (${cart.length})` : ""}`}>
-                  <ShoppingCart size={14} color={cart.length > 0 ? "#000" : "var(--text-2)"} />
+                  <ShoppingCart size={14} color={cart.length > 0 ? "#000" : "var(--text)"} />
                 </IconBtn>
                 <IconBtn onClick={() => go("compare")} label="Compare">
-                  <Scale size={14} color="var(--text-2)" />
+                  <Scale size={14} color="var(--text)" />
                 </IconBtn>
                 <IconBtn onClick={() => go(user ? "profile" : "login")} label={user ? "Profile" : "Login"}>
-                  <User size={14} color={user ? COLORS.green : "var(--text-2)"} />
+                  <User size={14} color={user ? COLORS.green : "var(--text)"} />
                 </IconBtn>
                 <ThemeToggle />
                 <div style={{ position: "relative" }}>
@@ -279,7 +279,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                   display: "flex", alignItems: "center", gap: 12,
                   width: "100%", textAlign: "left",
                   background: "transparent", border: "none",
-                  color: link === "Offers" ? "var(--warning)" : "var(--text-2)",
+                  color: link === "Offers" ? "var(--warning)" : "var(--text)",
                   padding: "14px 24px", cursor: "pointer",
                   fontSize: 15, fontWeight: 500,
                   borderBottom: "1px solid var(--border)",
@@ -294,7 +294,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                 <button key={b.l} onClick={() => go(b.t)} style={{
                   display: "flex", alignItems: "center", justifyContent: "center",
                   gap: 6, background: "var(--bg-1)",
-                  color: "var(--text-2)", border: "1px solid var(--border)",
+                  color: "var(--text)", border: "1px solid var(--border)",
                   borderRadius: 10, padding: "12px", cursor: "pointer", fontSize: 13,
                   minHeight: 44,
                 }}>
@@ -418,7 +418,7 @@ function IconBtn({
         padding: label ? "0 12px" : "0 9px",
         cursor: "pointer", position: "relative",
         fontSize: 12, fontWeight: 600,
-        color: accent ? "#000" : "var(--text-2)",
+        color: accent ? "#000" : "var(--text)",
         transition: "all 0.2s",
         whiteSpace: "nowrap",
       }}
