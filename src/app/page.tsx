@@ -204,6 +204,7 @@ export default function App() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<number[]>([]);
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
 
   const isCartLoaded = useRef(false);
   const isWishlistLoaded = useRef(false);
@@ -798,10 +799,24 @@ export default function App() {
         />
       )}
       {page === "cart" && (
-        <CartPage cart={cart} setCart={setCart} setPage={handleNavigate} triggerAlert={triggerStoreAlert} />
+        <CartPage
+          cart={cart}
+          setCart={setCart}
+          setPage={handleNavigate}
+          triggerAlert={triggerStoreAlert}
+          appliedCoupon={appliedCoupon}
+          setAppliedCoupon={setAppliedCoupon}
+        />
       )}
       {page === "checkout" && user && (
-        <CheckoutPage cart={cart} setPage={handleNavigate} setCart={setCart} user={user} />
+        <CheckoutPage
+          cart={cart}
+          setPage={handleNavigate}
+          setCart={setCart}
+          user={user}
+          appliedCoupon={appliedCoupon}
+          setAppliedCoupon={setAppliedCoupon}
+        />
       )}
       {page === "wishlist" && (
         <WishlistPage

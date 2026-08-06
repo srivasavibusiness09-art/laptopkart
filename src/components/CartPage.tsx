@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, ShoppingCart, ArrowRight, Tag, Shield } from "lucide-react";
+import { Trash2, ShoppingCart, ArrowRight, Tag, Shield, X } from "lucide-react";
 import { COLORS } from "@/data/products";
 import type { Product } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface CartItem extends Product { qty: number }
 
@@ -13,17 +15,62 @@ interface Props {
   setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
   setPage: (p: string) => void;
   triggerAlert: (type: "success" | "warning" | "error", msg: string) => void;
+  appliedCoupon: any;
+  setAppliedCoupon: React.Dispatch<React.SetStateAction<any>>;
 }
 
-export default function CartPage({ cart, setCart, setPage, triggerAlert }: Props) {
+export default function CartPage({ cart, setCart, setPage, triggerAlert, appliedCoupon, setAppliedCoupon }: Props) {
   const [coupon, setCoupon]   = useState("");
-  const [applied, setApplied] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   const total     = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
   const savings   = cart.reduce((s, i) => s + (i.mrp - i.price) * (i.qty || 1), 0);
-  const discount  = applied ? Math.round(total * 0.05) : 0;
-  const final     = total - discount;
+
+  let discount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.discountType === "percentage") {
+      discount = Math.round((total * appliedCoupon.discount) / 100);
+      if (appliedCoupon.maxDiscountAmount && discount > appliedCoupon.maxDiscountAmount) {
+        discount = appliedCoupon.maxDiscountAmount;
+      }
+    } else {
+      discount = appliedCoupon.discount;
+    }
+  }
+  const final = Math.max(0, total - discount);
+
+  const handleApplyCoupon = async () => {
+    setCouponError(null);
+    setCouponSuccess(null);
+    if (!coupon.trim()) {
+      setCouponError("Please enter a coupon code.");
+      return;
+    }
+    const code = coupon.trim().toUpperCase();
+    try {
+      const cSnap = await getDoc(doc(db, "coupons", code));
+      if (!cSnap.exists()) {
+        setCouponError("Invalid coupon code.");
+        return;
+      }
+      const cData = cSnap.data();
+      if (cData.minCartValue && total < cData.minCartValue) {
+        setCouponError(`Minimum purchase of ₹${cData.minCartValue.toLocaleString('en-IN')} required.`);
+        return;
+      }
+      if (cData.maxUses && cData.usedCount >= cData.maxUses) {
+        setCouponError("This coupon has expired or reached max uses.");
+        return;
+      }
+      setAppliedCoupon({ ...cData, code });
+      setCouponSuccess("Coupon applied successfully!");
+    } catch (e) {
+      console.error(e);
+      setCouponError("Failed to apply coupon.");
+    }
+  };
 
   const remove    = (id: number) => setCart((c) => c.filter((i) => i.id !== id));
   const updateQty = (id: number, d: number) =>
@@ -192,36 +239,55 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert }: Props
                 <Tag size={15} color={COLORS.green} />
                 Apply Coupon Code
               </div>
-              <div style={{ display: "flex", gap: 10 }}>
-                <input
-                  value={coupon}
-                  onChange={(e) => setCoupon(e.target.value.toUpperCase())}
-                  placeholder="e.g. SAVE10"
-                  style={{
-                    flex: 1, background: COLORS.background,
-                    border: `1px solid ${COLORS.cardBorder}`,
-                    borderRadius: 10, padding: "11px 14px",
-                    color: COLORS.text, fontSize: 14, outline: "none",
-                  }}
-                  onFocus={(e) => { e.target.style.borderColor = "rgba(56,189,248,0.4)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = COLORS.cardBorder; }}
-                />
-                <button
-                  onClick={() => { if (coupon.length > 2) setApplied(true); }}
-                  style={{
-                    background: applied ? "var(--success)" : COLORS.green,
-                    color: "var(--text-inverse)", border: "none", borderRadius: 10,
-                    padding: "11px 20px", fontWeight: 700, fontSize: 13,
-                    cursor: "pointer", fontFamily: "'Sora', sans-serif",
-                  }}
-                >
-                  {applied ? "✓ Applied" : "Apply"}
-                </button>
-              </div>
-              {applied && (
-                <p style={{ color: "var(--success)", fontSize: 12, marginTop: 8 }}>
-                  🎉 5% discount applied!
-                </p>
+              {!appliedCoupon ? (
+                <div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <input
+                      value={coupon}
+                      onChange={(e) => setCoupon(e.target.value.toUpperCase())}
+                      placeholder="e.g. SAVE10"
+                      style={{
+                        flex: 1, background: COLORS.background,
+                        border: `1px solid ${COLORS.cardBorder}`,
+                        borderRadius: 10, padding: "11px 14px",
+                        color: COLORS.text, fontSize: 14, outline: "none",
+                      }}
+                      onFocus={(e) => { e.target.style.borderColor = "rgba(56,189,248,0.4)"; }}
+                      onBlur={(e) => { e.target.style.borderColor = COLORS.cardBorder; }}
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      style={{
+                        background: COLORS.green,
+                        color: "var(--text-inverse)", border: "none", borderRadius: 10,
+                        padding: "11px 20px", fontWeight: 700, fontSize: 13,
+                        cursor: "pointer", fontFamily: "'Sora', sans-serif",
+                      }}
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p style={{ color: "var(--error)", fontSize: 12, marginTop: 8 }}>{couponError}</p>
+                  )}
+                </div>
+              ) : (
+                <div style={{ background: "rgba(56, 189, 248, 0.1)", border: `1px dashed ${COLORS.green}`, padding: 12, borderRadius: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ color: COLORS.green, fontWeight: 700, fontSize: 14 }}>
+                        {appliedCoupon.code} Applied — ₹{discount.toLocaleString("en-IN")} off
+                      </div>
+                      {couponSuccess && <div style={{ color: COLORS.green, fontSize: 12 }}>{couponSuccess}</div>}
+                    </div>
+                    <button
+                      onClick={() => { setAppliedCoupon(null); setCoupon(""); setCouponSuccess(null); setCouponError(null); }}
+                      style={{ background: "transparent", border: "none", color: "var(--error)", cursor: "pointer", padding: 4 }}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>

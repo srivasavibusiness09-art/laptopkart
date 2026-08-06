@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, doc, setDoc, deleteDoc, onSnapshot, query } from "firebase/firestore";
-import { db } from "./lib/firebase";
+import { collection, doc, setDoc, deleteDoc, onSnapshot, query, getDoc } from "firebase/firestore";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { db, auth } from "./lib/firebase";
 import { uploadProductImage, uploadVideoToCloudinary } from "./lib/storage";
+import AdminLogin from "./components/AdminLogin";
 import {
   LayoutDashboard,
   Laptop,
@@ -15,6 +17,7 @@ import {
   X,
   Sparkles,
   CheckCircle,
+  Clock,
   FileText,
   Bell,
   Truck,
@@ -32,7 +35,8 @@ import {
   User,
   Menu,
   Tag,
-  ClipboardList
+  ClipboardList,
+  LogOut
 } from 'lucide-react';
 
 // compressImage removed (using storage.ts module)
@@ -226,6 +230,37 @@ export default function App() {
       return () => window.removeEventListener("resize", handleResize);
     }
   }, []);
+
+  const [admin, setAdmin] = useState<any>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setAdmin(null);
+        setAuthChecked(true);
+        return;
+      }
+      try {
+        const snap = await getDoc(doc(db, "admins", user.uid));
+        const data = snap.data();
+        if (snap.exists() && data && data.role === "admin") {
+          setAdmin({ uid: user.uid, email: user.email, name: data.name || "Admin" });
+          setAuthError(null);
+        } else {
+          await signOut(auth);
+          setAuthError("Access Denied: this account is not an authorized administrator.");
+        }
+      } catch (err) {
+        console.error("[Auth] Admin verification failed:", err);
+        setAuthError("Could not verify admin access. Please try again.");
+      } finally {
+        setAuthChecked(true);
+      }
+    });
+    return () => unsubscribeAuth();
+  }, []);
   const [products, setProducts] = useState<Product[]>([]);
   const [accessories, setAccessories] = useState<AccessoryProduct[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -328,6 +363,8 @@ export default function App() {
 
   // Live snapshot database listeners for Products, Accessories, Banners, and Orders
   useEffect(() => {
+    if (!admin) return;
+
     // 1. Subscribe to Products
     const unsubscribeProducts = onSnapshot(
       query(collection(db, "products")),
@@ -487,7 +524,7 @@ export default function App() {
       unsubscribeCoupons();
       unsubProductRequests();
     };
-  }, []);
+  }, [admin]);
 
   const triggerAlert = (type: 'success' | 'danger', text: string) => {
     setAlertMsg({ type, text });
@@ -544,6 +581,7 @@ export default function App() {
   // Foreground notification handler & Quiet auto-registration on mount if already granted
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (!admin) return;
 
     if ('Notification' in window) {
       setNotificationPermission(Notification.permission);
@@ -594,7 +632,7 @@ export default function App() {
     };
 
     setupFCMListener();
-  }, []);
+  }, [admin]);
 
   const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -791,6 +829,8 @@ export default function App() {
 
   // Subscribe to live order checkouts (WebSockets)
   useEffect(() => {
+    if (!admin) return;
+
     let isInitial = true;
     const unsubscribeOrders = onSnapshot(query(collection(db, "orders")), (snapshot) => {
       const list: Order[] = [];
@@ -838,7 +878,7 @@ export default function App() {
     });
 
     return () => unsubscribeOrders();
-  }, []);
+  }, [admin]);
 
   const handleAutoFillSpecs = () => {
     const name = productForm.name || "";
@@ -1466,6 +1506,47 @@ export default function App() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("[Auth] Logout failed:", err);
+    }
+  };
+
+  const orderStats = {
+    total: orders.length,
+    today: orders.filter(ord => ord.createdAt && new Date(ord.createdAt).toDateString() === new Date().toDateString()).length,
+    active: orders.filter(ord => {
+      const s = ord.status || 'Pending';
+      return s !== 'Completed' && s !== 'Cancelled' && s !== 'Pending Payment' && s !== 'Failed';
+    }).length,
+    completed: orders.filter(ord => (ord.status || 'Pending') === 'Completed').length,
+    unpaid: orders.filter(ord => {
+      const s = ord.status || 'Pending';
+      return s === 'Pending Payment' || s === 'Failed';
+    }).length,
+    revenue: orders.filter(ord => {
+      const s = ord.status || 'Pending';
+      return s !== 'Cancelled' && s !== 'Pending (COD)' && s !== 'Pending Payment' && s !== 'Failed';
+    }).reduce((sum, ord) => sum + ord.total, 0),
+  };
+
+  if (!authChecked) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d1117' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#38BDF8', fontFamily: 'Sora', fontSize: 14, fontWeight: 700 }}>
+          <span style={{ width: 18, height: 18, border: '2px solid rgba(56,189,248,0.3)', borderTopColor: '#38BDF8', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          Verifying session...
+        </div>
+      </div>
+    );
+  }
+
+  if (!admin) {
+    return <AdminLogin error={authError} onClearError={() => setAuthError(null)} />;
+  }
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0d1117' }}>
 
@@ -1522,7 +1603,7 @@ export default function App() {
             { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> },
             { id: 'products', label: 'Laptops & PCs', icon: <Laptop size={18} /> },
             { id: 'accessories', label: 'Accessories', icon: <Keyboard size={18} /> },
-            { id: 'banners', label: 'Offers & Contests', icon: <ImageIcon size={18} /> },
+            { id: 'banners', label: 'Banners', icon: <ImageIcon size={18} /> },
             { id: 'hero_posters', label: 'Hero Posters', icon: <ImageIcon size={18} /> },
             { id: 'orders', label: 'Customer Orders', icon: <FileText size={18} /> },
             { id: 'blogs', label: 'Tech Blogs', icon: <BookOpen size={18} /> },
@@ -1564,6 +1645,23 @@ export default function App() {
           <p style={{ color: '#8B9BBE', fontSize: 11, lineHeight: 1.4 }}>
             Any changes written here will reflect immediately on client storefront pages.
           </p>
+        </div>
+
+        {/* Admin session */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: 12 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ color: '#E8EDF5', fontSize: 12, fontWeight: 700, fontFamily: 'Sora', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {admin?.email || 'Admin'}
+            </div>
+            <div style={{ color: '#8B9BBE', fontSize: 11 }}>Administrator</div>
+          </div>
+          <button
+            onClick={handleLogout}
+            title="Sign out"
+            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#EF4444', padding: 8, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <LogOut size={16} />
+          </button>
         </div>
       </aside>
 
@@ -1698,17 +1796,22 @@ export default function App() {
               Real-time analytics and inventory statistics.
             </p>
 
-            {/* Quick Stats Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 20, marginBottom: 32 }}>
+            {/* Order Statistics */}
+            <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <FileText size={18} color="#38BDF8" /> Order Statistics
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20, marginBottom: 32 }}>
               {[
-                { label: 'Total Products', val: products.length, icon: <Laptop size={20} color="#38BDF8" />, bg: 'rgba(56,189,248,0.1)' },
-                { label: 'Accessories Listed', val: accessories.length, icon: <Keyboard size={20} color="#8B5CF6" />, bg: 'rgba(139,92,246,0.1)' },
-                { label: 'Active Banner Slides', val: banners.length, icon: <ImageIcon size={20} color="#EF4444" />, bg: 'rgba(239,68,68,0.1)' },
-                { label: 'Total Sales Revenue', val: `₹${orders.filter(ord => ord.status !== 'Cancelled' && ord.status !== 'Pending (COD)' && ord.status !== 'Pending Payment' && ord.status !== 'Failed').reduce((sum, ord) => sum + ord.total, 0).toLocaleString('en-IN')}`, icon: <TrendingUp size={20} color="#10B981" />, bg: 'rgba(16,185,129,0.1)' },
+                { label: 'Total Orders Received', val: orderStats.total.toLocaleString('en-IN'), icon: <FileText size={20} color="#38BDF8" />, bg: 'rgba(56,189,248,0.1)' },
+                { label: 'New Orders Today', val: orderStats.today.toLocaleString('en-IN'), icon: <Sparkles size={20} color="#10B981" />, bg: 'rgba(16,185,129,0.1)' },
+                { label: 'Active Orders', val: orderStats.active.toLocaleString('en-IN'), icon: <Truck size={20} color="#8B5CF6" />, bg: 'rgba(139,92,246,0.1)' },
+                { label: 'Completed Orders', val: orderStats.completed.toLocaleString('en-IN'), icon: <CheckCircle size={20} color="#10B981" />, bg: 'rgba(16,185,129,0.1)' },
+                { label: 'Unpaid / Pending Payment', val: orderStats.unpaid.toLocaleString('en-IN'), icon: <Clock size={20} color="#F59E0B" />, bg: 'rgba(245,158,11,0.1)' },
+                { label: 'Total Sales Revenue', val: `₹${orderStats.revenue.toLocaleString('en-IN')}`, icon: <TrendingUp size={20} color="#06B6D4" />, bg: 'rgba(6,182,212,0.1)' },
               ].map(stat => (
                 <div key={stat.label} style={{
                   background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
-                  borderRadius: 20, padding: 24, display: 'flex', alignItems: 'center', justifyItems: 'center', gap: 20
+                  borderRadius: 20, padding: 24, display: 'flex', alignItems: 'center', gap: 20
                 }}>
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {stat.icon}
@@ -1721,56 +1824,47 @@ export default function App() {
               ))}
             </div>
 
-            {/* Simulated Activity Section */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.2fr', gap: 24 }}>
-
-              <div style={{
-                background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
-                borderRadius: 20, padding: 24
-              }}>
-                <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>
-                  Active Systems Status
-                </h2>
-                <div style={{ display: 'grid', gap: 14 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981' }} />
-                    <div>
-                      <span style={{ fontSize: 13, color: '#fff', fontWeight: 600, display: 'block' }}>Next.js Storefront Sync Bridge:</span>
-                      <span style={{ fontSize: 12, color: '#10B981', fontWeight: 700 }}>Connected (Real-time Firestore Sync)</span>
-                    </div>
+            {/* Catalog Overview */}
+            <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Laptop size={18} color="#38BDF8" /> Catalog Overview
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 20, marginBottom: 32 }}>
+              {[
+                { label: 'Total Products', val: products.length, icon: <Laptop size={20} color="#38BDF8" />, bg: 'rgba(56,189,248,0.1)' },
+                { label: 'Accessories Listed', val: accessories.length, icon: <Keyboard size={20} color="#8B5CF6" />, bg: 'rgba(139,92,246,0.1)' },
+                { label: 'Active Banner Slides', val: banners.length, icon: <ImageIcon size={20} color="#EF4444" />, bg: 'rgba(239,68,68,0.1)' },
+                { label: 'Hero Posters', val: heroPosters.length, icon: <ImageIcon size={20} color="#06B6D4" />, bg: 'rgba(6,182,212,0.1)' },
+              ].map(stat => (
+                <div key={stat.label} style={{
+                  background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
+                  borderRadius: 20, padding: 24, display: 'flex', alignItems: 'center', gap: 20
+                }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {stat.icon}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981' }} />
-                    <div>
-                      <span style={{ fontSize: 13, color: '#fff', fontWeight: 600, display: 'block' }}>Refurbishment Quality Inspection Engine:</span>
-                      <span style={{ fontSize: 12, color: '#8B9BBE' }}>Multiple Check point benchmark checklist loaded</span>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981' }} />
-                    <div>
-                      <span style={{ fontSize: 13, color: '#fff', fontWeight: 600, display: 'block' }}>Accessories Filter Category Set:</span>
-                      <span style={{ fontSize: 12, color: '#8B9BBE' }}>Monitors, Docks, Keyboards, Power, Bags, Mouse</span>
-                    </div>
+                  <div>
+                    <div style={{ color: '#8B9BBE', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>{stat.label}</div>
+                    <div style={{ color: '#fff', fontSize: 24, fontWeight: 800, fontFamily: 'Sora' }}>{stat.val}</div>
                   </div>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              {/* Incoming Customer Orders Section */}
-              <div style={{
-                background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
-                borderRadius: 20, padding: 24
-              }}>
-                <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <FileText size={18} color="#38BDF8" /> Incoming Customer Orders
-                </h2>
-                {orders.length === 0 ? (
-                  <p style={{ color: '#8B9BBE', fontSize: 13, fontStyle: 'italic' }}>
-                    No customer orders placed yet. Place an order on the checkout page to see it here.
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 220, overflowY: 'auto', paddingRight: 4 }}>
-                    {orders.map((ord) => (
+            {/* Incoming Customer Orders Section */}
+            <div style={{
+              background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
+              borderRadius: 20, padding: 24
+            }}>
+              <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FileText size={18} color="#38BDF8" /> Incoming Customer Orders
+              </h2>
+              {orders.length === 0 ? (
+                <p style={{ color: '#8B9BBE', fontSize: 13, fontStyle: 'italic' }}>
+                  No customer orders placed yet. Place an order on the checkout page to see it here.
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 260, overflowY: 'auto', paddingRight: 4 }}>
+                  {orders.map((ord) => (
                       <div
                         key={ord.orderId}
                         onClick={() => { setActiveTab('orders'); setOrdersFilter('active'); }}
@@ -1839,7 +1933,6 @@ export default function App() {
                   </div>
                 )}
               </div>
-            </div>
           </div>
         )}
 

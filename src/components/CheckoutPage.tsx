@@ -27,6 +27,8 @@ interface CheckoutPageProps {
   setPage: (p: string) => void;
   setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
   user: { uid: string; email: string; name: string };
+  appliedCoupon: any;
+  setAppliedCoupon: React.Dispatch<React.SetStateAction<any>>;
 }
 
 const STEPS = ["Address", "Payment", "Confirm"] as const;
@@ -51,7 +53,7 @@ const inputStyle = {
   boxSizing: "border-box" as const,
 };
 
-export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutPageProps) {
+export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoupon, setAppliedCoupon }: CheckoutPageProps) {
   const [step, setStep] = useState(0);
   const [address, setAddress] = useState<Address>({ name: "", phone: "", pincode: "", city: "", state: "", street: "" });
   const [payment, setPayment] = useState("upi");
@@ -60,7 +62,6 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
     Math.floor(100000 + Math.random() * 900000).toString()
   );
   const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
 
@@ -93,7 +94,8 @@ export default function CheckoutPage({ cart, setPage, setCart, user }: CheckoutP
         setOrderId(rOrderId);
         setStep(2); // Auto-navigate to receipt step
         if (status === "success") {
-          setCart([]); // Clean state cart on success
+          setCart([]);
+          setAppliedCoupon(null);
         }
       }
     }
