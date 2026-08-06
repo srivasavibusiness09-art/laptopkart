@@ -3,7 +3,7 @@
 import {
   Shield, RefreshCw, Truck, CreditCard, CheckCircle2,
   Microscope, BadgeDollarSign, ArrowRight, Recycle, Star,
-  Laptop, X, FileText, Package, Undo2
+  Laptop, X, FileText, Package, Undo2, Play
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -154,6 +154,25 @@ function SectionHeader({ eyebrow, title, subtitle, titleColor }: { eyebrow?: str
   );
 }
 
+/* ── Video helpers ─────────────────────────────────────── */
+const getYouTubeVideoId = (url: string): string | null => {
+  if (url.includes("youtube.com/watch")) return url.match(/[?&]v=([^&#]+)/)?.[1] || null;
+  if (url.includes("youtu.be/")) return url.split("youtu.be/")[1]?.split("?")[0] || null;
+  return null;
+};
+
+const getVideoEmbedSrc = (url: string): string | null => {
+  const id = getYouTubeVideoId(url);
+  if (id) return `https://www.youtube.com/embed/${id}`;
+  if (url.includes("vimeo.com")) return url;
+  return null;
+};
+
+const getVideoPosterSrc = (url: string): string | null => {
+  const id = getYouTubeVideoId(url);
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+};
+
 /* ── Smart finder ─────────────────────────────────────── */
 const finderQ = [
   { q: "What's your budget?", opts: ["Under ₹20,000", "₹20K–₹40K", "₹40K–₹70K", "₹70K+"] },
@@ -214,7 +233,17 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
     document.body.appendChild(script);
   }, []);
 
-  const [videoSettings, setVideoSettings] = useState<{ title: string; subtitle: string; videoUrl: string; orientation?: 'landscape' | 'portrait' } | null>(null);
+  const [videoSettings, setVideoSettings] = useState<{
+    title: string;
+    subtitle: string;
+    videoUrl: string;
+    orientation?: 'landscape' | 'portrait';
+    posterUrl?: string;
+    eyebrow?: string;
+  } | null>(null);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+  const [videoBuffering, setVideoBuffering] = useState(false);
 
   // Subscribe to Promo Video settings in Firestore
   useEffect(() => {
@@ -227,7 +256,9 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
             title: data.title || "",
             subtitle: data.subtitle || "",
             videoUrl: data.videoUrl || "",
-            orientation: data.orientation || "landscape"
+            orientation: data.orientation || "landscape",
+            posterUrl: data.posterUrl || "",
+            eyebrow: data.eyebrow || "Introduction",
           });
         }
       },
@@ -237,6 +268,128 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
     );
     return () => unsubscribe();
   }, []);
+
+  const videoEmbedSrc = videoSettings ? getVideoEmbedSrc(videoSettings.videoUrl) : null;
+  const videoPosterSrc = (() => {
+    if (!videoSettings) return null;
+    if (videoSettings.posterUrl) return videoSettings.posterUrl;
+    return getVideoPosterSrc(videoSettings.videoUrl);
+  })();
+
+  const handleVideoPlay = () => {
+    setVideoError(false);
+    setVideoBuffering(true);
+    setVideoPlaying(true);
+    window.setTimeout(() => setVideoBuffering(false), 2500);
+  };
+
+  const renderVideoTextOverlay = (align: "left" | "center") => (
+    <div style={{
+      position: "absolute", left: 0, right: 0, bottom: 0,
+      padding: isMobile ? "22px 20px" : "38px 44px",
+      textAlign: align, pointerEvents: "none",
+      background: "linear-gradient(0deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.35) 55%, transparent 100%)",
+    }}>
+      <div style={{
+        display: "inline-block",
+        color: "var(--accent)", fontSize: 11, fontWeight: 800,
+        letterSpacing: "0.08em", textTransform: "uppercase",
+        marginBottom: 10,
+        background: "rgba(118, 194, 39, 0.16)",
+        padding: "5px 14px", borderRadius: 100,
+        border: "1px solid rgba(118, 194, 39, 0.4)",
+      }}>
+        {videoSettings?.eyebrow || "Introduction"}
+      </div>
+      <h2 style={{
+        fontFamily: "'Sora', sans-serif",
+        fontSize: isMobile ? "clamp(20px, 5vw, 26px)" : "clamp(26px, 3.6vw, 40px)",
+        fontWeight: 800, letterSpacing: "-0.02em",
+        color: "#fff", margin: "0 0 10px", lineHeight: 1.12,
+        textShadow: "0 2px 18px rgba(0,0,0,0.5)",
+      }}>
+        {videoSettings?.title || "Explore Laptopkart in Action"}
+      </h2>
+      <p style={{
+        color: "rgba(255,255,255,0.85)",
+        fontSize: isMobile ? 13 : 15,
+        lineHeight: 1.6,
+        margin: align === "center" ? "0 auto" : "0",
+        maxWidth: 620,
+        textShadow: "0 1px 10px rgba(0,0,0,0.5)",
+      }}>
+        {videoSettings?.subtitle || "Watch our certified refurbishment process and see why thousands trust us."}
+      </p>
+    </div>
+  );
+
+  const renderVideoPlayer = () => {
+    if (!videoSettings) return null;
+
+    const isEmbed = videoEmbedSrc !== null;
+    const embedSrc = isEmbed
+      ? videoEmbedSrc!.includes("vimeo.com")
+        ? `${videoEmbedSrc}${videoEmbedSrc.includes("?") ? "&" : "?"}autoplay=1`
+        : `${videoEmbedSrc}?autoplay=1&rel=0`
+      : null;
+
+    return (
+      <div style={{ position: "relative", width: "100%", height: "100%" }}>
+        {!videoPlaying ? (
+          <button
+            onClick={handleVideoPlay}
+            aria-label="Play promo video"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none", background: "none", padding: 0, cursor: "pointer", display: "block" }}
+          >
+            {videoPosterSrc ? (
+              <img src={videoPosterSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            ) : (
+              <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #0B3B2E 0%, #14532D 45%, #0F766E 100%)" }} />
+            )}
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%)" }} />
+            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 74, height: 74, borderRadius: "50%", background: "rgba(118,194,39,0.95)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 12px 30px rgba(0,0,0,0.35)" }}>
+              <span style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "2px solid rgba(118,194,39,0.7)", animation: "pulse-ring 1.8s ease-out infinite" }} />
+              <Play size={30} fill="currentColor" style={{ marginLeft: 3 }} />
+            </span>
+            <span style={{ position: "absolute", bottom: 18, left: 0, right: 0, color: "#fff", fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>Watch now</span>
+          </button>
+        ) : videoError ? (
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, background: "#0B3B2E", color: "#fff", textAlign: "center", padding: 24 }}>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>Couldn't load the video.</div>
+            <button onClick={handleVideoPlay} style={{ background: "rgba(118,194,39,0.9)", color: "#fff", border: "none", borderRadius: 100, padding: "10px 22px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>Retry</button>
+          </div>
+        ) : (
+          <>
+            {videoBuffering && (
+              <div style={{ position: "absolute", inset: 0, zIndex: 3, background: "linear-gradient(90deg, rgba(11,59,46,0.9) 0%, rgba(11,59,46,0.75) 40%, rgba(11,59,46,0.9) 100%)", backgroundSize: "200% 100%", animation: "shimmer 1.6s linear infinite", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>Loading video…</span>
+              </div>
+            )}
+            {isEmbed ? (
+              <iframe
+                src={embedSrc!}
+                title="Laptopkart promo video"
+                style={{ width: "100%", height: "100%", border: "none" }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                onLoad={() => setVideoBuffering(false)}
+              />
+            ) : (
+              <video
+                src={videoSettings.videoUrl}
+                controls
+                autoPlay
+                playsInline
+                style={{ width: "100%", height: "100%", objectFit: "cover", background: "#000" }}
+                onLoadedData={() => setVideoBuffering(false)}
+                onError={() => { setVideoError(true); setVideoBuffering(false); }}
+              />
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
 
   // Review states
   const [showAllReviews, setShowAllReviews] = useState(false);
@@ -553,150 +706,48 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
           {section(
             <>
               {videoSettings.orientation === 'portrait' ? (
-                /* Portrait Split Layout: Content Left, Video Right */
-                <div style={{
-                  display: "flex",
-                  flexDirection: isMobile ? "column" : "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: isMobile ? 32 : 48
-                }}>
-                  {/* Left Column: Text Content */}
-                  <div style={{ flex: 1.2, textAlign: isMobile ? "center" : "left" }}>
+                /* Portrait: full-width banner, centered phone video, blurred poster fills the sides */
+                <div style={{ position: "relative", width: "100%", borderRadius: 28, overflow: "hidden", background: "#0B3B2E", boxShadow: "0 30px 70px rgba(31,29,27,0.18)" }}>
+                  {videoPosterSrc && (
                     <div style={{
-                      display: "inline-block",
-                      color: "var(--accent)", fontSize: 11, fontWeight: 800,
-                      letterSpacing: "0.08em", textTransform: "uppercase",
-                      marginBottom: 12,
-                      background: "rgba(0, 229, 255, 0.06)",
-                      padding: "5px 14px", borderRadius: 100,
-                      border: "1px solid rgba(0, 229, 255, 0.22)",
-                      boxShadow: "0 0 15px rgba(0, 229, 255, 0.1)",
-                    }}>Introduction</div>
-                    <h2 style={{
-                      fontFamily: "'Sora', sans-serif",
-                      fontSize: "clamp(26px, 4vw, 42px)",
-                      fontWeight: 800, letterSpacing: "-0.03em",
-                      color: "var(--text)",
-                      margin: "0 0 16px", lineHeight: 1.1,
-                    }}>
-                      {videoSettings.title || "Explore Laptopkart in Action"}
-                    </h2>
-                    <p style={{
-                      color: COLORS.muted,
-                      fontSize: 16,
-                      lineHeight: 1.6,
-                      marginBottom: 24,
-                      maxWidth: isMobile ? "100%" : 540
-                    }}>
-                      {videoSettings.subtitle || "Watch our certified refurbishment process and see why thousands trust us."}
-                    </p>
+                      position: "absolute", inset: 0,
+                      backgroundImage: `url(${videoPosterSrc})`,
+                      backgroundSize: "cover", backgroundPosition: "center",
+                      filter: "blur(28px) brightness(0.45) saturate(1.2)",
+                      transform: "scale(1.15)",
+                    }} />
+                  )}
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(11,59,46,0.35) 0%, rgba(11,59,46,0.9) 100%)" }} />
 
-                    {/* Highly polished trust bullets */}
+                  <div style={{
+                    position: "relative",
+                    display: "flex", justifyContent: "center",
+                    padding: isMobile ? "48px 16px 130px" : "60px 16px 150px",
+                  }}>
                     <div style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 12,
-                      textAlign: "left",
-                      maxWidth: 480,
-                      margin: isMobile ? "0 auto" : "0",
-                      background: "var(--border)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 16,
-                      padding: 20
+                      width: "100%", maxWidth: 300, aspectRatio: "9/16",
+                      borderRadius: 32, padding: 6,
+                      background: "linear-gradient(160deg, rgba(118,194,39,0.55), rgba(104,185,43,0.12), rgba(124,77,255,0.5))",
+                      boxShadow: "0 25px 60px rgba(0,0,0,0.4)",
                     }}>
-                      {[
-                        "Premium Refurbished Laptops at Best Prices",
-                        "1 Year Warranty on All Laptops",
-                        "Fast and Secure Shipping Across India",
-                        "7 Days Easy Replacement Policy"
-                      ].map((bullet, idx) => (
-                        <div key={idx} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--text-2)" }}>
-                          <span style={{ color: "var(--accent)", fontWeight: "bold" }}>✓</span>
-                          <span>{bullet}</span>
-                        </div>
-                      ))}
+                      <div style={{ width: "100%", height: "100%", borderRadius: 26, overflow: "hidden", background: "#000", position: "relative" }}>
+                        {renderVideoPlayer()}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Right Column: Vertical Player */}
-                  <div style={{
-                    flex: 1,
-                    width: "100%",
-                    maxWidth: 320,
-                    aspectRatio: "9/16",
-                    background: COLORS.cardBg,
-                    border: "1px solid rgba(56, 189, 248, 0.18)",
-                    borderRadius: 32,
-                    overflow: "hidden",
-                    boxShadow: "0 25px 60px rgba(0, 0, 0, 0.5)",
-                    position: "relative",
-                    margin: "0 auto"
-                  }}>
-                    {videoSettings.videoUrl.includes("youtube.com") || videoSettings.videoUrl.includes("youtu.be") || videoSettings.videoUrl.includes("vimeo.com") ? (
-                      <iframe
-                        src={videoSettings.videoUrl.includes("youtube.com/watch")
-                          ? `https://www.youtube.com/embed/${videoSettings.videoUrl.match(/[?&]v=([^&#]+)/)?.[1] || ''}`
-                          : videoSettings.videoUrl.includes("youtu.be/")
-                            ? `https://www.youtube.com/embed/${videoSettings.videoUrl.split("youtu.be/")[1]?.split("?")[0] || ''}`
-                            : videoSettings.videoUrl
-                        }
-                        style={{ width: "100%", height: "100%", border: "none" }}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <video
-                        src={videoSettings.videoUrl}
-                        controls
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    )}
-                  </div>
+                  {renderVideoTextOverlay("center")}
                 </div>
               ) : (
-                /* Landscape Centered Layout */
-                <>
-                  <SectionHeader
-                    eyebrow="Introduction"
-                    title={videoSettings.title || "Explore Laptopkart in Action"}
-                    subtitle={videoSettings.subtitle || "Watch our certified refurbishment process and see why thousands trust us."}
-                    titleColor="var(--text)"
-                  />
-
-                  <div style={{
-                    maxWidth: 800,
-                    margin: "0 auto",
-                    background: COLORS.cardBg,
-                    border: "1px solid rgba(56, 189, 248, 0.15)",
-                    borderRadius: 24,
-                    overflow: "hidden",
-                    boxShadow: "0 20px 50px rgba(0, 0, 0, 0.4)",
-                    position: "relative",
-                    aspectRatio: "16/9"
-                  }}>
-                    {videoSettings.videoUrl.includes("youtube.com") || videoSettings.videoUrl.includes("youtu.be") || videoSettings.videoUrl.includes("vimeo.com") ? (
-                      <iframe
-                        src={videoSettings.videoUrl.includes("youtube.com/watch")
-                          ? `https://www.youtube.com/embed/${videoSettings.videoUrl.match(/[?&]v=([^&#]+)/)?.[1] || ''}`
-                          : videoSettings.videoUrl.includes("youtu.be/")
-                            ? `https://www.youtube.com/embed/${videoSettings.videoUrl.split("youtu.be/")[1]?.split("?")[0] || ''}`
-                            : videoSettings.videoUrl
-                        }
-                        style={{ width: "100%", height: "100%", border: "none" }}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <video
-                        src={videoSettings.videoUrl}
-                        controls
-                        style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                      />
-                    )}
+                /* Landscape: full-width cinematic banner with text overlay */
+                <div style={{ position: "relative", width: "100%", borderRadius: 28, overflow: "hidden", background: "#0B3B2E", boxShadow: "0 30px 70px rgba(31,29,27,0.18)" }}>
+                  <div style={{ position: "relative", width: "100%", aspectRatio: "16/9" }}>
+                    {renderVideoPlayer()}
                   </div>
-                </>
+                  {renderVideoTextOverlay("left")}
+                </div>
               )}
+
             </>,
             COLORS.background
           )}

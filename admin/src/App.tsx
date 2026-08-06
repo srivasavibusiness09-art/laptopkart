@@ -352,6 +352,9 @@ export default function App() {
   const [videoUrl, setVideoUrl] = useState("");
   const [videoOrientation, setVideoOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [videoPoster, setVideoPoster] = useState("");
+  const [videoEyebrow, setVideoEyebrow] = useState("Introduction");
+  const [uploadingPoster, setUploadingPoster] = useState(false);
 
   // Form states - Coupons
   const [couponCode, setCouponCode] = useState("");
@@ -456,6 +459,8 @@ export default function App() {
           if (data.subtitle) setVideoSubtitle(data.subtitle);
           if (data.videoUrl) setVideoUrl(data.videoUrl);
           if (data.orientation) setVideoOrientation(data.orientation);
+          if (data.posterUrl) setVideoPoster(data.posterUrl);
+          if (data.eyebrow) setVideoEyebrow(data.eyebrow);
         }
       },
       (error) => {
@@ -772,6 +777,22 @@ export default function App() {
     }
   };
 
+  const handleVideoPosterUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingPoster(true);
+    try {
+      const url = await uploadProductImage(files[0]);
+      setVideoPoster(url);
+      triggerAlert('success', 'Poster image uploaded successfully!');
+    } catch (err: any) {
+      console.error(err);
+      triggerAlert('danger', err.message || 'Error uploading poster image.');
+    } finally {
+      setUploadingPoster(false);
+    }
+  };
+
   const handleVideoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!videoTitle.trim()) return triggerAlert('danger', 'Please enter a title.');
@@ -783,6 +804,8 @@ export default function App() {
         subtitle: videoSubtitle.trim(),
         videoUrl: videoUrl.trim(),
         orientation: videoOrientation,
+        posterUrl: videoPoster.trim(),
+        eyebrow: videoEyebrow.trim(),
         updatedAt: new Date().toISOString()
       });
       triggerAlert('success', 'Promo video settings updated successfully!');
@@ -800,6 +823,8 @@ export default function App() {
         setVideoSubtitle("Watch our certified refurbishment process and see why thousands trust us.");
         setVideoUrl("");
         setVideoOrientation("landscape");
+        setVideoPoster("");
+        setVideoEyebrow("Introduction");
         triggerAlert('success', 'Promo video deleted successfully!');
       } catch (err) {
         console.error(err);
@@ -2873,6 +2898,45 @@ export default function App() {
                       <option value="landscape">Landscape (Horizontal - 16:9)</option>
                       <option value="portrait">Portrait (Vertical - 9:16)</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Section Eyebrow Label</label>
+                    <input
+                      type="text" placeholder="e.g. Introduction"
+                      value={videoEyebrow} onChange={e => setVideoEyebrow(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Thumbnail / Poster Image (Optional)</label>
+                    <input
+                      type="text" placeholder="https://... or leave empty to auto-detect from a YouTube link"
+                      value={videoPoster} onChange={e => setVideoPoster(e.target.value)}
+                      className="form-input"
+                    />
+                    <div style={{ marginTop: 10 }}>
+                      <input
+                        type="file" accept="image/*" id="admin-poster-file-input"
+                        onChange={handleVideoPosterUpload} style={{ display: 'none' }}
+                        disabled={uploadingPoster}
+                      />
+                      <label
+                        htmlFor="admin-poster-file-input"
+                        style={{
+                          display: 'inline-block', background: 'rgba(56,189,248,0.12)',
+                          color: '#38BDF8', padding: '10px 20px', borderRadius: 10,
+                          fontSize: 13, fontWeight: 700, cursor: uploadingPoster ? 'not-allowed' : 'pointer',
+                          border: '1px solid rgba(56,189,248,0.2)'
+                        }}
+                      >
+                        {uploadingPoster ? "Uploading poster..." : "Upload Poster Image"}
+                      </label>
+                      {videoPoster && (
+                        <span style={{ color: '#8B9BBE', fontSize: 11, marginLeft: 12 }}>Poster set ✓</span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Local file upload option */}
