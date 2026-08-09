@@ -36,7 +36,7 @@ export function HeroBanner({ setPage, banners = [] }: HeroProps) {
   // Auto-scroll logic (5 seconds)
   useEffect(() => {
     if (activeBanners.length <= 1) return;
-    const interval = setInterval(nextSlide, 5000);
+    const interval = setInterval(nextSlide, 50000);
     return () => clearInterval(interval);
   }, [nextSlide, activeBanners.length]);
 
@@ -46,64 +46,67 @@ export function HeroBanner({ setPage, banners = [] }: HeroProps) {
         position: "relative",
         width: "100%",
         overflow: "hidden",
-        background: "var(--bg-1)",
+        background: "linear-gradient(135deg, #082F49 0%, #0C4A6E 60%, #0369A1 100%)",
+        aspectRatio: isMobile ? "16/9" : "21/9",
         cursor: "pointer",
       }}
       onClick={() => setPage("listing")}
     >
       <div style={{
         display: "flex",
+        height: "100%",
         transform: `translateX(-${currentIndex * 100}%)`,
         transition: "transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)",
         willChange: "transform"
       }}>
         {activeBanners.map((b, idx) => (
-          <div key={idx} style={{ flex: "0 0 100%", width: "100%", position: "relative" }}>
+          <div key={idx} style={{ flex: "0 0 100%", width: "100%", height: "100%", position: "relative" }}>
             <img
               src={isMobile && b.mobileSrc ? b.mobileSrc : b.src}
               alt={b.title || `Banner ${idx + 1}`}
               style={{
                 width: "100%",
-                height: "auto",
+                height: "100%",
+                objectFit: "cover",
                 display: "block"
               }}
             />
-
-            {/* Fallback banner overlay if the admin hasn't uploaded any banners yet */}
-            {activeBanners.length === 1 && !banners.length && (
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%)",
-                display: "flex", alignItems: "center",
-                padding: isMobile ? "0 24px" : "0 80px",
-              }}>
-                <div style={{ maxWidth: 600 }}>
-                  <div style={{
-                    display: "inline-flex", alignItems: "center", gap: 8,
-                    background: "rgba(56,189,248,0.2)",
-                    border: "1px solid rgba(56,189,248,0.4)",
-                    borderRadius: 100, padding: "6px 16px",
-                    marginBottom: 24,
-                  }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.green, animation: "pulse-glow 2s ease-in-out infinite" }} />
-                    <span style={{ color: COLORS.green, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                      Save Up To 70% Off
-                    </span>
-                  </div>
-                  <h1 style={{
-                    fontFamily: "'Sora', sans-serif",
-                    fontSize: isMobile ? "32px" : "56px",
-                    fontWeight: 800, color: "#FFFFFF",
-                    lineHeight: 1.1, margin: "0 0 16px",
-                  }}>
-                    Refurbished Tech That Feels <span style={{ color: "var(--accent)" }}>Brand New</span>
-                  </h1>
-                </div>
-              </div>
-            )}
           </div>
         ))}
       </div>
+
+      {/* Fallback banner overlay if the admin hasn't uploaded any banners yet */}
+      {activeBanners.length === 0 && (
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%)",
+          display: "flex", alignItems: "center",
+          padding: isMobile ? "0 24px" : "0 80px",
+        }}>
+          <div style={{ maxWidth: 600 }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              background: "rgba(56,189,248,0.2)",
+              border: "1px solid rgba(56,189,248,0.4)",
+              borderRadius: 100, padding: "6px 16px",
+              marginBottom: 24,
+            }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.green, animation: "pulse-glow 2s ease-in-out infinite" }} />
+              <span style={{ color: COLORS.green, fontSize: 12, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                Save Up To 70% Off
+              </span>
+            </div>
+            <h1 style={{
+              fontFamily: "'Sora', sans-serif",
+              fontSize: isMobile ? "32px" : "56px",
+              fontWeight: 800, color: "#FFFFFF",
+              lineHeight: 1.1, margin: "0 0 16px",
+            }}>
+              Refurbished Tech That Feels <span style={{ color: "var(--accent)" }}>Brand New</span>
+            </h1>
+          </div>
+        </div>
+      )}
 
       {/* Navigation Arrows */}
       {activeBanners.length > 1 && !isMobile && (
@@ -173,12 +176,26 @@ export function HeroBanner({ setPage, banners = [] }: HeroProps) {
 
 export function HeroStats() {
   const isMobile = useIsMobile();
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(1);
 
-  // Counter animation for stats
+  // Counter animation: count from 1 to 50000 like a timer
   useEffect(() => {
-    const t = setInterval(() => setCount((c) => (c < 50000 ? c + 1618 : 50000)), 28);
-    return () => clearInterval(t);
+    const target = 50000;
+    const duration = 2800;
+    let startTime: number | null = null;
+    let rafId = 0;
+
+    const tick = (now: number) => {
+      if (startTime === null) startTime = now;
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.max(1, Math.round(eased * target)));
+      if (progress < 1) rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   return (
@@ -214,7 +231,7 @@ export function HeroStats() {
                 color: isRating ? "var(--warning)" : "var(--accent)",
                 marginBottom: 6,
               }}>
-                {s.label === "Devices Sold" ? `${Math.min(count, 5000).toLocaleString("en-IN")}+` : s.value}
+                {s.label === "Devices Sold" ? `${Math.min(count, 50000).toLocaleString("en-IN")}+` : s.value}
               </div>
               <div style={{ color: "var(--text-2)", fontSize: isMobile ? 12 : 14, fontWeight: 500, letterSpacing: "0.02em" }}>
                 {s.label}

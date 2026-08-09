@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
+import { MotionConfig } from "framer-motion";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Script from "next/script";
 
@@ -41,7 +42,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          {children}
+          <MotionConfig reducedMotion="never">{children}</MotionConfig>
         </ThemeProvider>
       </body>
     </html>

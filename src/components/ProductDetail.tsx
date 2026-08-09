@@ -341,13 +341,13 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
   const trustBadgesJSX = (
     <div className="pd-trust-grid">
       {trustBadges.map((b) => (
-        <div 
-          key={b.text} 
+        <div
+          key={b.text}
           style={{
             background: "var(--bg-2)",
             border: "1px solid var(--border-hi)",
             borderRadius: 16,
-            padding: "16px 10px", 
+            padding: "16px 10px",
             textAlign: "center",
             boxShadow: "var(--shadow-sm)",
             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -371,7 +371,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
 
   const aboutCardJSX = (
     <div style={{
-      marginTop: 24,
+      marginTop: 0,
       background: "var(--bg-1)",
       border: `1px solid ${COLORS.cardBorder}`,
       borderRadius: 20,
@@ -380,9 +380,17 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
       <h3 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: 15, fontWeight: 700, margin: "0 0 10px" }}>
         About this Laptop
       </h3>
-      <p style={{ color: COLORS.muted, fontSize: 13, lineHeight: 1.65, margin: "0 0 16px" }}>
-        {product.description || getAboutText(product.name, product.brand, product.category, product.condition === "Brand New")}
-      </p>
+      <div style={{ color: COLORS.muted, fontSize: 13, lineHeight: 1.65, marginBottom: 16 }}>
+        {(product.description || getAboutText(product.name, product.brand, product.category, product.condition === "Brand New"))
+          .split(/\r?\n/)
+          .map((line, i) =>
+            line.trim() === "" ? (
+              <div key={i} style={{ height: 10 }} />
+            ) : (
+              <p key={i} style={{ margin: "0 0 12px" }}>{line}</p>
+            )
+          )}
+      </div>
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>
         <div style={{ color: COLORS.text, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
           {product.condition === "Brand New" ? "Sealed Box Contents:" : "Certified Box Contents:"}
@@ -412,7 +420,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
     </div>
   );
 
-  const productInfoJSX = (
+  const productTopJSX = (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
         <div style={{
@@ -689,106 +697,109 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
       >
         {(product.stock !== undefined ? product.stock : 1) <= 0 ? "Out of Stock" : "Buy Now"}
       </button>
-      <div style={{ marginTop: 24 }}>
-        <div style={{
-          display: "flex", gap: 0,
-          borderBottom: `1px solid ${COLORS.cardBorder}`,
-          marginBottom: 20,
-          overflowX: "auto",
-          WebkitOverflowScrolling: "touch",
-        }}>
-          {(["specs", "why", "reviews"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)} style={{
-              background: "transparent", border: "none",
-              borderBottom: `2px solid ${tab === t ? COLORS.green : "transparent"}`,
-              color: tab === t ? COLORS.text : COLORS.muted,
-              padding: "10px 18px", cursor: "pointer",
-              fontSize: 13, fontWeight: 700,
-              textTransform: "capitalize",
-              transition: "all 0.2s",
-              flexShrink: 0,
+    </div>
+  );
+
+  const productTabsJSX = (
+    <div style={{ marginTop: 24 }}>
+      <div style={{
+        display: "flex", gap: 0,
+        borderBottom: `1px solid ${COLORS.cardBorder}`,
+        marginBottom: 20,
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
+      }}>
+        {(["specs", "why", "reviews"] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)} style={{
+            background: "transparent", border: "none",
+            borderBottom: `2px solid ${tab === t ? COLORS.green : "transparent"}`,
+            color: tab === t ? COLORS.text : COLORS.muted,
+            padding: "10px 18px", cursor: "pointer",
+            fontSize: 13, fontWeight: 700,
+            textTransform: "capitalize",
+            transition: "all 0.2s",
+            flexShrink: 0,
+          }}>
+            {t === "specs" ? "Specifications" : t === "why" ? "Why Buy?" : "Reviews"}
+          </button>
+        ))}
+      </div>
+      {tab === "specs" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          {specs.length > 0 ? specs.map(([key, val]) => (
+            <div key={key} style={{
+              display: "flex", justifyContent: "space-between",
+              padding: "12px 0",
+              borderBottom: `1px solid ${COLORS.cardBorder}`,
+              gap: 16,
             }}>
-              {t === "specs" ? "Specifications" : t === "why" ? "Why Buy?" : "Reviews"}
-            </button>
+              <span style={{ color: COLORS.muted, fontSize: 13, display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
+                {specIcons[key] ?? "·"} {key}
+              </span>
+              <span style={{
+                color: COLORS.text,
+                fontSize: 13,
+                fontWeight: 600,
+                maxWidth: "70%",
+                textAlign: "right",
+                wordBreak: "break-word",
+                whiteSpace: "normal",
+              }}>
+                {val as string}
+              </span>
+            </div>
+          )) : (
+            <p style={{ color: COLORS.muted, fontSize: 13 }}>{product.specs}</p>
+          )}
+        </div>
+      )}
+      {tab === "why" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {(product.condition === "Brand New" ? [
+            "100% Brand New, Sealed Box Packaging",
+            "Full Manufacturer Warranty (Brand Direct)",
+            "Factory Sealed Accessories & Charger included",
+            "Genuine Windows/macOS operating system licensed",
+            "Unused keyboard, screen, and battery cells",
+            "Zero defects — 100% pristine condition",
+          ] : [
+            "Multi-point quality diagnostics completed",
+            "Original parts — no fake components",
+            "Full operating system restored & verified",
+            "Battery cycle count checked & disclosed",
+            "1 Year warranty with nationwide service",
+            "7-day return if not satisfied",
+          ]).map((item) => (
+            <div key={item} style={{
+              display: "flex", gap: 10, alignItems: "flex-start",
+            }}>
+              <BadgeCheck size={16} color={COLORS.green} style={{ flexShrink: 0, marginTop: 1 }} />
+              <span style={{ color: COLORS.muted, fontSize: 14, lineHeight: 1.5 }}>{item}</span>
+            </div>
           ))}
         </div>
-        {tab === "specs" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            {specs.length > 0 ? specs.map(([key, val]) => (
-              <div key={key} style={{
-                display: "flex", justifyContent: "space-between",
-                padding: "12px 0",
-                borderBottom: `1px solid ${COLORS.cardBorder}`,
-                gap: 16,
-              }}>
-                <span style={{ color: COLORS.muted, fontSize: 13, display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
-                  {specIcons[key] ?? "·"} {key}
-                </span>
-                <span style={{
-                  color: COLORS.text,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  maxWidth: "70%",
-                  textAlign: "right",
-                  wordBreak: "break-word",
-                  whiteSpace: "normal",
-                }}>
-                  {val as string}
-                </span>
+      )}
+      {tab === "reviews" && (
+        <div>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 16, marginBottom: 20,
+            padding: "16px 20px", background: COLORS.background,
+            borderRadius: 16, border: `1px solid ${COLORS.cardBorder}`,
+          }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 48, fontWeight: 800, color: COLORS.text, lineHeight: 1, fontFamily: "'Sora', sans-serif" }}>
+                {product.rating}
               </div>
-            )) : (
-              <p style={{ color: COLORS.muted, fontSize: 13 }}>{product.specs}</p>
-            )}
-          </div>
-        )}
-        {tab === "why" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {(product.condition === "Brand New" ? [
-              "100% Brand New, Sealed Box Packaging",
-              "Full Manufacturer Warranty (Brand Direct)",
-              "Factory Sealed Accessories & Charger included",
-              "Genuine Windows/macOS operating system licensed",
-              "Unused keyboard, screen, and battery cells",
-              "Zero defects — 100% pristine condition",
-            ] : [
-              "Multi-point quality diagnostics completed",
-              "Original parts — no fake components",
-              "Full operating system restored & verified",
-              "Battery cycle count checked & disclosed",
-              "1 Year warranty with nationwide service",
-              "7-day return if not satisfied",
-            ]).map((item) => (
-              <div key={item} style={{
-                display: "flex", gap: 10, alignItems: "flex-start",
-              }}>
-                <BadgeCheck size={16} color={COLORS.green} style={{ flexShrink: 0, marginTop: 1 }} />
-                <span style={{ color: COLORS.muted, fontSize: 14, lineHeight: 1.5 }}>{item}</span>
+              <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 4 }}>
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star key={s} size={12} fill="#FBBF24" color="#FBBF24" />
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-        {tab === "reviews" && (
-          <div>
-            <div style={{
-              display: "flex", alignItems: "center", gap: 16, marginBottom: 20,
-              padding: "16px 20px", background: COLORS.background,
-              borderRadius: 16, border: `1px solid ${COLORS.cardBorder}`,
-            }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 48, fontWeight: 800, color: COLORS.text, lineHeight: 1, fontFamily: "'Sora', sans-serif" }}>
-                  {product.rating}
-                </div>
-                <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 4 }}>
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star key={s} size={12} fill="#FBBF24" color="#FBBF24" />
-                  ))}
-                </div>
-                <div style={{ color: COLORS.muted, fontSize: 11, marginTop: 4 }}>{product.reviews} reviews</div>
-              </div>
+              <div style={{ color: COLORS.muted, fontSize: 11, marginTop: 4 }}>{product.reviews} reviews</div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 
@@ -838,11 +849,23 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
         .pd-main-grid {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 0 24px 80px;
+          padding: 0 24px 8px;
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 16px 56px;
           align-items: start;
+        }
+        
+        .pd-bottom-section {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 24px 80px;
+        }
+        
+        .pd-bottom-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 40px;
         }
         
         .pd-left-col {
@@ -946,20 +969,30 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             {galleryJSX}
           </div>
 
-          {/* 4. Trust Badges row */}
+          {/* 2. Trust Badges row */}
           <div className="pd-badges-col">
             {trustBadgesJSX}
           </div>
+        </div>
 
-          {/* 3. About this Laptop Card */}
+        {/* 3. Product Name, Price, Rating, Cart, Buy Now */}
+        <div className="pd-info-col">
+          {productTopJSX}
+        </div>
+      </div>
+
+      {/* ── Extended Info Section ──────────────── */}
+      <div className="pd-bottom-section">
+        <div className="pd-bottom-grid">
+          {/* 4. About this Laptop Card */}
           <div className="pd-about-col">
             {aboutCardJSX}
           </div>
-        </div>
 
-        {/* 2. Product Name, Price, Rating, Cart, Buy Now, Tabs */}
-        <div className="pd-info-col">
-          {productInfoJSX}
+          {/* 5. Tabs (Specs, Reviews) */}
+          <div className="pd-tabs-col">
+            {productTabsJSX}
+          </div>
         </div>
       </div>
 

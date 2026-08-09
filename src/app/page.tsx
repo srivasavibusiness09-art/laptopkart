@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
 import LandingIntro from "@/components/LandingIntro";
+import PageTransition from "@/components/PageTransition";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Homepage from "@/components/Homepage";
@@ -758,113 +759,119 @@ export default function App() {
         searchQuery={searchQuery}
       />
 
-      {page === "home" && (
-        <Homepage
-          products={productsList}
-          banners={banners}
-          heroPosters={heroPosters}
-          setPage={handleNavigate}
-          onViewProduct={handleViewProduct}
-          onAddToCart={handleAddToCart}
-          onWishlist={handleWishlist}
-          wishlist={wishlist}
-          accessories={accessories}
-          customerReviews={customerReviews}
-          user={user}
-          triggerAlert={triggerStoreAlert}
-        />
-      )}
-      {page === "listing" && (
-        <ProductListing
-          products={productsList}
-          onViewProduct={handleViewProduct}
-          onAddToCart={handleAddToCart}
-          onWishlist={handleWishlist}
-          wishlist={wishlist}
-          initialCategory={listingCategory}
-          initialSearch={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-      )}
-      {page === "product" && (
-        <ProductDetail
-          product={viewProduct}
-          onAddToCart={handleAddToCart}
-          onWishlist={handleWishlist}
-          wishlist={wishlist}
-          setPage={handleNavigate}
-          onViewProduct={handleViewProduct}
-          productsList={productsList}
-          triggerAlert={triggerStoreAlert}
-        />
-      )}
-      {page === "cart" && (
-        <CartPage
-          cart={cart}
-          setCart={setCart}
-          setPage={handleNavigate}
-          triggerAlert={triggerStoreAlert}
-          appliedCoupon={appliedCoupon}
-          setAppliedCoupon={setAppliedCoupon}
-        />
-      )}
-      {page === "checkout" && user && (
-        <CheckoutPage
-          cart={cart}
-          setPage={handleNavigate}
-          setCart={setCart}
-          user={user}
-          appliedCoupon={appliedCoupon}
-          setAppliedCoupon={setAppliedCoupon}
-        />
-      )}
-      {page === "wishlist" && (
-        <WishlistPage
-          wishlist={wishlist}
-          onAddToCart={handleAddToCart}
-          setPage={handleNavigate}
-          onWishlist={handleWishlist}
-        />
-      )}
-      {page === "compare" && <ComparePage productsList={productsList} />}
-      {page === "about" && <AboutPage />}
-      {page.startsWith("blog-") && (
-        <BlogDetail postId={page.replace("blog-", "")} setPage={handleNavigate} />
-      )}
-      {page === "blog" && (
-        <BlogPage user={user} setPage={handleNavigate} />
-      )}{page === "contact" && <ContactPage />}
-      {page === "resell" && <SellLaptopPage setPage={handleNavigate} user={user} triggerAlert={triggerStoreAlert} />}
-      {page === "login" && <LoginPage setPage={handleNavigate} onLogin={handleLogin} triggerAlert={triggerStoreAlert} />}
-      {page === "profile" && user && (
-        <ProfilePage user={user} setUser={setUser} setPage={handleNavigate} triggerAlert={triggerStoreAlert} />
-      )}
-      {page === "why-refurbished" && <WhyRefurbishedPage />}
-      {page.startsWith("write-blog") && user && (
-        <WriteBlogPage setPage={handleNavigate} editPostId={page.replace("write-blog", "").replace("-", "") || undefined} />
-      )}
-      {page === "privacy-policy" && <PrivacyPolicyPage setPage={handleNavigate} />}
-      {page === "refund-policy" && <RefundPolicyPage setPage={handleNavigate} />}
-      {page === "terms-of-use" && <TermsOfUsePage setPage={handleNavigate} />}
-      {page === "accessories" && (
-        <AccessoriesPage
-          accessories={accessories}
-          setPage={handleNavigate}
-          onAddToCart={handleAddToCart}
-          onWishlist={handleWishlist}
-          wishlist={wishlist}
-          onViewAccessory={handleViewAccessory}
-        />
-      )}
-      {page === "accessory-detail" && (
-        <AccessoryDetailPage
-          accessory={viewAccessory}
-          setPage={handleNavigate}
-          onAddToCart={handleAddToCart}
-          onWishlist={handleWishlist}
-          wishlist={wishlist}
-        />
-      )}
+      <PageTransition pageKey={page}>
+        {(displayPage) => (
+          <>
+            {displayPage === "home" && (
+              <Homepage
+                products={productsList}
+                banners={banners}
+                heroPosters={heroPosters}
+                setPage={handleNavigate}
+                onViewProduct={handleViewProduct}
+                onAddToCart={handleAddToCart}
+                onWishlist={handleWishlist}
+                wishlist={wishlist}
+                accessories={accessories}
+                customerReviews={customerReviews}
+                user={user}
+                triggerAlert={triggerStoreAlert}
+              />
+            )}
+            {displayPage === "listing" && (
+              <ProductListing
+                products={productsList}
+                onViewProduct={handleViewProduct}
+                onAddToCart={handleAddToCart}
+                onWishlist={handleWishlist}
+                wishlist={wishlist}
+                initialCategory={listingCategory}
+                initialSearch={searchQuery}
+                onSearchChange={setSearchQuery}
+              />
+            )}
+            {displayPage === "product" && (
+              <ProductDetail
+                product={viewProduct}
+                onAddToCart={handleAddToCart}
+                onWishlist={handleWishlist}
+                wishlist={wishlist}
+                setPage={handleNavigate}
+                onViewProduct={handleViewProduct}
+                productsList={productsList}
+                triggerAlert={triggerStoreAlert}
+              />
+            )}
+            {displayPage === "cart" && (
+              <CartPage
+                cart={cart}
+                setCart={setCart}
+                setPage={handleNavigate}
+                triggerAlert={triggerStoreAlert}
+                appliedCoupon={appliedCoupon}
+                setAppliedCoupon={setAppliedCoupon}
+              />
+            )}
+            {displayPage === "checkout" && user && (
+              <CheckoutPage
+                cart={cart}
+                setPage={handleNavigate}
+                setCart={setCart}
+                user={user}
+                appliedCoupon={appliedCoupon}
+                setAppliedCoupon={setAppliedCoupon}
+              />
+            )}
+            {displayPage === "wishlist" && (
+              <WishlistPage
+                wishlist={wishlist}
+                onAddToCart={handleAddToCart}
+                setPage={handleNavigate}
+                onWishlist={handleWishlist}
+              />
+            )}
+            {displayPage === "compare" && <ComparePage productsList={productsList} />}
+            {displayPage === "about" && <AboutPage />}
+            {displayPage.startsWith("blog-") && (
+              <BlogDetail postId={displayPage.replace("blog-", "")} setPage={handleNavigate} />
+            )}
+            {displayPage === "blog" && (
+              <BlogPage user={user} setPage={handleNavigate} />
+            )}{displayPage === "contact" && <ContactPage />}
+            {displayPage === "resell" && <SellLaptopPage setPage={handleNavigate} user={user} triggerAlert={triggerStoreAlert} />}
+            {displayPage === "login" && <LoginPage setPage={handleNavigate} onLogin={handleLogin} triggerAlert={triggerStoreAlert} />}
+            {displayPage === "profile" && user && (
+              <ProfilePage user={user} setUser={setUser} setPage={handleNavigate} triggerAlert={triggerStoreAlert} />
+            )}
+            {displayPage === "why-refurbished" && <WhyRefurbishedPage />}
+            {displayPage.startsWith("write-blog") && user && (
+              <WriteBlogPage setPage={handleNavigate} editPostId={displayPage.replace("write-blog", "").replace("-", "") || undefined} />
+            )}
+            {displayPage === "privacy-policy" && <PrivacyPolicyPage setPage={handleNavigate} />}
+            {displayPage === "refund-policy" && <RefundPolicyPage setPage={handleNavigate} />}
+            {displayPage === "terms-of-use" && <TermsOfUsePage setPage={handleNavigate} />}
+            {displayPage === "accessories" && (
+              <AccessoriesPage
+                accessories={accessories}
+                setPage={handleNavigate}
+                onAddToCart={handleAddToCart}
+                onWishlist={handleWishlist}
+                wishlist={wishlist}
+                onViewAccessory={handleViewAccessory}
+              />
+            )}
+            {displayPage === "accessory-detail" && (
+              <AccessoryDetailPage
+                accessory={viewAccessory}
+                setPage={handleNavigate}
+                onAddToCart={handleAddToCart}
+                onWishlist={handleWishlist}
+                wishlist={wishlist}
+              />
+            )}
+          </>
+        )}
+      </PageTransition>
 
       <Footer setPage={handleNavigate} />
 

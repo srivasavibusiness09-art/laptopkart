@@ -11,6 +11,7 @@ import { COLORS, categories, reviews } from "@/data/products";
 import type { Product } from "@/data/products";
 import Hero, { HeroBanner, HeroStats } from "@/components/Hero";
 import ProductCard from "@/components/ProductCard";
+import Reveal from "@/components/Reveal";
 import { useIsMobile } from "@/lib/hooks";
 import { collection, doc, setDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -33,14 +34,12 @@ const trustItems = [
 function TrustStrip() {
   const duplicatedItems = [...trustItems, ...trustItems];
   const isMobile = useIsMobile();
-  
+
   if (!isMobile) {
     // Desktop: Static grid
     return (
       <div style={{
         background: "var(--bg-2)",
-        borderTop: "1px solid var(--border-hi)",
-        borderBottom: "1px solid var(--border-hi)",
         padding: "24px 24px",
       }}>
         <div style={{
@@ -75,8 +74,6 @@ function TrustStrip() {
   return (
     <div style={{
       background: "var(--bg-2)",
-      borderTop: "1px solid var(--border-hi)",
-      borderBottom: "1px solid var(--border-hi)",
       padding: "12px 0", // Reduced padding to minimize spacing
       overflow: "hidden",
       width: "100%",
@@ -333,6 +330,11 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
         : `${videoEmbedSrc}?autoplay=1&rel=0`
       : null;
 
+    const showPortrait = !isMobile && videoSettings?.orientation === "portrait";
+    const playerBoxStyle = showPortrait
+      ? { width: "calc(100vh * 0.5625)", height: "100vh" }
+      : { width: "max(100vw, 177.78vh)", height: "max(100vh, 56.25vw)" };
+
     return (
       <div style={{ position: "relative", width: "100%", height: "100%" }}>
         {!videoPlaying ? (
@@ -366,24 +368,38 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
               </div>
             )}
             {isEmbed ? (
-              <iframe
-                src={embedSrc!}
-                title="Laptopkart promo video"
-                style={{ width: "100%", height: "100%", border: "none" }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                onLoad={() => setVideoBuffering(false)}
-              />
+              <div style={{
+                position: "absolute",
+                top: "50%", left: "50%",
+                transform: "translate(-50%, -50%)",
+                ...playerBoxStyle,
+              }}>
+                <iframe
+                  src={embedSrc!}
+                  title="Laptopkart promo video"
+                  style={{ width: "100%", height: "100%", border: "none" }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  onLoad={() => setVideoBuffering(false)}
+                />
+              </div>
             ) : (
-              <video
-                src={videoSettings.videoUrl}
-                controls
-                autoPlay
-                playsInline
-                style={{ width: "100%", height: "100%", objectFit: "cover", background: "#000" }}
-                onLoadedData={() => setVideoBuffering(false)}
-                onError={() => { setVideoError(true); setVideoBuffering(false); }}
-              />
+              <div style={{
+                position: "absolute",
+                top: "50%", left: "50%",
+                transform: "translate(-50%, -50%)",
+                ...playerBoxStyle,
+              }}>
+                <video
+                  src={videoSettings.videoUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  style={{ width: "100%", height: "100%", objectFit: "cover", background: "#000" }}
+                  onLoadedData={() => setVideoBuffering(false)}
+                  onError={() => { setVideoError(true); setVideoBuffering(false); }}
+                />
+              </div>
             )}
           </>
         )}
@@ -494,7 +510,7 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
     if (!banners || banners.length === 0) return;
     const timer = setInterval(() => {
       setActiveSlideIdx((prev) => (prev + 1) % banners.length);
-    }, 5000);
+    }, 50000);
     return () => clearInterval(timer);
   }, [banners?.length]);
 
@@ -514,7 +530,9 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
         padding: paddingOverride || `${isMobile ? 56 : 100}px ${isMobile ? 18 : 24}px`,
         position: "relative", overflow: "hidden",
       }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>{children}</div>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <Reveal>{children}</Reveal>
+        </div>
       </section>
     );
   };
@@ -541,9 +559,9 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
             <p style={{ color: "var(--text-2)", fontSize: 15, margin: 0 }}>Grab them before they're gone</p>
           </div>
           {!isMobile && (
-            <button style={{ background: "transparent", border: "1px solid var(--border-hi)", color: "var(--accent)", padding: "10px 20px", borderRadius: 100, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            <Button variant="ghost" onClick={() => setPage("listing")}>
               View All Deals <ArrowRight size={14} />
-            </button>
+            </Button>
           )}
         </div>
 
@@ -565,7 +583,7 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
           /* Mobile & Tablet Stacked Deck Carousel Layout */
           <>
 
-            <motion.div 
+            <motion.div
               onPanEnd={(e, info) => {
                 const len = latestEightLaptops.length;
                 const swipeThreshold = 30;
@@ -624,11 +642,11 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
                       }}
                       style={{
                         position: "absolute",
-                        width: 200,      
-                        height: 340,     
+                        width: 200,
+                        height: 340,
                         cursor: "pointer",
                         transformOrigin: "center center",
-                        display: "flex" 
+                        display: "flex"
                       }}
                     >
                       <div style={{ width: "100%", height: "100%", pointerEvents: isCenter ? "auto" : "none" }}>
@@ -686,72 +704,32 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
       {!isMobile ? (
         // Desktop Layout
         <>
-          <HeroBanner setPage={setPage} banners={heroPosters || []} />
-          <TrustStrip />
-          <HeroStats />
+          <Reveal y={0}><HeroBanner setPage={setPage} banners={heroPosters || []} /></Reveal>
+          <Reveal delay={0.08} y={20}><TrustStrip /></Reveal>
+          <Reveal delay={0.16} y={20}><HeroStats /></Reveal>
         </>
       ) : (
         // Mobile Layout
         <>
-          <HeroBanner setPage={setPage} banners={heroPosters || []} />
-          <TrustStrip />
+          <Reveal y={0}><HeroBanner setPage={setPage} banners={heroPosters || []} /></Reveal>
+          <Reveal delay={0.08} y={20}><TrustStrip /></Reveal>
           {renderTopPicks()}
-          <HeroStats />
+          <Reveal delay={0.1} y={20}><HeroStats /></Reveal>
         </>
       )}
 
-      {/* ── Promo Video Section ── */}
+      {/* ── Promo Video Section (full-bleed hero) ── */}
       {videoSettings && videoSettings.videoUrl && (
-        <div id="promo-video-section">
-          {section(
-            <>
-              {videoSettings.orientation === 'portrait' ? (
-                /* Portrait: full-width banner, centered phone video, blurred poster fills the sides */
-                <div style={{ position: "relative", width: "100%", borderRadius: 28, overflow: "hidden", background: "#0B3B2E", boxShadow: "0 30px 70px rgba(31,29,27,0.18)" }}>
-                  {videoPosterSrc && (
-                    <div style={{
-                      position: "absolute", inset: 0,
-                      backgroundImage: `url(${videoPosterSrc})`,
-                      backgroundSize: "cover", backgroundPosition: "center",
-                      filter: "blur(28px) brightness(0.45) saturate(1.2)",
-                      transform: "scale(1.15)",
-                    }} />
-                  )}
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(11,59,46,0.35) 0%, rgba(11,59,46,0.9) 100%)" }} />
-
-                  <div style={{
-                    position: "relative",
-                    display: "flex", justifyContent: "center",
-                    padding: isMobile ? "48px 16px 130px" : "60px 16px 150px",
-                  }}>
-                    <div style={{
-                      width: "100%", maxWidth: 300, aspectRatio: "9/16",
-                      borderRadius: 32, padding: 6,
-                      background: "linear-gradient(160deg, rgba(118,194,39,0.55), rgba(104,185,43,0.12), rgba(124,77,255,0.5))",
-                      boxShadow: "0 25px 60px rgba(0,0,0,0.4)",
-                    }}>
-                      <div style={{ width: "100%", height: "100%", borderRadius: 26, overflow: "hidden", background: "#000", position: "relative" }}>
-                        {renderVideoPlayer()}
-                      </div>
-                    </div>
-                  </div>
-
-                  {renderVideoTextOverlay("center")}
-                </div>
-              ) : (
-                /* Landscape: full-width cinematic banner with text overlay */
-                <div style={{ position: "relative", width: "100%", borderRadius: 28, overflow: "hidden", background: "#0B3B2E", boxShadow: "0 30px 70px rgba(31,29,27,0.18)" }}>
-                  <div style={{ position: "relative", width: "100%", aspectRatio: "16/9" }}>
-                    {renderVideoPlayer()}
-                  </div>
-                  {renderVideoTextOverlay("left")}
-                </div>
-              )}
-
-            </>,
-            COLORS.background
-          )}
-        </div>
+        <Reveal y={0}>
+          <section
+            id="promo-video-section"
+            className="full-window-video"
+            style={{ position: "relative", overflow: "hidden", background: "#0B3B2E", marginLeft: "calc(50% - 50vw)" }}
+          >
+            {renderVideoPlayer()}
+            {renderVideoTextOverlay(videoSettings.orientation === "portrait" ? "center" : "left")}
+          </section>
+        </Reveal>
       )}
 
       {/* ── Offers & Contests Section ── */}
@@ -869,9 +847,9 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
               <p style={{ color: "var(--text-2)", fontSize: 15, margin: 0 }}>Find the perfect laptop for your needs</p>
             </div>
             {!isMobile && (
-              <button style={{ background: "transparent", border: "1px solid var(--border-hi)", color: "var(--accent)", padding: "10px 20px", borderRadius: 100, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              <Button variant="ghost" onClick={() => setPage("listing")}>
                 View All Categories <ArrowRight size={14} />
-              </button>
+              </Button>
             )}
           </div>
 
@@ -886,60 +864,61 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
                 realCount = accessories.length;
               } else {
                 let mappedCat = cat.name.replace(" Laptops", "").replace(/s$/, "");
-                realCount = products.filter(p => 
-                  p.category.toLowerCase().includes(mappedCat.toLowerCase()) || 
+                realCount = products.filter(p =>
+                  p.category.toLowerCase().includes(mappedCat.toLowerCase()) ||
                   (mappedCat === 'MacBook' && p.brand.toLowerCase() === 'apple')
                 ).length;
               }
 
               return (
-              <div
-                key={cat.name}
-                onClick={() => {
-                  if (cat.name === "Accessories") setPage("accessories");
-                  else if (cat.name === "Business Laptops") setPage("listing:Business");
-                  else if (cat.name === "Gaming Laptops") setPage("listing:Gaming");
-                  else setPage(`listing:${cat.name}`);
-                }}
-                style={{
-                  background: "var(--bg-2)",
-                  border: `1px solid var(--border)`,
-                  borderRadius: 16,
-                  padding: "20px 12px",
-                  textAlign: "center",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLDivElement;
-                  el.style.borderColor = "var(--accent)";
-                  el.style.transform = "translateY(-4px)";
-                  el.style.boxShadow = "0 10px 25px rgba(0,0,0,0.05)";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLDivElement;
-                  el.style.borderColor = "var(--border)";
-                  el.style.transform = "translateY(0)";
-                  el.style.boxShadow = "none";
-                }}
-              >
-                <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                  <img src={cat.icon} alt={cat.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                <div
+                  key={cat.name}
+                  onClick={() => {
+                    if (cat.name === "Accessories") setPage("accessories");
+                    else if (cat.name === "Business Laptops") setPage("listing:Business");
+                    else if (cat.name === "Gaming Laptops") setPage("listing:Gaming");
+                    else setPage(`listing:${cat.name}`);
+                  }}
+                  style={{
+                    background: "var(--bg-2)",
+                    border: `1px solid var(--border)`,
+                    borderRadius: 16,
+                    padding: "20px 12px",
+                    textAlign: "center",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    const el = e.currentTarget as HTMLDivElement;
+                    el.style.borderColor = "var(--accent)";
+                    el.style.transform = "translateY(-4px)";
+                    el.style.boxShadow = "0 10px 25px rgba(0,0,0,0.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    const el = e.currentTarget as HTMLDivElement;
+                    el.style.borderColor = "var(--border)";
+                    el.style.transform = "translateY(0)";
+                    el.style.boxShadow = "none";
+                  }}
+                >
+                  <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                    <img src={cat.icon} alt={cat.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                  </div>
+                  <div style={{ color: "var(--text)", fontWeight: 700, fontSize: 13, fontFamily: "'Sora', sans-serif", marginBottom: 4 }}>
+                    {cat.name}
+                  </div>
+                  <div style={{ color: "var(--text-2)", fontSize: 11 }}>
+                    {realCount} items
+                  </div>
                 </div>
-                <div style={{ color: "var(--text)", fontWeight: 700, fontSize: 13, fontFamily: "'Sora', sans-serif", marginBottom: 4 }}>
-                  {cat.name}
-                </div>
-                <div style={{ color: "var(--text-2)", fontSize: 11 }}>
-                  {realCount} items
-                </div>
-              </div>
-            )})}
+              )
+            })}
           </div>
           {isMobile && (
             <div style={{ textAlign: "center", marginTop: 24 }}>
-              <button style={{ background: "transparent", border: "1px solid var(--border-hi)", color: "var(--accent)", padding: "10px 20px", borderRadius: 100, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <Button variant="ghost" onClick={() => setPage("listing")}>
                 View All Categories <ArrowRight size={14} />
-              </button>
+              </Button>
             </div>
           )}
         </>,
@@ -1135,7 +1114,7 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
               </Card>
             ))}
           </div>
-        </>, 
+        </>,
         "var(--bg)",
         `${isMobile ? 24 : 40}px ${isMobile ? 18 : 24}px ${isMobile ? 56 : 100}px`
       )}
