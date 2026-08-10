@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, doc, setDoc, deleteDoc, onSnapshot, query, getDoc } from "firebase/firestore";
+import { collection, doc, setDoc, deleteDoc, onSnapshot, query, getDoc, updateDoc, increment } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { db, auth } from "./lib/firebase";
 import { uploadProductImage, uploadVideoToCloudinary } from "./lib/storage";
@@ -36,7 +36,13 @@ import {
   Menu,
   Tag,
   ClipboardList,
-  LogOut
+  LogOut,
+  Package,
+  AlertTriangle,
+  PackageX,
+  PackagePlus,
+  ArrowUpRight,
+  Layers
 } from 'lucide-react';
 
 // compressImage removed (using storage.ts module)
@@ -270,6 +276,7 @@ export default function App() {
 
   // Search filter states
   const [productSearch, setProductSearch] = useState('');
+  const [stockFilter, setStockFilter] = useState<'all' | 'in' | 'low' | 'out'>('all');
   const [accessorySearch, setAccessorySearch] = useState('');
   const [blogSearch, setBlogSearch] = useState('');
 
@@ -1138,11 +1145,53 @@ export default function App() {
 
   const handleOrderStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      await setDoc(doc(db, "orders", orderId), { status: newStatus }, { merge: true });
+      const orderRef = doc(db, "orders", orderId);
+      const prevSnap = await getDoc(orderRef);
+      const prevStatus = prevSnap.exists() ? prevSnap.data().status : undefined;
+
+      await setDoc(orderRef, { status: newStatus }, { merge: true });
+
+      // Auto-restore stock when an order is cancelled
+      if (newStatus === 'Cancelled' && prevStatus !== 'Cancelled' && prevSnap.exists()) {
+        const orderData = prevSnap.data();
+        const items: { id: number; qty: number }[] = orderData.items || [];
+        let restocked = 0;
+        for (const item of items) {
+          const productRef = doc(db, "products", String(item.id));
+          const productSnap = await getDoc(productRef);
+          if (productSnap.exists() && productSnap.data().stock !== undefined) {
+            await updateDoc(productRef, { stock: increment(item.qty || 1) });
+            restocked += item.qty || 1;
+          }
+        }
+        triggerAlert('success', `Order #${orderId} cancelled. ${restocked} unit(s) returned to stock.`);
+        return;
+      }
+
       triggerAlert('success', `Order #${orderId} status set to "${newStatus}"`);
     } catch (err) {
       console.error("Error updating order status:", err);
       triggerAlert('danger', "Failed to update order status.");
+    }
+  };
+
+  const LOW_STOCK_THRESHOLD = 3;
+
+  const getStockStatus = (stock?: number): 'in' | 'low' | 'out' => {
+    const qty = stock === undefined ? 5 : stock;
+    if (qty <= 0) return 'out';
+    if (qty <= LOW_STOCK_THRESHOLD) return 'low';
+    return 'in';
+  };
+
+  const handleQuickStockUpdate = async (productId: any, newStock: number) => {
+    const qty = Math.max(0, Number(newStock) || 0);
+    try {
+      await setDoc(doc(db, "products", String(productId)), { stock: qty }, { merge: true });
+      triggerAlert('success', `Stock updated to ${qty} unit(s).`);
+    } catch (err) {
+      console.error("Error updating stock:", err);
+      triggerAlert('danger', "Failed to update stock.");
     }
   };
 
@@ -1373,8 +1422,9 @@ export default function App() {
 
   // Filter lists
   const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-    p.brand.toLowerCase().includes(productSearch.toLowerCase())
+    (p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+    p.brand.toLowerCase().includes(productSearch.toLowerCase())) &&
+    (stockFilter === 'all' || getStockStatus(p.stock) === stockFilter)
   );
 
   const filteredAccessories = accessories.filter(a =>
@@ -1875,6 +1925,148 @@ export default function App() {
               ))}
             </div>
 
+            {/* Stock & Inventory Overview */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(6,182,212,0.04))',
+              border: '1px solid rgba(16,185,129,0.18)',
+              borderRadius: 24, padding: 28, marginBottom: 32,
+              position: 'relative', overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.12), transparent 70%)', pointerEvents: 'none' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 14,
+                    background: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(6,182,212,0.15))',
+                    border: '1px solid rgba(16,185,129,0.3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981'
+                  }}>
+                    <Layers size={22} />
+                  </div>
+                  <div>
+                    <h2 style={{ fontFamily: 'Sora', fontSize: 20, fontWeight: 800, color: '#fff', margin: 0 }}>
+                      Stock & Inventory Overview
+                    </h2>
+                    <p style={{ color: '#8B9BBE', fontSize: 12, margin: '2px 0 0' }}>
+                      {(() => {
+                        const totalProducts = products.length;
+                        const soldOut = products.filter(p => getStockStatus(p.stock) === 'out').length;
+                        return `${totalProducts} products tracked • ${soldOut} currently sold out`;
+                      })()}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveTab('products')}
+                  style={{
+                    background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.25)',
+                    color: '#38BDF8', borderRadius: 12, padding: '10px 18px', fontSize: 13, fontWeight: 800,
+                    cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'Sora',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(56,189,248,0.2)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(56,189,248,0.1)'; }}
+                >
+                  Manage Inventory <ArrowUpRight size={15} />
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 18, marginBottom: 24 }}>
+                {[
+                  {
+                    label: 'In Stock', sub: 'products',
+                    val: products.filter(p => getStockStatus(p.stock) === 'in').length.toLocaleString('en-IN'),
+                    icon: <CheckCircle size={20} color="#10B981" />,
+                    accent: '#10B981', grad: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.05))',
+                    glow: '0 0 30px rgba(16,185,129,0.12)'
+                  },
+                  {
+                    label: 'Low Stock', sub: 'needs attention',
+                    val: products.filter(p => getStockStatus(p.stock) === 'low').length.toLocaleString('en-IN'),
+                    icon: <AlertTriangle size={20} color="#F59E0B" />,
+                    accent: '#F59E0B', grad: 'linear-gradient(135deg, rgba(245,158,11,0.25), rgba(245,158,11,0.05))',
+                    glow: '0 0 30px rgba(245,158,11,0.12)'
+                  },
+                  {
+                    label: 'Sold Out', sub: 'need restock',
+                    val: products.filter(p => getStockStatus(p.stock) === 'out').length.toLocaleString('en-IN'),
+                    icon: <PackageX size={20} color="#EF4444" />,
+                    accent: '#EF4444', grad: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.05))',
+                    glow: '0 0 30px rgba(239,68,68,0.12)'
+                  },
+                  {
+                    label: 'Total Units', sub: 'available now',
+                    val: products.reduce((sum, p) => sum + (p.stock === undefined ? 0 : p.stock), 0).toLocaleString('en-IN'),
+                    icon: <Package size={20} color="#06B6D4" />,
+                    accent: '#06B6D4', grad: 'linear-gradient(135deg, rgba(6,182,212,0.25), rgba(6,182,212,0.05))',
+                    glow: '0 0 30px rgba(6,182,212,0.12)'
+                  },
+                ].map(stat => (
+                  <div key={stat.label} style={{
+                    background: '#131a24',
+                    border: `1px solid ${stat.accent}26`,
+                    borderTop: `3px solid ${stat.accent}`,
+                    borderRadius: 18, padding: '22px 20px',
+                    display: 'flex', flexDirection: 'column', gap: 14,
+                    boxShadow: stat.glow,
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    position: 'relative', overflow: 'hidden'
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.35)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = stat.glow; }}
+                  >
+                    <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: stat.grad, pointerEvents: 'none' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 12, background: stat.grad, border: `1px solid ${stat.accent}33`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {stat.icon}
+                      </div>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: stat.accent, boxShadow: `0 0 12px ${stat.accent}`, opacity: 0.9 }} />
+                    </div>
+                    <div>
+                      <div style={{ color: '#8B9BBE', fontSize: 12, fontWeight: 500, marginBottom: 3 }}>{stat.label}</div>
+                      <div style={{ color: '#fff', fontSize: 26, fontWeight: 850, fontFamily: 'Sora', lineHeight: 1.1 }}>{stat.val}</div>
+                      <div style={{ color: stat.accent, fontSize: 11, fontWeight: 600, marginTop: 4 }}>{stat.sub}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Distribution bar */}
+              {(() => {
+                const total = Math.max(1, products.length);
+                const inCount = products.filter(p => getStockStatus(p.stock) === 'in').length;
+                const lowCount = products.filter(p => getStockStatus(p.stock) === 'low').length;
+                const outCount = products.filter(p => getStockStatus(p.stock) === 'out').length;
+                return (
+                  <div style={{ background: 'rgba(13,17,23,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: '16px 18px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <span style={{ color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Inventory Health</span>
+                      <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>
+                        {Math.round(((inCount + lowCount) / total) * 100)}% sellable
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', height: 10, borderRadius: 100, overflow: 'hidden', background: 'rgba(255,255,255,0.04)', marginBottom: 12 }}>
+                      <div style={{ width: `${(inCount / total) * 100}%`, background: 'linear-gradient(90deg, #10B981, #34D399)', transition: 'width 0.4s' }} />
+                      <div style={{ width: `${(lowCount / total) * 100}%`, background: 'linear-gradient(90deg, #F59E0B, #FBBF24)', transition: 'width 0.4s' }} />
+                      <div style={{ width: `${(outCount / total) * 100}%`, background: 'linear-gradient(90deg, #EF4444, #F87171)', transition: 'width 0.4s' }} />
+                    </div>
+                    <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+                      {[
+                        { label: 'In Stock', count: inCount, color: '#34D399' },
+                        { label: 'Low Stock', count: lowCount, color: '#FBBF24' },
+                        { label: 'Sold Out', count: outCount, color: '#F87171' },
+                      ].map(item => (
+                        <span key={item.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#8B9BBE' }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color }} />
+                          {item.label}: <strong style={{ color: '#fff', marginLeft: 2 }}>{item.count}</strong>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
             {/* Incoming Customer Orders Section */}
             <div style={{
               background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)',
@@ -2020,6 +2212,49 @@ export default function App() {
               />
             </div>
 
+            {/* Stock Filter Chips */}
+            <div style={{
+              display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 24,
+              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 16, padding: 8, width: 'fit-content'
+            }}>
+              {[
+                { id: 'all' as const, label: 'All', color: '#38BDF8', icon: <Layers size={13} /> },
+                { id: 'in' as const, label: 'In Stock', color: '#10B981', icon: <CheckCircle size={13} /> },
+                { id: 'low' as const, label: 'Low Stock', color: '#F59E0B', icon: <AlertTriangle size={13} /> },
+                { id: 'out' as const, label: 'Sold Out', color: '#EF4444', icon: <PackageX size={13} /> },
+              ].map(opt => {
+                const active = stockFilter === opt.id;
+                const count = opt.id === 'all' ? products.length : products.filter(p => getStockStatus(p.stock) === opt.id).length;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => setStockFilter(opt.id)}
+                    style={{
+                      background: active ? `${opt.color}1F` : 'transparent',
+                      border: `1px solid ${active ? `${opt.color}55` : 'transparent'}`,
+                      color: active ? opt.color : '#8B9BBE',
+                      borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700,
+                      cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'Sora',
+                      display: 'inline-flex', alignItems: 'center', gap: 7,
+                      boxShadow: active ? `0 0 18px ${opt.color}22` : 'none'
+                    }}
+                  >
+                    {opt.icon}
+                    {opt.label}
+                    <span style={{
+                      background: active ? opt.color : 'rgba(255,255,255,0.08)',
+                      color: active ? '#0d1117' : '#8B9BBE',
+                      borderRadius: 100, minWidth: 18, height: 18, padding: '0 5px',
+                      fontSize: 10, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Table Grid */}
             <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 20, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -2028,13 +2263,17 @@ export default function App() {
                     <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Product</th>
                     <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Condition</th>
                     <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Price / MRP</th>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Stock</th>
                     <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Specs</th>
                     <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredProducts.map(p => (
-                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <tr key={p.id} style={{
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      background: getStockStatus(p.stock) === 'out' ? 'rgba(239,68,68,0.03)' : 'transparent'
+                    }}>
                       <td style={{ padding: '18px 24px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                           <img src={p.img} alt={p.name} style={{ width: 44, height: 33, borderRadius: 6, objectFit: 'cover' }} />
@@ -2055,21 +2294,110 @@ export default function App() {
                         <div style={{ color: '#fff', fontWeight: 800, fontSize: 14 }}>₹{p.price.toLocaleString('en-IN')}</div>
                         <div style={{ color: '#8B9BBE', fontSize: 12, textDecoration: 'line-through' }}>₹{p.mrp.toLocaleString('en-IN')}</div>
                       </td>
+                      <td style={{ padding: '18px 24px' }}>
+                        {(() => {
+                          const st = getStockStatus(p.stock);
+                          const cfg = st === 'in'
+                            ? { color: '#10B981', dot: '#10B981', bg: 'rgba(16,185,129,0.12)' }
+                            : st === 'low'
+                              ? { color: '#F59E0B', dot: '#F59E0B', bg: 'rgba(245,158,11,0.12)' }
+                              : { color: '#EF4444', dot: '#EF4444', bg: 'rgba(239,68,68,0.12)' };
+                          const cap = 20;
+                          const pct = Math.min(100, Math.max(0, ((p.stock === undefined ? 5 : p.stock) / cap) * 100));
+                          return (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', minWidth: 96 }}>
+                              <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                                <span style={{ color: '#fff', fontWeight: 800, fontSize: 15 }}>
+                                  {p.stock === undefined ? '—' : p.stock}
+                                </span>
+                                <span style={{ color: '#8B9BBE', fontSize: 10, fontWeight: 500 }}>units</span>
+                              </div>
+                              <div style={{ width: '100%', height: 5, borderRadius: 100, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                                <div style={{ width: `${pct}%`, height: '100%', borderRadius: 100, background: `linear-gradient(90deg, ${cfg.color}, ${cfg.dot})`, transition: 'width 0.3s' }} />
+                              </div>
+                              <span style={{
+                                background: cfg.bg, color: cfg.color,
+                                fontSize: 9, fontWeight: 800, padding: '3px 9px', borderRadius: 100,
+                                display: 'inline-flex', alignItems: 'center', gap: 5,
+                                textTransform: 'uppercase', letterSpacing: '0.03em'
+                              }}>
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: cfg.dot, boxShadow: `0 0 8px ${cfg.dot}`, animation: 'pulse 1.6s ease-in-out infinite' }} />
+                                {st === 'in' ? 'In Stock' : st === 'low' ? 'Low Stock' : 'Sold Out'}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                      </td>
                       <td style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 13, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {p.specs}
                       </td>
                       <td style={{ padding: '18px 24px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                          <button onClick={() => handleProductEdit(p)} style={{ background: 'transparent', border: 'none', color: '#38BDF8', cursor: 'pointer' }} title="Edit"><Edit2 size={16} /></button>
-                          <button onClick={() => handleProductDelete(p.id)} style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer' }} title="Delete"><Trash2 size={16} /></button>
+                        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <button
+                            onClick={() => handleQuickStockUpdate(p.id, 0)}
+                            disabled={getStockStatus(p.stock) === 'out'}
+                            title="Mark as Sold Out"
+                            style={{
+                              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
+                              color: '#EF4444', borderRadius: 8, width: 32, height: 32,
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                              cursor: getStockStatus(p.stock) === 'out' ? 'not-allowed' : 'pointer',
+                              opacity: getStockStatus(p.stock) === 'out' ? 0.35 : 1,
+                              transition: 'all 0.2s', flexShrink: 0
+                            }}
+                            onMouseEnter={e => { if (getStockStatus(p.stock) !== 'out') e.currentTarget.style.background = 'rgba(239,68,68,0.2)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
+                          ><PackageX size={15} /></button>
+                          <button
+                            onClick={() => {
+                              const input = window.prompt(`Restock quantity for "${p.name}"`, String((p.stock === undefined ? 0 : p.stock) + LOW_STOCK_THRESHOLD + 1));
+                              if (input !== null) handleQuickStockUpdate(p.id, Number(input));
+                            }}
+                            title="Restock units"
+                            style={{
+                              background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)',
+                              color: '#10B981', borderRadius: 8, width: 32, height: 32,
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                              cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.2)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.1)'; }}
+                          ><PackagePlus size={15} /></button>
+                          <span style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.06)' }} />
+                          <button onClick={() => handleProductEdit(p)} style={{ background: 'transparent', border: 'none', color: '#38BDF8', cursor: 'pointer', padding: 6 }} title="Edit"><Edit2 size={16} /></button>
+                          <button onClick={() => handleProductDelete(p.id)} style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', padding: 6 }} title="Delete"><Trash2 size={16} /></button>
                         </div>
                       </td>
                     </tr>
                   ))}
                   {filteredProducts.length === 0 && (
                     <tr>
-                      <td colSpan={5} style={{ padding: '36px', textAlign: 'center', color: '#8B9BBE', fontSize: 14 }}>
-                        No products found in the catalog.
+                      <td colSpan={6} style={{ padding: '48px 24px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+                          <div style={{
+                            width: 64, height: 64, borderRadius: '50%',
+                            background: 'rgba(56,189,248,0.06)', border: '1px solid rgba(56,189,248,0.12)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}>
+                            <PackageX size={28} color="#38BDF8" style={{ opacity: 0.6 }} />
+                          </div>
+                          <div>
+                            <p style={{ color: '#E8EDF5', fontSize: 14, fontWeight: 700, margin: 0 }}>No products found</p>
+                            <p style={{ color: '#8B9BBE', fontSize: 12, margin: '4px 0 0' }}>
+                              Try adjusting the search text or stock filter.
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => { setProductSearch(''); setStockFilter('all'); }}
+                            style={{
+                              background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.25)',
+                              color: '#38BDF8', borderRadius: 10, padding: '8px 16px', fontSize: 12, fontWeight: 700,
+                              cursor: 'pointer', fontFamily: 'Sora', transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(56,189,248,0.2)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(56,189,248,0.1)'; }}
+                          >Clear Filters</button>
+                        </div>
                       </td>
                     </tr>
                   )}
