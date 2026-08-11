@@ -335,8 +335,12 @@ export function HeroStats() {
               onClick={isRating ? () => window.open("https://www.google.com/search?q=Laptopkart+Reviews", "_blank") : undefined}
               style={{
                 background: "transparent",
+                gridColumn: isMobile && i === stats.length - 1 && stats.length % 2 !== 0 ? "span 2" : "auto",
                 border: "none",
-                borderLeft: i > 0 ? "1px solid var(--border)" : "none",
+                borderLeft: isMobile 
+                  ? (i % 2 !== 0 ? "1px solid var(--border)" : "none")
+                  : (i > 0 ? "1px solid var(--border)" : "none"),
+                borderTop: isMobile && i >= 2 ? "1px solid var(--border)" : "none",
                 borderRadius: 0,
                 padding: isMobile ? "14px 8px" : "24px 16px",
                 textAlign: "center",

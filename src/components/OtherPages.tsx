@@ -805,14 +805,18 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
         {/* Emblem Header */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{
-            width: 52, height: 52, borderRadius: 14,
+            width: 80, height: 80, borderRadius: 18,
             background: "var(--bg-hover)",
             border: "1px solid var(--bg-active)",
             display: "flex", alignItems: "center", justifyContent: "center",
             margin: "0 auto 16px",
             boxShadow: "0 0 20px var(--bg-active)",
           }}>
-            <Laptop size={24} color={COLORS.green} />
+            <img 
+              src="/Laptopkart logo.png" 
+              alt="Laptopkart" 
+              style={{ width: "70%", height: "70%", objectFit: "contain" }} 
+            />
           </div>
           <h2 style={{
             fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 800,

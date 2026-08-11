@@ -120,16 +120,13 @@ export default function Footer({ setPage }: FooterProps) {
           {/* Brand column */}
           <div>
             <div onClick={() => setPage("home")} style={{
-              cursor: "pointer", marginBottom: 14,
-              fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 22,
-              letterSpacing: "-0.02em",
+              cursor: "pointer", marginBottom: 14, display: "flex", alignItems: "center"
             }}>
-              <span style={{
-                color: "transparent",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                backgroundImage: "linear-gradient(135deg, var(--accent), #6366F1)",
-              }}>Laptopkart</span>
+              <img
+                src="/Laptopkart logo.png"
+                alt="Laptopkart Logo"
+                style={{ height: 60, width: "auto", objectFit: "contain" }}
+              />
             </div>
             <p style={{ color: "var(--footer-text-2)", fontSize: 13, lineHeight: 1.7, maxWidth: 260, marginBottom: 20 }}>
               India's most trusted refurbished laptop store. Best prices, best quality, backed by warranty.

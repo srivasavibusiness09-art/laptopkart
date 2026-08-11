@@ -332,7 +332,7 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
         : `${videoEmbedSrc}?autoplay=1&rel=0`
       : null;
 
-    const showPortrait = !isMobile && videoSettings?.orientation === "portrait";
+    const showPortrait = videoSettings?.orientation === "portrait";
     const playerBoxStyle = showPortrait
       ? { width: "min(100vw, calc(100dvh * 0.5625))", height: "100dvh", maxWidth: "100vw" }
       : { width: "min(100vw, calc(100dvh * 1.7778))", aspectRatio: "16 / 9", maxHeight: "100dvh" };

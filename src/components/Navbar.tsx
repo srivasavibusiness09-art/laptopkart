@@ -106,7 +106,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
             <img
               src="/Laptopkart logo.png"
               alt="Laptopkart Logo"
-              style={{ height: isMobile ? 44 : 80, width: "auto", objectFit: "contain" }}
+              style={{ height: isMobile ? 70 : 100, width: "auto", objectFit: "contain" }}
             />
           </div>
 
