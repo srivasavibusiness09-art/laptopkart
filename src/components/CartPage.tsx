@@ -98,7 +98,7 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert, applied
             margin: "0 auto 28px",
             boxShadow: "0 0 40px var(--bg-hover)",
           }}>
-            <ShoppingCart size={48} color={COLORS.green} />
+            <ShoppingCart size={48} color={COLORS.blue} />
           </div>
           <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 32, fontWeight: 800, color: COLORS.text, marginBottom: 10 }}>
             Your cart is empty
@@ -107,7 +107,7 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert, applied
             Add some refurbished laptops to get started
           </p>
           <button onClick={() => setPage("listing")} style={{
-            background: COLORS.green, color: "var(--text-inverse)",
+            background: "#0062FF", color: "var(--text-inverse)",
             border: "none", borderRadius: 100,
             padding: "14px 32px", fontWeight: 800, fontSize: 15,
             cursor: "pointer", fontFamily: "'Sora', sans-serif",
@@ -236,7 +236,7 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert, applied
               borderRadius: 20, padding: 20,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, color: COLORS.text, fontWeight: 700, fontSize: 14 }}>
-                <Tag size={15} color={COLORS.green} />
+                <Tag size={15} color={COLORS.blue} />
                 Apply Coupon Code
               </div>
               {!appliedCoupon ? (
@@ -258,7 +258,7 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert, applied
                     <button
                       onClick={handleApplyCoupon}
                       style={{
-                        background: COLORS.green,
+                        background: "#0062FF",
                         color: "var(--text-inverse)", border: "none", borderRadius: 10,
                         padding: "11px 20px", fontWeight: 700, fontSize: 13,
                         cursor: "pointer", fontFamily: "'Sora', sans-serif",
@@ -329,7 +329,7 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert, applied
               marginBottom: 22,
             }}>
               <span style={{ color: COLORS.text, fontWeight: 800, fontSize: 18, fontFamily: "'Sora', sans-serif" }}>Total</span>
-              <span style={{ color: COLORS.green, fontWeight: 800, fontSize: 24, fontFamily: "'Sora', sans-serif" }}>
+              <span style={{ color: COLORS.text, fontWeight: 800, fontSize: 24, fontFamily: "'Sora', sans-serif" }}>
                 ₹{final.toLocaleString("en-IN")}
               </span>
             </div>
@@ -341,11 +341,11 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert, applied
               padding: "16px 0", fontWeight: 800, fontSize: 16,
               cursor: "pointer", fontFamily: "'Sora', sans-serif",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              boxShadow: "0 0 40px rgba(118, 194, 39, 0.35)",
+              boxShadow: "0 0 40px rgba(0, 98, 255, 0.35)",
               transition: "all 0.2s",
             }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 60px rgba(118, 194, 39, 0.50)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 40px rgba(118, 194, 39, 0.35)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 60px rgba(0, 98, 255, 0.50)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 40px rgba(0, 98, 255, 0.35)"; }}
             >
               Proceed to Checkout <ArrowRight size={16} />
             </button>
@@ -365,7 +365,7 @@ export default function CartPage({ cart, setCart, setPage, triggerAlert, applied
             </button>
 
             <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "center", marginTop: 16 }}>
-              <Shield size={12} color={COLORS.green} />
+              <Shield size={12} color={COLORS.blue} />
               <span style={{ color: COLORS.muted, fontSize: 11 }}>100% Secure Checkout</span>
             </div>
           </div>

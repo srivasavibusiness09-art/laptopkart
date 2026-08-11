@@ -457,7 +457,7 @@ export function ContactPage() {
               <p style={{ color: COLORS.muted, margin: "0 0 16px 0", fontSize: 14 }}>We&apos;ll get back to you within 24 hours.</p>
               <button 
                 onClick={() => { setSent(false); setForm({ name: "", email: "", phone: "", message: "" }); }} 
-                style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}
+                style={{ background: "#0062FF", color: "var(--text-inverse)", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}
               >
                 Send Another
               </button>
@@ -527,7 +527,7 @@ export function ContactPage() {
                 }} 
                 style={{ 
                   width: "100%", 
-                  background: COLORS.green, 
+                  background: "#0062FF", 
                   color: "var(--text-inverse)", 
                   border: "none", 
                   borderRadius: 12, 
@@ -842,7 +842,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
             top: 4, bottom: 4,
             left: mode === "login" ? 4 : "calc(50% + 2px)",
             width: "calc(50% - 6px)",
-            background: COLORS.green,
+            background: "#0062FF",
             borderRadius: 10,
             transition: "all 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
             zIndex: 1,
@@ -967,7 +967,7 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
             type="submit"
             style={{
               width: "100%",
-              background: COLORS.green,
+              background: "#0062FF",
               color: "var(--text-inverse)",
               border: "none",
               borderRadius: 12,
@@ -1430,8 +1430,8 @@ export function AccessoriesPage({
   accessories: any[];
   setPage: (p: string) => void;
   onAddToCart: (p: any) => void;
-  onWishlist: (id: number) => void;
-  wishlist: number[];
+  onWishlist: (id: number | string) => void;
+  wishlist: (number | string)[];
   onViewAccessory?: (item: any) => void;
 }) {
   const isMobile = useIsMobile();
@@ -1643,8 +1643,8 @@ export function AccessoryDetailPage({
   accessory: any | null;
   setPage: (p: string) => void;
   onAddToCart: (p: any) => void;
-  onWishlist: (id: number) => void;
-  wishlist: number[];
+  onWishlist: (id: number | string) => void;
+  wishlist: (number | string)[];
 }) {
   const isMobile = useIsMobile();
   const [added, setAdded] = useState(false);

@@ -11,13 +11,13 @@ export default function Badge({ type, text, style }: BadgeProps) {
   const getBadgeStyles = () => {
     if (type === "badge") {
       const badgeColors: Record<string, string> = {
-        "Best Seller": "var(--error)",
+        "Best Seller": "#EF4444",
         "Gaming": "#8B5CF6",
-        "Top Rated": "var(--success)",
-        "Value Deal": "var(--warning)",
+        "Top Rated": "#059669",
+        "Value Deal": "#FF6B00",
       };
       return {
-        background: badgeColors[text] || "var(--accent-2)",
+        background: badgeColors[text] || "var(--accent)",
         color: "#FFFFFF",
         border: "none",
         icon: <Tag size={8} />,
@@ -25,16 +25,16 @@ export default function Badge({ type, text, style }: BadgeProps) {
     } else {
       if (text === "Brand New") {
         return {
-          background: "rgba(99,102,241,0.12)",
-          color: "#8B5CF6",
-          border: "1px solid rgba(99,102,241,0.2)",
+          background: "rgba(0, 98, 255, 0.08)",
+          color: "#0062FF",
+          border: "1px solid rgba(0, 98, 255, 0.22)",
           icon: <Zap size={8} />,
         };
       } else {
         return {
-          background: "var(--bg-active)",
-          color: "var(--accent)",
-          border: "1px solid var(--bg-active)",
+          background: "rgba(5, 150, 105, 0.08)",
+          color: "#059669",
+          border: "1px solid rgba(5, 150, 105, 0.22)",
           icon: <BadgeCheck size={8} />,
         };
       }

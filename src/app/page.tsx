@@ -19,6 +19,7 @@ import CheckoutPage from "@/components/CheckoutPage";
 import WishlistPage from "@/components/WishlistPage";
 import ProfilePage from "@/components/ProfilePage";
 import SellLaptopPage from "@/components/SellLaptopPage";
+import StudentHubPage from "@/components/StudentHubPage";
 import {
   ComparePage,
   AboutPage,
@@ -53,8 +54,8 @@ function AccessoryDetailPage({
   accessory: any | null;
   setPage: (p: string) => void;
   onAddToCart: (p: any) => void;
-  onWishlist: (id: number) => void;
-  wishlist: number[];
+  onWishlist: (id: number | string) => void;
+  wishlist: (number | string)[];
 }) {
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
@@ -197,6 +198,7 @@ export default function App() {
   const [page, setPage] = useState("home");
   const [listingCategory, setListingCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [hubSection, setHubSection] = useState<string | null>(null);
 
   /* Global authentication states */
   const [user, setUser] = useState<any>(null);
@@ -204,7 +206,7 @@ export default function App() {
   const [statusNotification, setStatusNotification] = useState<any>(null);
 
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [wishlist, setWishlist] = useState<number[]>([]);
+  const [wishlist, setWishlist] = useState<(number | string)[]>([]);
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
 
   const isCartLoaded = useRef(false);
@@ -239,7 +241,7 @@ export default function App() {
       getDoc(userDocRef)
         .then(async (docSnap) => {
           let dbCart: CartItem[] = [];
-          let dbWishlist: number[] = [];
+          let dbWishlist: (number | string)[] = [];
 
           if (docSnap.exists()) {
             const data = docSnap.data();
@@ -497,6 +499,10 @@ export default function App() {
       const cat = pageStr.split(":")[1];
       setListingCategory(cat);
       targetPage = "listing";
+    } else if (pageStr.startsWith("student-hub:")) {
+      const section = pageStr.split(":")[1];
+      setHubSection(section);
+      targetPage = "student-hub";
     } else {
       if (pageStr === "listing") {
         setListingCategory("All");
@@ -632,6 +638,9 @@ export default function App() {
       } else if (page === "profile") {
         setPendingAction({ type: "profile" });
         handleNavigate("login");
+      } else if (page === "student-hub") {
+        setPendingAction({ type: "student-hub", section: hubSection });
+        handleNavigate("login");
       }
     }
   }, [page, user]);
@@ -680,7 +689,7 @@ export default function App() {
     });
   };
 
-  const handleWishlist = (id: number) => {
+  const handleWishlist = (id: number | string) => {
     if (!user) {
       setPendingAction({ type: "wishlist", payload: id });
       handleNavigate("login");
@@ -693,6 +702,15 @@ export default function App() {
 
   const handleLogin = (loggedInUser: any) => {
     setUser(loggedInUser);
+    if (loggedInUser?.uid) {
+      setDoc(doc(db, "users", loggedInUser.uid), {
+        name: loggedInUser.name || loggedInUser.email?.split("@")[0] || "",
+        email: loggedInUser.email || "",
+        photoURL: loggedInUser.img || "",
+        updatedAt: new Date().toISOString(),
+      }, { merge: true })
+        .catch((err) => console.error("Error saving user profile to Firestore:", err));
+    }
     if (pendingAction) {
       if (pendingAction.type === "cart") {
         const product = pendingAction.payload;
@@ -711,6 +729,8 @@ export default function App() {
         handleNavigate("checkout");
       } else if (pendingAction.type === "profile") {
         handleNavigate("profile");
+      } else if (pendingAction.type === "student-hub") {
+        handleNavigate(pendingAction.section ? `student-hub:${pendingAction.section}` : "student-hub");
       } else if (pendingAction.type.startsWith("write-blog")) {
         handleNavigate(pendingAction.type);
       }
@@ -767,6 +787,7 @@ export default function App() {
                 products={productsList}
                 banners={banners}
                 heroPosters={heroPosters}
+                firestoreReady={firestoreReady}
                 setPage={handleNavigate}
                 onViewProduct={handleViewProduct}
                 onAddToCart={handleAddToCart}
@@ -825,6 +846,7 @@ export default function App() {
             {displayPage === "wishlist" && (
               <WishlistPage
                 wishlist={wishlist}
+                products={productsList}
                 onAddToCart={handleAddToCart}
                 setPage={handleNavigate}
                 onWishlist={handleWishlist}
@@ -842,6 +864,9 @@ export default function App() {
             {displayPage === "login" && <LoginPage setPage={handleNavigate} onLogin={handleLogin} triggerAlert={triggerStoreAlert} />}
             {displayPage === "profile" && user && (
               <ProfilePage user={user} setUser={setUser} setPage={handleNavigate} triggerAlert={triggerStoreAlert} />
+            )}
+            {displayPage === "student-hub" && user && (
+              <StudentHubPage setPage={handleNavigate} user={user} initialSection={hubSection} />
             )}
             {displayPage === "why-refurbished" && <WhyRefurbishedPage />}
             {displayPage.startsWith("write-blog") && user && (

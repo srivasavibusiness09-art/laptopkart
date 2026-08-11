@@ -7,14 +7,15 @@ const fileToDataURL = (file: File): Promise<string> => {
   });
 };
 
-export const uploadProductImage = async (file: File): Promise<string> => {
+export const uploadProductImage = async (file: File): Promise<{ url: string; publicId: string }> => {
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "";
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "";
 
   // Fallback to local base64 if Cloudinary credentials are not configured yet
   if (!cloudName || !uploadPreset || cloudName.includes("YOUR_") || uploadPreset.includes("YOUR_")) {
     console.warn("Cloudinary not configured. Falling back to local Base64 string for testing.");
-    return await fileToDataURL(file);
+    const url = await fileToDataURL(file);
+    return { url, publicId: "" };
   }
 
   const formData = new FormData();
@@ -31,10 +32,10 @@ export const uploadProductImage = async (file: File): Promise<string> => {
   }
 
   const data = await res.json();
-  return data.secure_url; // Direct secure CDN URL
+  return { url: data.secure_url, publicId: data.public_id }; // Return both url and publicId
 };
 
-export const uploadVideoToCloudinary = async (file: File): Promise<string> => {
+export const uploadVideoToCloudinary = async (file: File): Promise<{ url: string; publicId: string }> => {
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "";
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "";
 
@@ -58,5 +59,5 @@ export const uploadVideoToCloudinary = async (file: File): Promise<string> => {
   }
 
   const data = await res.json();
-  return data.secure_url;
+  return { url: data.secure_url, publicId: data.public_id };
 };

@@ -3,16 +3,17 @@
 import { useState, useEffect } from "react";
 import {
   Search, Heart, ShoppingCart, User, Scale,
-  Flame, Laptop, Monitor, Keyboard, RefreshCw, Tag, Info, X, Menu, Phone, ChevronDown,
+  Flame, Laptop, Monitor, Keyboard, RefreshCw, Tag, Info, X, Menu, Phone, ChevronDown, GraduationCap, Truck
 } from "lucide-react";
-import { COLORS, navLinks } from "@/data/products";
+import { COLORS, navLinks, categories } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
 import { ThemeToggle } from "./ThemeToggle";
+import RequestProductModal from "./RequestProductModal";
 
 interface NavbarProps {
   setPage: (page: string) => void;
   cart: { id: number }[];
-  wishlist: number[];
+  wishlist: (number | string)[];
   user: any;
   onSearch?: (query: string) => void;
   searchQuery?: string;
@@ -22,6 +23,7 @@ const linkIcons: Record<string, React.ReactNode> = {
   Offers: <Flame size={13} color="var(--warning)" />,
   Laptops: <Laptop size={13} />,
   Desktops: <Monitor size={13} />,
+  "Student Hub": <GraduationCap size={13} color="var(--hub-accent)" />,
   Accessories: <Keyboard size={13} />,
   "Resell Laptop": <RefreshCw size={13} />,
   Blog: <Tag size={13} />,
@@ -29,7 +31,7 @@ const linkIcons: Record<string, React.ReactNode> = {
 
 const getTarget = (link: string) => ({
   Laptops: "listing:Laptops", Desktops: "listing:Desktops", Accessories: "accessories",
-  Blog: "blog", Offers: "listing:Offers", "Resell Laptop": "resell",
+  Blog: "blog", Offers: "listing:Offers", "Resell Laptop": "resell", "Student Hub": "student-hub",
 } as Record<string, string>)[link] ?? "home";
 
 export default function Navbar({ setPage, cart, wishlist, user, onSearch, searchQuery = "" }: NavbarProps) {
@@ -38,6 +40,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
   const [menuOpen, setMenuOpen] = useState(false);
   const [bulkDropdownOpen, setBulkDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -71,374 +74,345 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
   };
 
   const navBg = scrolled
-    ? "color-mix(in srgb, var(--bg) 92%, transparent)"
-    : "color-mix(in srgb, var(--bg) 65%, transparent)";
+    ? "color-mix(in srgb, var(--bg-1) 96%, transparent)"
+    : "var(--bg-1)";
 
   return (
     <>
-      {/* ── Main nav ──────────────────────────────── */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 1000,
         background: navBg,
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        borderBottom: `1px solid rgba(56,189,248,${scrolled ? 0.08 : 0.04})`,
+        backdropFilter: scrolled ? "blur(24px)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(24px)" : "none",
+        borderBottom: `1px solid var(--border)`,
         transition: "background 0.3s ease",
       }}>
+        {/* TOP ROW */}
         <div style={{
           maxWidth: 1280, margin: "0 auto",
-          padding: isMobile ? "0 12px" : "0 24px",
+          padding: isMobile ? "12px" : "12px 24px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          height: 60, gap: isMobile ? 8 : 16,
+          gap: isMobile ? 12 : 24,
+          flexWrap: isMobile ? "wrap" : "nowrap"
         }}>
-          {/* Logo */}
+          {/* Logo Section */}
           <div
             onClick={() => go("home")}
             style={{
               cursor: "pointer", flexShrink: 0,
-              display: "flex", alignItems: "center", gap: 6,
+              display: "flex", flexDirection: "column",
             }}
           >
-            <Laptop size={18} color={COLORS.green} />
-            <span style={{
-              fontFamily: "'Sora', sans-serif",
-              fontWeight: 800, fontSize: isMobile ? 16 : 18,
-              letterSpacing: "-0.02em",
-            }}>
-              <span style={{
-                color: "transparent",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                backgroundImage: "linear-gradient(135deg, var(--accent), #6366F1)",
-              }}>Laptopkart</span>
-            </span>
+            <img
+              src="/Laptopkart logo.png"
+              alt="Laptopkart Logo"
+              style={{ height: isMobile ? 44 : 80, width: "auto", objectFit: "contain" }}
+            />
           </div>
 
-          {/* Desktop center links */}
+          {/* Search Bar & Helper (Desktop) */}
           {!isMobile && (
-            <div style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: 2,
-              flex: 1,
-              minWidth: 0,
-            }}>
-              {navLinks
-                .map((link) => (
-                  <button
-                    key={link}
-                    title={link}
-                    className={link === "Resell Laptop" ? "nav-link-resell" : ""}
-                    onClick={() => handleNavClick(link)}
-                    style={{
-                      padding: "4px 6px", background: "transparent",
-                      border: "none",
-                      color: link === "Offers" ? "var(--warning)" : "var(--text)",
-                      cursor: "pointer", fontSize: 12, fontWeight: 500,
-                      whiteSpace: "nowrap", letterSpacing: "0.01em",
-                      display: "flex", alignItems: "center", gap: 2,
-                      transition: "color 0.2s",
-                      borderRadius: 6,
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget).style.color = "var(--text)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget).style.color = link === "Offers" ? "var(--warning)" : "var(--text)"; }}
-                  >
-                    {linkIcons[link] && <span className="nav-link-icon">{linkIcons[link]}</span>}
-                    {link === "Resell Laptop" ? (
-                      <>
-                        <span className="resell-text-long">Resell</span>
-                        <span className="resell-text-short">Resell</span>
-                      </>
-                    ) : (
-                      <span>{link}</span>
-                    )}
-                  </button>
-                ))}
+            <div style={{ display: "flex", alignItems: "center", flex: 1, maxWidth: 650, gap: 20 }}>
+              <div style={{ display: "flex", flex: 1, border: "2px solid #0062FF", borderRadius: 8, overflow: "hidden" }}>
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") onSearch?.(search);
+                  }}
+                  placeholder="Search laptops, models, specs..."
+                  style={{
+                    flex: 1, padding: "12px 16px", border: "none", outline: "none",
+                    background: "var(--bg-2)", color: "var(--text-2)", fontSize: 13,
+                  }}
+                />
+                <button
+                  onClick={() => onSearch?.(search)}
+                  style={{
+                    background: "#0062FF", color: "#fff", border: "none",
+                    padding: "0 28px", fontWeight: 700, cursor: "pointer",
+                    fontSize: 13, transition: "background 0.2s"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "#0052D6"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "#0062FF"}
+                >
+                  Search
+                </button>
+              </div>
+              <div className="nav-helper-txt" style={{ display: "flex", flexDirection: "column", fontSize: 11, color: "#0062FF", flexShrink: 0, lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 500 }}>Can't find what you need?</span>
+                <span onClick={() => setRequestModalOpen(true)} style={{ fontWeight: 600, cursor: "pointer", display: "inline-block" }}>Tell us →</span>
+              </div>
             </div>
           )}
 
-          {/* Action buttons */}
-          <div style={{ display: "flex", gap: 2, alignItems: "center", flexShrink: 0 }}>
-            {/* Search Toggle Button */}
-            <IconBtn onClick={() => setSearchActive(!searchActive)}>
-              <Search size={isMobile ? 16 : 14} color="var(--text)" />
+          {/* Icons Section */}
+          <div style={{ display: "flex", gap: isMobile ? 8 : 16, alignItems: "center" }}>
+            {isMobile && (
+              <IconBtn onClick={() => setMenuOpen((o) => !o)}>
+                {menuOpen ? <X size={20} color="var(--text-2)" /> : <Menu size={20} color="var(--text-2)" />}
+              </IconBtn>
+            )}
+
+            {!isMobile && (
+              <IconBtn onClick={() => go("profile")} label="Profile" className="nav-extra-btn">
+                <User size={20} color="var(--text-2)" />
+              </IconBtn>
+            )}
+
+            {!isMobile && (
+              <IconBtn onClick={() => go("profile")} label="Track Order" className="nav-extra-btn">
+                <Truck size={20} color="var(--text-2)" />
+              </IconBtn>
+            )}
+
+            {!isMobile && (
+              <IconBtn onClick={() => go("compare")} label="Compare" className="nav-extra-btn">
+                <Scale size={20} color="var(--text-2)" />
+              </IconBtn>
+            )}
+
+            <IconBtn onClick={() => go("wishlist")} count={wishlist.length} label={!isMobile ? "Wishlist" : undefined}>
+              <Heart size={20} color="var(--text-2)" />
             </IconBtn>
 
-            {isMobile ? (
-              <>
-                <IconBtn onClick={() => go("wishlist")} count={wishlist.length} countColor="var(--error)">
-                  <Heart size={16} color={wishlist.length > 0 ? "var(--error)" : "var(--text)"} fill={wishlist.length > 0 ? "var(--error)" : "none"} />
-                </IconBtn>
-                <IconBtn onClick={() => go("cart")} count={cart.length} accent={cart.length > 0} countColor="#fff">
-                  <ShoppingCart size={16} color={cart.length > 0 ? "#000" : "var(--text)"} />
-                </IconBtn>
+            <IconBtn onClick={() => go("cart")} count={cart.length} label={!isMobile ? "Cart" : undefined}>
+              <ShoppingCart size={20} color="var(--text-2)" />
+            </IconBtn>
+
+            {!isMobile && (
+              <div style={{ paddingLeft: 8, borderLeft: "1px solid var(--border)", display: "flex", alignItems: "center" }}>
                 <ThemeToggle />
-                <IconBtn onClick={() => setMenuOpen((o) => !o)}>
-                  {menuOpen ? <X size={18} color="var(--text)" /> : <Menu size={18} color="var(--text)" />}
-                </IconBtn>
-              </>
-            ) : (
-              <>
-                <IconBtn onClick={() => go("wishlist")} count={wishlist.length} countColor="var(--error)" label="Wishlist">
-                  <Heart size={14} color={wishlist.length > 0 ? "var(--error)" : "var(--text)"} fill={wishlist.length > 0 ? "var(--error)" : "none"} />
-                </IconBtn>
-                <IconBtn onClick={() => go("cart")} count={cart.length} accent={cart.length > 0} countColor="#fff" label={`Cart${cart.length > 0 ? ` (${cart.length})` : ""}`}>
-                  <ShoppingCart size={14} color={cart.length > 0 ? "#000" : "var(--text)"} />
-                </IconBtn>
-                <IconBtn onClick={() => go("compare")} label="Compare">
-                  <Scale size={14} color="var(--text)" />
-                </IconBtn>
-                <IconBtn onClick={() => go(user ? "profile" : "login")} label={user ? "Profile" : "Login"}>
-                  <User size={14} color={user ? COLORS.green : "var(--text)"} />
-                </IconBtn>
-                <ThemeToggle />
-                <div style={{ position: "relative" }}>
-                  <button
-                    onClick={() => setBulkDropdownOpen(!bulkDropdownOpen)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      background: "var(--bg-hover)",
-                      border: "1px solid var(--bg-active)",
-                      borderRadius: 8,
-                      padding: "6px 10px",
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color: "var(--accent)",
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                      height: 30,
-                      boxSizing: "border-box",
-                      transition: "all 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "var(--bg-active)";
-                      e.currentTarget.style.borderColor = "var(--border-focus)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "var(--bg-hover)";
-                      e.currentTarget.style.borderColor = "var(--bg-active)";
-                    }}
-                  >
-                    <span className="bulk-order-text-long">Bulk Order Contact</span>
-                    <span className="bulk-order-text-short">Bulk Order</span>
-                    <ChevronDown size={11} style={{ transform: bulkDropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
-                  </button>
-                  {bulkDropdownOpen && (
-                    <div style={{
-                      position: "absolute",
-                      top: "calc(100% + 6px)",
-                      right: 0,
-                      background: "var(--bg)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 10,
-                      padding: "12px 16px",
-                      minWidth: 165,
-                      boxShadow: "0 10px 25px var(--bg-overlay)",
-                      zIndex: 1000,
-                      textAlign: "center",
-                    }}>
-                      <div style={{ color: "var(--text-2)", fontSize: 10, fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.02em" }}>Call or WhatsApp</div>
-                      <a
-                        href="tel:+919750331313"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 6,
-                          color: "var(--accent)",
-                          fontSize: 13,
-                          fontWeight: 800,
-                          textDecoration: "none",
-                        }}
-                      >
-                        <Phone size={12} />
-                        <span>+91 97503 31313</span>
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Mobile drawer */}
+        {/* Mobile Search */}
+        {isMobile && (
+          <div style={{ padding: "0 12px 12px 12px", display: "flex" }}>
+            <div style={{ display: "flex", flex: 1, border: "2px solid #0062FF", borderRadius: 8, overflow: "hidden" }}>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") onSearch?.(search);
+                }}
+                placeholder="Search laptops, models..."
+                style={{
+                  flex: 1, padding: "10px 14px", border: "none", outline: "none",
+                  background: "var(--bg-2)", color: "var(--text-2)", fontSize: 13,
+                }}
+              />
+              <button
+                onClick={() => onSearch?.(search)}
+                style={{
+                  background: "#0062FF", color: "#fff", border: "none",
+                  padding: "0 20px", fontWeight: 700, cursor: "pointer", fontSize: 13,
+                }}
+              >
+                Search
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* BOTTOM ROW (Nav Links) */}
+        {!isMobile && (
+          <div style={{ borderTop: "1px solid var(--border)" }}>
+            <div style={{
+              maxWidth: 1280, margin: "0 auto", padding: "0 24px",
+              display: "flex", alignItems: "center", justifyContent: "space-between", height: 48
+            }}>
+              <div className="nav-bottom-links" style={{ display: "flex", alignItems: "center", gap: 24 }}>
+                {navLinks.map((link) => (
+                  <div key={link} className="nav-dropdown-wrapper" style={{ position: "relative" }}>
+                    <button
+                      onClick={() => handleNavClick(link)}
+                      style={{
+                        background: "transparent", border: "none", cursor: "pointer",
+                        color: link === "Offers" ? "var(--warning)" : "var(--text-2)",
+                        fontSize: 13, fontWeight: 500,
+                        display: "flex", alignItems: "center", gap: 6, padding: "14px 0",
+                        transition: "color 0.2s"
+                      }}
+                      onMouseEnter={(e) => { if (link !== "Offers") e.currentTarget.style.color = "#0062FF"; }}
+                      onMouseLeave={(e) => { if (link !== "Offers") e.currentTarget.style.color = "var(--text-2)"; }}
+                    >
+                      {link}
+                      {link === "Laptops" && <ChevronDown size={14} />}
+                      {link === "Student Hub" && (
+                        <span className="hub-new-badge" style={{
+                          background: "var(--badge-new)", color: "#fff",
+                          fontSize: 8, fontWeight: 800, letterSpacing: "0.05em",
+                          padding: "1px 5px", borderRadius: 100, lineHeight: 1.4,
+                        }}>NEW</span>
+                      )}
+                    </button>
+
+                    {/* Dropdown for Laptops */}
+                    {link === "Laptops" && (
+                      <div className="nav-dropdown" style={{
+                        position: "absolute", top: "100%", left: 0,
+                        background: "var(--bg-1)", border: "1px solid var(--border)",
+                        borderRadius: 12, padding: 8, minWidth: 220,
+                        boxShadow: "0 12px 30px rgba(0,0,0,0.15)", zIndex: 100,
+                        display: "none", flexDirection: "column", gap: 4
+                      }}>
+                        {categories.map((c) => (
+                          <div key={c.name} onClick={() => go("listing:Laptops")} style={{
+                            fontSize: 13, fontWeight: 500, color: "var(--text-2)", cursor: "pointer",
+                            padding: "10px 16px", borderRadius: 8, transition: "background 0.2s"
+                          }} onMouseEnter={(e) => e.currentTarget.style.background = "var(--bg-hover)"}
+                            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                            {c.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Phone Number */}
+              <div className="nav-phone" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <Phone size={20} color="var(--text-2)" />
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.2 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)" }}>+91 80560 12345</span>
+                  <span style={{ fontSize: 10, fontWeight: 500, color: "var(--text-2)" }}>Mon-Sat 10AM-7PM</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile menu drawer */}
         {isMobile && menuOpen && (
           <div style={{
-            background: "color-mix(in srgb, var(--bg) 97%, transparent)", backdropFilter: "blur(24px)",
-            borderTop: "1px solid var(--border)",
-            padding: "8px 0 16px",
+            background: "var(--bg-1)", borderTop: "1px solid var(--border)", padding: "16px 20px",
+            maxHeight: "calc(100vh - 120px)", overflowY: "auto"
           }}>
             {navLinks.map((link) => (
               <button
                 key={link}
                 onClick={() => handleNavClick(link)}
                 style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  width: "100%", textAlign: "left",
-                  background: "transparent", border: "none",
-                  color: link === "Offers" ? "var(--warning)" : "var(--text)",
-                  padding: "14px 24px", cursor: "pointer",
-                  fontSize: 15, fontWeight: 500,
-                  borderBottom: "1px solid var(--border)",
-                  minHeight: 48,
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  width: "100%", textAlign: "left", background: "transparent", border: "none",
+                  color: link === "Offers" ? "var(--warning)" : "var(--text-2)",
+                  padding: "16px 0", cursor: "pointer",
+                  fontSize: 14, fontWeight: 600, borderBottom: "1px solid var(--border)",
                 }}
               >
-                {linkIcons[link]}{link}
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {link}
+                  {link === "Student Hub" && (
+                    <span style={{ background: "var(--error)", color: "#fff", fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 4 }}>NEW</span>
+                  )}
+                </div>
+                {link === "Laptops" && <ChevronDown size={18} />}
               </button>
             ))}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "12px 20px" }}>
-              {[{ l: "Compare", t: "compare", icon: <Scale size={14} /> }, { l: user ? "Profile" : "Login", t: user ? "profile" : "login", icon: <User size={14} color={user ? COLORS.green : undefined} /> }].map((b) => (
-                <button key={b.l} onClick={() => go(b.t)} style={{
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  gap: 6, background: "var(--bg-1)",
-                  color: "var(--text)", border: "1px solid var(--border)",
-                  borderRadius: 10, padding: "12px", cursor: "pointer", fontSize: 13,
-                  minHeight: 44,
-                }}>
-                  {b.icon}{b.l}
-                </button>
-              ))}
+
+            <div style={{ padding: "20px 0", borderBottom: "1px solid var(--border)", display: "flex", gap: 16 }}>
+              <IconBtn onClick={() => go("profile")} label="Profile">
+                <User size={20} color="var(--text-2)" />
+              </IconBtn>
+              <IconBtn onClick={() => go("compare")} count={0} label="Compare">
+                <Scale size={20} color="var(--text-2)" />
+              </IconBtn>
+              <IconBtn onClick={() => go("profile")} label="Track Order">
+                <Truck size={20} color="var(--text-2)" />
+              </IconBtn>
+            </div>
+
+            <div style={{ marginTop: 24, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 22, background: "var(--bg-hover)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Phone size={20} color="var(--text-2)" />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.3 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-2)" }}>+91 80560 12345</span>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-2)" }}>Mon-Sat 10AM-7PM</span>
+                </div>
+              </div>
+              <ThemeToggle />
             </div>
           </div>
         )}
         <style>{`
-          @media (max-width: 1440px) {
-            .nav-link-icon {
-              display: none !important;
-            }
-            .nav-link-about {
-              display: none !important;
-            }
-            .resell-text-long {
-              display: none !important;
-            }
-            .resell-text-short {
-              display: inline !important;
-            }
+          .nav-dropdown-wrapper:hover .nav-dropdown {
+            display: flex !important;
+          }
+          @media (max-width: 1280px) {
             .nav-btn-label {
               display: none !important;
             }
-            .bulk-order-text-long {
+            .nav-helper-txt {
               display: none !important;
             }
-            .bulk-order-text-short {
-              display: inline !important;
+            .hub-new-badge {
+              display: none !important;
+            }
+            .nav-bottom-links {
+              gap: 20px !important;
             }
           }
-          @media (min-width: 1441px) {
-            .resell-text-short {
+          @media (max-width: 1100px) {
+            .nav-phone {
               display: none !important;
             }
-            .bulk-order-text-short {
+          }
+          @media (max-width: 1000px) {
+            .nav-extra-btn {
               display: none !important;
             }
           }
         `}</style>
-        {/* Search Dropdown Overlay */}
-        <div
-          className={`absolute top-full left-0 w-full bg-white border-b border-border-base shadow-md transition-all duration-300 ease-in-out origin-top ${
-            searchActive
-              ? 'scale-y-100 opacity-100'
-              : 'scale-y-0 opacity-0 pointer-events-none'
-          }`}
-          style={{ 
-            position: 'absolute', top: '100%', left: 0, width: '100%', 
-            background: 'var(--bg-1)', borderBottom: '1px solid var(--border-hi)',
-            transition: 'all 0.3s ease-in-out',
-            transformOrigin: 'top',
-            transform: searchActive ? 'scaleY(1)' : 'scaleY(0)',
-            opacity: searchActive ? 1 : 0,
-            pointerEvents: searchActive ? 'auto' : 'none',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <div style={{ maxWidth: '100%', margin: '0 auto', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                onSearch?.(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") onSearch?.(search);
-              }}
-              autoFocus={searchActive}
-              placeholder="Search products, blogs, and more..."
-              style={{
-                flex: 1,
-                background: "var(--bg-2)",
-                border: "1px solid var(--border-hi)",
-                borderRadius: 8,
-                padding: "10px 16px",
-                color: "var(--text)",
-                fontSize: 14,
-                outline: "none",
-              }}
-            />
-            <button
-              onClick={() => {
-                setSearchActive(false);
-                setSearch("");
-                onSearch?.("");
-              }}
-              style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-2)", padding: 8, display: 'flex', alignItems: 'center' }}
-            >
-              <X size={20} />
-            </button>
-          </div>
-        </div>
       </nav>
+      <RequestProductModal isOpen={requestModalOpen} onClose={() => setRequestModalOpen(false)} />
     </>
   );
 }
 
 /* ── Small icon button helper ─────────────────────────── */
 function IconBtn({
-  children, onClick, count, countColor, accent, label,
+  children, onClick, count, label, className,
 }: {
   children: React.ReactNode;
   onClick: () => void;
   count?: number;
-  countColor?: string;
-  accent?: boolean;
   label?: string;
+  className?: string;
 }) {
   return (
     <button
       onClick={onClick}
+      className={className}
       style={{
-        background: accent ? COLORS.green : "transparent",
-        border: `1px solid ${accent ? "transparent" : "var(--border)"}`,
-        borderRadius: 8,
-        height: 34,
-        display: "flex", alignItems: "center", gap: 5,
-        padding: label ? "0 12px" : "0 9px",
-        cursor: "pointer", position: "relative",
-        fontSize: 12, fontWeight: 600,
-        color: accent ? "#000" : "var(--text)",
-        transition: "all 0.2s",
-        whiteSpace: "nowrap",
+        background: "transparent", border: "none", cursor: "pointer",
+        display: "flex", alignItems: "center", gap: 8, color: "var(--text-2)",
+        fontWeight: 500, fontSize: 12, padding: "6px 4px", transition: "color 0.2s"
       }}
-      onMouseEnter={(e) => { if (!accent) (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-focus)"; }}
-      onMouseLeave={(e) => { if (!accent) (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
+      onMouseEnter={(e) => e.currentTarget.style.color = "#0062FF"}
+      onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-2)"}
     >
-      {children}
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {children}
+        {count !== undefined && (
+          <span style={{
+            position: "absolute", top: -8, right: -8,
+            background: count > 0 ? "#0062FF" : "var(--bg-hover)",
+            color: count > 0 ? "#fff" : "var(--text-2)", borderRadius: "50%",
+            width: 18, height: 18, fontSize: 10, fontWeight: 800,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            border: `2px solid var(--bg-1)`,
+          }}>
+            {count}
+          </span>
+        )}
+      </div>
       {label && <span className="nav-btn-label">{label}</span>}
-      {count !== undefined && count > 0 && (
-        <span style={{
-          position: "absolute", top: -5, right: -5,
-          background: countColor ?? "var(--error)",
-          color: "var(--text)", borderRadius: "50%",
-          width: 16, height: 16, fontSize: 9, fontWeight: 800,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          border: `2px solid ${COLORS.darkBg}`,
-        }}>
-          {count}
-        </span>
-      )}
     </button>
   );
 }

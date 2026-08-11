@@ -9,10 +9,16 @@ export const COLORS = {
   greenDark: "var(--accent-2)",
   cyan: "var(--accent-3)",
   indigo: "var(--accent-indigo)",
-  primary: "var(--accent-2)",
+  primary: "var(--accent)",
   accent: "var(--warning)",
-  badge: "var(--accent-2)",
+  badge: "var(--accent)",
   black: "var(--bg)",
+  blue: "#0062FF",
+  blueHov: "#0052D6",
+  hubAccent: "#6D28D9",
+  hubAccentLight: "var(--hub-accent-light)",
+  greenLegacy: "#76C227",
+  successGreen: "#059669",
 } as const;
 
 export type Product = {
@@ -307,6 +313,7 @@ export const navLinks = [
   "Offers",
   "Laptops",
   "Desktops",
+  "Student Hub",
   "Blog",
   "Accessories",
   "Resell Laptop",

@@ -3,6 +3,7 @@ import { collection, doc, setDoc, deleteDoc, onSnapshot, query, getDoc, updateDo
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { db, auth } from "./lib/firebase";
 import { uploadProductImage, uploadVideoToCloudinary } from "./lib/storage";
+import { deleteCloudinaryAssets } from "./lib/cloudinaryDelete";
 import AdminLogin from "./components/AdminLogin";
 import {
   LayoutDashboard,
@@ -42,7 +43,10 @@ import {
   PackageX,
   PackagePlus,
   ArrowUpRight,
-  Layers
+  Layers,
+  Award,
+  ChevronRight,
+  Calendar
 } from 'lucide-react';
 
 // compressImage removed (using storage.ts module)
@@ -93,6 +97,8 @@ interface Product {
   amazon_url?: string;
   flipkart_url?: string;
   croma_url?: string;
+  imagePublicId?: string;
+  imagePublicIds?: string[];
 }
 
 interface AccessoryProduct {
@@ -106,6 +112,7 @@ interface AccessoryProduct {
   img: string;
   brand: string;
   specs: string;
+  imagePublicId?: string;
 }
 
 interface Banner {
@@ -114,6 +121,7 @@ interface Banner {
   title: string;
   desc: string;
   target: string;
+  imagePublicId?: string;
 }
 
 // Initial defaults to populate storage if empty
@@ -222,7 +230,7 @@ export const DEFAULT_BANNERS: Banner[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'hero_posters' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests' | 'coupons' | 'product_requests'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'hero_posters' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests' | 'coupons' | 'product_requests' | 'student_hub' | 'users'>('overview');
   const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed' | 'unpaid'>('active');
   const [ordersPage, setOrdersPage] = useState(0);
 
@@ -273,6 +281,22 @@ export default function App() {
   const [heroPosters, setHeroPosters] = useState<any[]>([]);
   const [blogs, setBlogs] = useState<any[]>([]);
   const [subscribers, setSubscribers] = useState<any[]>([]);
+
+  // Student Hub state
+  const [giveawayConfig, setGiveawayConfig] = useState<{prizeTitle: string, prizeImage: string, deadline: string, prizeImagePublicId?: string}>({ prizeTitle: '', prizeImage: '', deadline: '' });
+  const [winnerForm, setWinnerForm] = useState({ name: '', city: '', blogTitle: '', photo: '' });
+  const [lastWinnerData, setLastWinnerData] = useState<any>(null);
+  const [hubSaving, setHubSaving] = useState(false);
+  const [hubImageUploading, setHubImageUploading] = useState(false);
+  const [hubLeaderboard, setHubLeaderboard] = useState<{ email: string; name: string; articles: number; reads: number }[]>([]);
+  const [hubBlogsLoaded, setHubBlogsLoaded] = useState(false);
+
+  // Users tab state
+  const [usersData, setUsersData] = useState<any[]>([]);
+  const [usersLoaded, setUsersLoaded] = useState(false);
+  const [usersSearch, setUsersSearch] = useState('');
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [userOrders, setUserOrders] = useState<Record<string, any[]>>({});
 
   // Search filter states
   const [productSearch, setProductSearch] = useState('');
@@ -349,7 +373,7 @@ export default function App() {
   });
 
   // Form states - Hero Poster
-  const [heroPosterForm, setHeroPosterForm] = useState<{ src: string; mobileSrc?: string; title: string; target: string; }>({
+  const [heroPosterForm, setHeroPosterForm] = useState<{ src: string; mobileSrc?: string; title: string; target: string; imagePublicId?: string; mobileSrcPublicId?: string; }>({
     src: '', mobileSrc: '', title: '', target: 'listing'
   });
 
@@ -357,11 +381,13 @@ export default function App() {
   const [videoTitle, setVideoTitle] = useState("Explore Laptopkart in Action");
   const [videoSubtitle, setVideoSubtitle] = useState("Watch our certified refurbishment process and see why thousands trust us.");
   const [videoUrl, setVideoUrl] = useState("");
-  const [videoOrientation, setVideoOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [videoPublicId, setVideoPublicId] = useState("");
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [videoPoster, setVideoPoster] = useState("");
-  const [videoEyebrow, setVideoEyebrow] = useState("Introduction");
+  const [videoPosterPublicId, setVideoPosterPublicId] = useState("");
   const [uploadingPoster, setUploadingPoster] = useState(false);
+  const [videoOrientation, setVideoOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [videoEyebrow, setVideoEyebrow] = useState("Introduction");
 
   // Form states - Coupons
   const [couponCode, setCouponCode] = useState("");
@@ -465,8 +491,10 @@ export default function App() {
           if (data.title) setVideoTitle(data.title);
           if (data.subtitle) setVideoSubtitle(data.subtitle);
           if (data.videoUrl) setVideoUrl(data.videoUrl);
-          if (data.orientation) setVideoOrientation(data.orientation);
+          if (data.videoPublicId) setVideoPublicId(data.videoPublicId);
           if (data.posterUrl) setVideoPoster(data.posterUrl);
+          if (data.videoPosterPublicId) setVideoPosterPublicId(data.videoPosterPublicId);
+          if (data.orientation) setVideoOrientation(data.orientation);
           if (data.eyebrow) setVideoEyebrow(data.eyebrow);
         }
       },
@@ -650,8 +678,9 @@ export default function App() {
     const files = e.target.files;
     if (!files) return;
 
-    const promises: Promise<string>[] = [];
+    const promises: Promise<{ url: string; publicId: string }>[] = [];
     const currentImages = productForm.images || [];
+    const currentPublicIds = productForm.imagePublicIds || [];
     const maxFiles = Math.min(files.length, 5 - currentImages.length);
 
     for (let i = 0; i < maxFiles; i++) {
@@ -659,13 +688,18 @@ export default function App() {
     }
 
     try {
-      const urls = await Promise.all(promises);
+      const results = await Promise.all(promises);
+      const urls = results.map(r => r.url);
+      const publicIds = results.map(r => r.publicId);
       const newImages = [...currentImages, ...urls].slice(0, 5);
+      const newPublicIds = [...currentPublicIds, ...publicIds].slice(0, 5);
 
       setProductForm(prev => ({
         ...prev,
         images: newImages,
-        img: prev.img || newImages[0] || ''
+        img: prev.img || newImages[0] || '',
+        imagePublicIds: newPublicIds,
+        imagePublicId: prev.imagePublicId || newPublicIds[0] || ''
       }));
       setGalleryLinksText(newImages.join(', '));
       triggerAlert('success', `Uploaded ${urls.length} images successfully to Cloudinary.`);
@@ -677,11 +711,15 @@ export default function App() {
 
   const handleRemoveProductImage = (idx: number) => {
     const currentImages = productForm.images || [];
+    const currentPublicIds = productForm.imagePublicIds || [];
     const newImages = currentImages.filter((_, i) => i !== idx);
+    const newPublicIds = currentPublicIds.filter((_, i) => i !== idx);
     setProductForm(prev => ({
       ...prev,
       images: newImages,
-      img: prev.img === currentImages[idx] ? (newImages[0] || '') : prev.img
+      img: prev.img === currentImages[idx] ? (newImages[0] || '') : prev.img,
+      imagePublicIds: newPublicIds,
+      imagePublicId: prev.imagePublicId === currentPublicIds[idx] ? (newPublicIds[0] || '') : prev.imagePublicId
     }));
     setGalleryLinksText(newImages.join(', '));
   };
@@ -690,10 +728,11 @@ export default function App() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     try {
-      const url = await uploadProductImage(files[0]);
+      const { url, publicId } = await uploadProductImage(files[0]);
       setAccessoryForm(prev => ({
         ...prev,
-        img: url
+        img: url,
+        imagePublicId: publicId
       }));
       triggerAlert('success', 'Accessory image uploaded successfully to Cloudinary.');
     } catch (err) {
@@ -710,10 +749,11 @@ export default function App() {
 
     setUploadingBanner(true);
     try {
-      const url = await uploadProductImage(files[0]);
+      const { url, publicId } = await uploadProductImage(files[0]);
       setBannerForm(prev => ({
         ...prev,
-        src: url
+        src: url,
+        imagePublicId: publicId
       }));
       triggerAlert('success', 'Banner image uploaded successfully.');
     } catch (err) {
@@ -733,10 +773,11 @@ export default function App() {
 
     setUploadingHeroPoster(true);
     try {
-      const url = await uploadProductImage(files[0]);
+      const { url, publicId } = await uploadProductImage(files[0]);
       setHeroPosterForm(prev => ({
         ...prev,
-        src: url
+        src: url,
+        imagePublicId: publicId
       }));
       triggerAlert('success', 'Hero poster image uploaded successfully.');
     } catch (err) {
@@ -753,10 +794,11 @@ export default function App() {
 
     setUploadingHeroPosterMobile(true);
     try {
-      const url = await uploadProductImage(files[0]);
+      const { url, publicId } = await uploadProductImage(files[0]);
       setHeroPosterForm(prev => ({
         ...prev,
-        mobileSrc: url
+        mobileSrc: url,
+        mobileSrcPublicId: publicId
       }));
       triggerAlert('success', 'Mobile hero poster image uploaded successfully.');
     } catch (err) {
@@ -773,8 +815,9 @@ export default function App() {
     setUploadingVideo(true);
     try {
       triggerAlert('success', 'Starting video upload to Cloudinary... Please wait.');
-      const url = await uploadVideoToCloudinary(files[0]);
+      const { url, publicId } = await uploadVideoToCloudinary(files[0]);
       setVideoUrl(url);
+      setVideoPublicId(publicId);
       triggerAlert('success', 'Video uploaded successfully to Cloudinary!');
     } catch (err: any) {
       console.error(err);
@@ -789,8 +832,9 @@ export default function App() {
     if (!files || files.length === 0) return;
     setUploadingPoster(true);
     try {
-      const url = await uploadProductImage(files[0]);
+      const { url, publicId } = await uploadProductImage(files[0]);
       setVideoPoster(url);
+      setVideoPosterPublicId(publicId);
       triggerAlert('success', 'Poster image uploaded successfully!');
     } catch (err: any) {
       console.error(err);
@@ -810,8 +854,10 @@ export default function App() {
         title: videoTitle.trim(),
         subtitle: videoSubtitle.trim(),
         videoUrl: videoUrl.trim(),
-        orientation: videoOrientation,
+        videoPublicId: videoPublicId,
         posterUrl: videoPoster.trim(),
+        videoPosterPublicId: videoPosterPublicId,
+        orientation: videoOrientation,
         eyebrow: videoEyebrow.trim(),
         updatedAt: new Date().toISOString()
       });
@@ -823,21 +869,28 @@ export default function App() {
   };
 
   const handleVideoDelete = async () => {
-    if (confirm('Are you sure you want to delete the promo video section? This will remove the video from the homepage.')) {
-      try {
-        await deleteDoc(doc(db, "homepage_settings", "video"));
+    if (!confirm('Are you sure you want to delete the promo video section? This will remove the video from the homepage.')) return;
+    try {
+      const videoDoc = await getDoc(doc(db, "homepage_settings", "video"));
+      if (videoDoc.exists()) {
+        const data = videoDoc.data();
+        if (data.videoPublicId) await deleteCloudinaryAssets([data.videoPublicId], "video");
+        if (data.videoPosterPublicId) await deleteCloudinaryAssets([data.videoPosterPublicId], "image");
+      }
+      await deleteDoc(doc(db, "homepage_settings", "video"));
         setVideoTitle("Explore Laptopkart in Action");
         setVideoSubtitle("Watch our certified refurbishment process and see why thousands trust us.");
         setVideoUrl("");
-        setVideoOrientation("landscape");
+        setVideoPublicId("");
         setVideoPoster("");
+        setVideoPosterPublicId("");
+        setVideoOrientation("landscape");
         setVideoEyebrow("Introduction");
         triggerAlert('success', 'Promo video deleted successfully!');
       } catch (err) {
         console.error(err);
         triggerAlert('danger', 'Error deleting promo video.');
       }
-    }
   };
 
   interface Order {
@@ -858,6 +911,29 @@ export default function App() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [newOrderAlert, setNewOrderAlert] = useState<Order | null>(null);
   const orderStatusesRef = useRef<Record<string, string>>({});
+
+  // Fetch current Student Hub contest and last winner
+  useEffect(() => {
+    if (!admin) return;
+    
+    const fetchGiveawayData = async () => {
+      try {
+        const currentDoc = await getDoc(doc(db, "giveaway", "current"));
+        if (currentDoc.exists()) {
+          setGiveawayConfig(currentDoc.data() as any);
+        }
+        
+        const lastWinnerDoc = await getDoc(doc(db, "giveaway", "lastWinner"));
+        if (lastWinnerDoc.exists()) {
+          setLastWinnerData(lastWinnerDoc.data());
+        }
+      } catch (err) {
+        console.error("Error fetching giveaway data:", err);
+      }
+    };
+    
+    fetchGiveawayData();
+  }, [admin]);
 
   // Subscribe to live order checkouts (WebSockets)
   useEffect(() => {
@@ -1062,6 +1138,8 @@ export default function App() {
       amazon_url: productForm.amazon_url || '',
       flipkart_url: productForm.flipkart_url || '',
       croma_url: productForm.croma_url || '',
+      imagePublicId: productForm.imagePublicId || '',
+      imagePublicIds: productForm.imagePublicIds || [],
     };
 
     if (productForm.condition === 'Refurbished') {
@@ -1135,12 +1213,21 @@ export default function App() {
     setProductModal({ open: true, mode: 'edit', item });
   };
 
-  const handleProductDelete = (id: any) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      deleteDoc(doc(db, "products", String(id)))
-        .then(() => triggerAlert('success', 'Product deleted successfully!'))
-        .catch(() => triggerAlert('danger', 'Failed to delete product.'));
+  const handleProductDelete = async (id: any) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    
+    const product = products.find(p => p.id === id);
+    if (product) {
+      const ids = [
+        product.imagePublicId,
+        ...(product.imagePublicIds || []),
+      ].filter(Boolean) as string[];
+      await deleteCloudinaryAssets(ids);
     }
+
+    deleteDoc(doc(db, "products", String(id)))
+      .then(() => triggerAlert('success', 'Product deleted successfully!'))
+      .catch(() => triggerAlert('danger', 'Failed to delete product.'));
   };
 
   const handleOrderStatusChange = async (orderId: string, newStatus: string) => {
@@ -1274,6 +1361,7 @@ export default function App() {
       reviews: accessoryModal.mode === 'edit' ? accessoryModal.item!.reviews : 5,
       specs: accessoryForm.specs || 'N/A',
       img: accessoryForm.img || 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&q=80&auto=format&fit=crop',
+      imagePublicId: accessoryForm.imagePublicId || '',
     };
 
     setDoc(doc(db, "accessories", docId), aData)
@@ -1299,12 +1387,15 @@ export default function App() {
     setAccessoryModal({ open: true, mode: 'edit', item });
   };
 
-  const handleAccessoryDelete = (id: any) => {
-    if (confirm('Are you sure you want to delete this accessory?')) {
-      deleteDoc(doc(db, "accessories", String(id)))
-        .then(() => triggerAlert('success', 'Accessory deleted successfully!'))
-        .catch(() => triggerAlert('danger', 'Failed to delete accessory.'));
-    }
+  const handleAccessoryDelete = async (id: any) => {
+    if (!confirm('Are you sure you want to delete this accessory?')) return;
+
+    const acc = accessories.find((a: any) => a.id === id);
+    if (acc?.imagePublicId) await deleteCloudinaryAssets([acc.imagePublicId]);
+
+    deleteDoc(doc(db, "accessories", String(id)))
+      .then(() => triggerAlert('success', 'Accessory deleted successfully!'))
+      .catch(() => triggerAlert('danger', 'Failed to delete accessory.'));
   };
 
   // Banner CRUD Handlers
@@ -1329,6 +1420,7 @@ export default function App() {
       title: bannerForm.title.trim(),
       desc: bannerForm.desc?.trim() || '',
       target: bannerForm.target || 'listing',
+      imagePublicId: bannerForm.imagePublicId || '',
     };
 
     try {
@@ -1370,6 +1462,8 @@ export default function App() {
       mobileSrc: heroPosterForm.mobileSrc || '',
       title: heroPosterForm.title.trim(),
       target: heroPosterForm.target || 'listing',
+      imagePublicId: heroPosterForm.imagePublicId || '',
+      mobileSrcPublicId: heroPosterForm.mobileSrcPublicId || '',
     };
 
     try {
@@ -1384,21 +1478,30 @@ export default function App() {
     }
   };
 
-  const handleDeleteHeroPoster = (docId: string) => {
-    if (confirm('Are you sure you want to delete this hero poster?')) {
-      deleteDoc(doc(db, "heroPosters", docId))
-        .then(() => triggerAlert('success', 'Hero poster deleted!'))
-        .catch(() => triggerAlert('danger', 'Failed to delete hero poster.'));
+  const handleDeleteHeroPoster = async (docId: string) => {
+    if (!confirm('Are you sure you want to delete this hero poster?')) return;
+
+    const poster = heroPosters.find((p: any) => p.id === docId || p.title?.replace(/[^a-zA-Z0-9]/g,"_").toLowerCase() === docId);
+    if (poster) {
+      const ids = [poster.imagePublicId, poster.mobileSrcPublicId].filter(Boolean) as string[];
+      await deleteCloudinaryAssets(ids);
     }
+
+    deleteDoc(doc(db, "heroPosters", docId))
+      .then(() => triggerAlert('success', 'Hero poster deleted!'))
+      .catch(() => triggerAlert('danger', 'Failed to delete hero poster.'));
   };
 
-  const handleBannerDelete = (title: string) => {
-    if (confirm('Are you sure you want to delete this slide banner?')) {
-      const docId = title.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
-      deleteDoc(doc(db, "banners", docId))
-        .then(() => triggerAlert('success', 'Banner removed successfully!'))
-        .catch(() => triggerAlert('danger', 'Error removing banner.'));
-    }
+  const handleBannerDelete = async (title: string) => {
+    if (!confirm('Are you sure you want to delete this slide banner?')) return;
+
+    const docId = title.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+    const banner = banners.find((b: any) => b.title === title);
+    if (banner?.imagePublicId) await deleteCloudinaryAssets([banner.imagePublicId]);
+
+    deleteDoc(doc(db, "banners", docId))
+      .then(() => triggerAlert('success', 'Banner removed successfully!'))
+      .catch(() => triggerAlert('danger', 'Error removing banner.'));
   };
 
   const handleBlogDelete = (id: string) => {
@@ -1687,6 +1790,8 @@ export default function App() {
             { id: 'sell_requests', label: 'Sell Requests', icon: <RefreshCw size={18} /> },
             { id: 'coupons', label: 'Coupons', icon: <Tag size={18} /> },
             { id: 'product_requests', label: 'Product Requests', icon: <ClipboardList size={18} /> },
+            { id: 'student_hub', label: 'Student Hub', icon: <Sparkles size={18} /> },
+            { id: 'users', label: 'Users', icon: <User size={18} /> },
           ].map(tab => (
             <button
               key={tab.id}
@@ -3964,8 +4069,6 @@ export default function App() {
           </div>
         )}
 
-      </main>
-
       {/* ── Modal: Product Form ── */}
       {productModal.open && (
         <div style={{
@@ -4831,6 +4934,531 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* ── Tab: STUDENT HUB ── */}
+      {activeTab === 'student_hub' && (() => {
+        // Build leaderboard from blogs state
+        if (!hubBlogsLoaded && blogs.length > 0) {
+          const byEmail: Record<string, { email: string; name: string; articles: number; reads: number }> = {};
+          blogs.forEach((b: any) => {
+            const email = (b.authorEmail || '').toLowerCase();
+            if (!email) return;
+            if (!byEmail[email]) byEmail[email] = { email, name: b.authorName || b.author || email.split('@')[0], articles: 0, reads: 0 };
+            byEmail[email].articles += 1;
+            byEmail[email].reads += (b.reads || 0);
+          });
+          const board = Object.values(byEmail).sort((a, b) => b.reads !== a.reads ? b.reads - a.reads : b.articles - a.articles);
+          if (board.length !== hubLeaderboard.length) {
+            setHubLeaderboard(board);
+            setHubBlogsLoaded(true);
+          }
+        }
+
+        const handleSaveGiveaway = async () => {
+          if (!giveawayConfig.prizeTitle.trim()) return triggerAlert('danger', 'Prize title is required.');
+          setHubSaving(true);
+          try {
+            await setDoc(doc(db, 'giveaway', 'current'), {
+              ...giveawayConfig,
+              updatedAt: new Date().toISOString()
+            });
+            triggerAlert('success', 'Giveaway config saved to Firestore!');
+          } catch (err) {
+            triggerAlert('danger', 'Failed to save giveaway config.');
+          } finally {
+            setHubSaving(false);
+          }
+        };
+
+        const handleDeleteGiveaway = async () => {
+          if (!window.confirm("Are you sure you want to clear the current contest?")) return;
+          setHubSaving(true);
+          try {
+            if (giveawayConfig.prizeImagePublicId) {
+              await deleteCloudinaryAssets([giveawayConfig.prizeImagePublicId]);
+            }
+            await deleteDoc(doc(db, 'giveaway', 'current'));
+            setGiveawayConfig({ prizeTitle: '', prizeImage: '', deadline: '' });
+            triggerAlert('success', 'Giveaway contest cleared!');
+          } catch (err) {
+            triggerAlert('danger', 'Failed to clear contest.');
+          } finally {
+            setHubSaving(false);
+          }
+        };
+
+
+        const handlePrizeImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+          const files = e.target.files;
+          if (!files || files.length === 0) return;
+          setHubImageUploading(true);
+          try {
+            const { url, publicId } = await uploadProductImage(files[0]);
+            setGiveawayConfig(p => ({ ...p, prizeImage: url, prizeImagePublicId: publicId }));
+            triggerAlert('success', 'Prize image uploaded successfully.');
+          } catch (err) {
+            console.error(err);
+            triggerAlert('danger', 'Error uploading prize image.');
+          } finally {
+            setHubImageUploading(false);
+            if (e.target) e.target.value = '';
+          }
+        };
+
+        const handleAnnounceWinner = async () => {
+          if (!winnerForm.name.trim() || !winnerForm.blogTitle.trim()) return triggerAlert('danger', 'Winner name and blog title are required.');
+          setHubSaving(true);
+          try {
+            await setDoc(doc(db, 'giveaway', 'lastWinner'), {
+              ...winnerForm,
+              announcedAt: new Date().toISOString()
+            });
+            triggerAlert('success', 'Winner announced and saved to Firestore!');
+            setWinnerForm({ name: '', city: '', blogTitle: '', photo: '' });
+          } catch (err) {
+            triggerAlert('danger', 'Failed to announce winner.');
+          } finally {
+            setHubSaving(false);
+          }
+        };
+
+        const contestBlogs = blogs.filter((b: any) => b.approved !== false);
+
+        return (
+          <div className="fade-in">
+            <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+              Student Hub Management
+            </h1>
+            <p style={{ color: '#8B9BBE', fontSize: 15, marginBottom: 32 }}>
+              Manage the weekly blog contest giveaway, leaderboard, and contest submissions.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24, marginBottom: 32 }}>
+
+              {/* Giveaway Config Card */}
+              <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.15)', borderRadius: 24, padding: 28 }}>
+                <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Sparkles size={18} color="#F59E0B" /> Current Giveaway Prize
+                </h2>
+                <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>Saved to Firestore <code style={{ color: '#38BDF8' }}>giveaway/current</code></p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Prize Title</label>
+                    <input
+                      className="form-input"
+                      placeholder="e.g. Win a Bluetooth Neckband"
+                      value={giveawayConfig.prizeTitle}
+                      onChange={e => setGiveawayConfig(p => ({ ...p, prizeTitle: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Prize Image</label>
+                    {giveawayConfig.prizeImage && (
+                      <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
+                        <img src={giveawayConfig.prizeImage} alt="Prize preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <button
+                          onClick={async () => {
+                            setHubImageUploading(true);
+                            try {
+                              if (giveawayConfig.prizeImagePublicId) {
+                                await deleteCloudinaryAssets([giveawayConfig.prizeImagePublicId]);
+                              }
+                              await setDoc(doc(db, 'giveaway', 'current'), { prizeImage: '', prizeImagePublicId: '' }, { merge: true });
+                              triggerAlert('success', 'Prize image removed.');
+                            } catch (err) {
+                              console.error(err);
+                              triggerAlert('danger', 'Failed to remove prize image.');
+                            } finally {
+                              setHubImageUploading(false);
+                            }
+                            setGiveawayConfig(p => ({ ...p, prizeImage: '', prizeImagePublicId: '' }));
+                          }}
+                          title="Remove image"
+                          style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                    <div
+                      onClick={() => { if (!hubImageUploading) document.getElementById('prize-file-input')?.click(); }}
+                      style={{
+                        background: 'rgba(26, 34, 53, 0.4)',
+                        border: '2px dashed rgba(56,189,248,0.25)',
+                        borderRadius: 16,
+                        padding: '20px 16px',
+                        textAlign: 'center',
+                        cursor: hubImageUploading ? 'wait' : 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={e => {
+                        if (!hubImageUploading) {
+                          e.currentTarget.style.borderColor = '#38BDF8';
+                          e.currentTarget.style.background = 'rgba(56,189,248,0.04)';
+                        }
+                      }}
+                      onMouseLeave={e => {
+                        if (!hubImageUploading) {
+                          e.currentTarget.style.borderColor = 'rgba(56,189,248,0.25)';
+                          e.currentTarget.style.background = 'rgba(26, 34, 53, 0.4)';
+                        }
+                      }}
+                    >
+                      <ImageIcon size={26} color="#38BDF8" style={{ marginBottom: 6 }} />
+                      <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
+                        {hubImageUploading ? 'Uploading image...' : 'Upload prize image'}
+                      </div>
+                      <div style={{ color: '#8B9BBE', fontSize: 11 }}>Click to browse files (JPG / PNG)</div>
+                      <input
+                        id="prize-file-input"
+                        type="file"
+                        accept="image/*"
+                        disabled={hubImageUploading}
+                        onChange={handlePrizeImageUpload}
+                        style={{ display: 'none' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                      <div style={{ flex: 1, height: 1, background: 'rgba(139,155,190,0.2)' }} />
+                      <span style={{ color: '#8B9BBE', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>or paste a URL</span>
+                      <div style={{ flex: 1, height: 1, background: 'rgba(139,155,190,0.2)' }} />
+                    </div>
+                    <input
+                      className="form-input"
+                      placeholder="https://..."
+                      value={giveawayConfig.prizeImage}
+                      onChange={e => setGiveawayConfig(p => ({ ...p, prizeImage: e.target.value }))}
+                      style={{ marginTop: 10 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Contest Deadline</label>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      <div style={{ position: "relative" }}>
+                        <div style={{ position: "absolute", left: 14, top: 0, bottom: 0, display: "flex", alignItems: "center", pointerEvents: "none" }}>
+                          <Calendar size={16} color="#8B9BBE" />
+                        </div>
+                        <input
+                          type="date"
+                          value={giveawayConfig.deadline ? giveawayConfig.deadline.split("T")[0] : ""}
+                          onChange={(e) => {
+                            const date = e.target.value;
+                            const time = giveawayConfig.deadline && giveawayConfig.deadline.includes("T") 
+                              ? giveawayConfig.deadline.split("T")[1] 
+                              : "12:00";
+                            setGiveawayConfig(p => ({ ...p, deadline: `${date}T${time}` }));
+                          }}
+                          style={{
+                            width: "100%", background: "#0d1117", border: "1px solid #30363d", borderRadius: 8, padding: "12px 14px 12px 40px", color: "#e6edf3", outline: "none", fontSize: 13, colorScheme: "dark", boxSizing: "border-box", transition: "border-color 0.2s"
+                          }}
+                          onFocus={e => e.target.style.borderColor = "#38BDF8"}
+                          onBlur={e => e.target.style.borderColor = "#30363d"}
+                        />
+                      </div>
+                      <div style={{ position: "relative" }}>
+                        <div style={{ position: "absolute", left: 14, top: 0, bottom: 0, display: "flex", alignItems: "center", pointerEvents: "none" }}>
+                          <Clock size={16} color="#8B9BBE" />
+                        </div>
+                        <input
+                          type="time"
+                          value={giveawayConfig.deadline && giveawayConfig.deadline.includes("T") ? giveawayConfig.deadline.split("T")[1] : ""}
+                          onChange={(e) => {
+                            const time = e.target.value;
+                            const date = giveawayConfig.deadline ? giveawayConfig.deadline.split("T")[0] : new Date().toISOString().split("T")[0];
+                            setGiveawayConfig(p => ({ ...p, deadline: `${date}T${time}` }));
+                          }}
+                          style={{
+                            width: "100%", background: "#0d1117", border: "1px solid #30363d", borderRadius: 8, padding: "12px 14px 12px 40px", color: "#e6edf3", outline: "none", fontSize: 13, colorScheme: "dark", boxSizing: "border-box", transition: "border-color 0.2s"
+                          }}
+                          onFocus={e => e.target.style.borderColor = "#38BDF8"}
+                          onBlur={e => e.target.style.borderColor = "#30363d"}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <button
+                      onClick={handleSaveGiveaway}
+                      disabled={hubSaving}
+                      style={{ flex: 1, background: 'linear-gradient(135deg, #F59E0B, #EF4444)', color: '#000', border: 'none', borderRadius: 12, padding: '12px 0', fontWeight: 800, fontFamily: 'Sora', cursor: 'pointer', fontSize: 14 }}
+                    >
+                      {hubSaving ? 'Saving...' : 'Save Giveaway Config'}
+                    </button>
+                    <button
+                      onClick={handleDeleteGiveaway}
+                      disabled={hubSaving}
+                      style={{ flex: 1, background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 12, padding: '12px 0', fontWeight: 800, fontFamily: 'Sora', cursor: 'pointer', fontSize: 14 }}
+                    >
+                      Clear Contest
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Announce Winner Card */}
+              <div style={{ background: '#1a2235', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 24, padding: 28 }}>
+                <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Award size={18} color="#8B5CF6" /> Announce Last Week's Winner
+                </h2>
+                <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>Saved to Firestore <code style={{ color: '#38BDF8' }}>giveaway/lastWinner</code></p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winner's Name</label>
+                    <input className="form-input" placeholder="e.g. Rahul Verma" value={winnerForm.name} onChange={e => setWinnerForm(p => ({ ...p, name: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>City / College</label>
+                    <input className="form-input" placeholder="e.g. VIT, Chennai" value={winnerForm.city} onChange={e => setWinnerForm(p => ({ ...p, city: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winning Blog Title</label>
+                    <input className="form-input" placeholder="e.g. 10 AI Tools That Changed My College Life" value={winnerForm.blogTitle} onChange={e => setWinnerForm(p => ({ ...p, blogTitle: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winner Photo URL (optional)</label>
+                    <input className="form-input" placeholder="https://..." value={winnerForm.photo} onChange={e => setWinnerForm(p => ({ ...p, photo: e.target.value }))} />
+                  </div>
+                  <button
+                    onClick={handleAnnounceWinner}
+                    disabled={hubSaving}
+                    style={{ background: 'linear-gradient(135deg, #8B5CF6, #38BDF8)', color: '#000', border: 'none', borderRadius: 12, padding: '12px 0', fontWeight: 800, fontFamily: 'Sora', cursor: 'pointer', fontSize: 14 }}
+                  >
+                    {hubSaving ? 'Announcing...' : '🏆 Announce Winner'}
+                  </button>
+                </div>
+              </div>
+
+              {lastWinnerData && (
+                <div style={{ background: '#1a2235', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 24, padding: 28, marginTop: 24 }}>
+                  <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Award size={18} color="#10B981" /> Currently Announced Winner
+                  </h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    {lastWinnerData.photo ? (
+                      <img src={lastWinnerData.photo} alt={lastWinnerData.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #10B981, #34D399)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 800, fontSize: 24 }}>
+                        {lastWinnerData.name?.substring(0, 2).toUpperCase() || "W"}
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{lastWinnerData.name}</div>
+                      <div style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 4 }}>{lastWinnerData.city}</div>
+                      <div style={{ color: '#38BDF8', fontSize: 13, fontWeight: 600 }}>{lastWinnerData.blogTitle}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Leaderboard Preview */}
+            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 24, padding: 28, marginBottom: 32 }}>
+              <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <TrendingUp size={18} color="#38BDF8" /> Leaderboard Preview
+              </h2>
+              <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>Ranked by total reads, then article count. Derived from the <code style={{ color: '#38BDF8' }}>blogs</code> collection.</p>
+              {hubLeaderboard.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: '#8B9BBE', fontSize: 13 }}>No blog data yet.</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {hubLeaderboard.slice(0, 10).map((entry, idx) => (
+                    <div key={entry.email} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '12px 16px' }}>
+                      <span style={{ fontSize: 16, width: 30, textAlign: 'center', flexShrink: 0 }}>{['🥇', '🥈', '🥉'][idx] || `#${idx + 1}`}</span>
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
+                        {entry.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ color: '#fff', fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.name}</div>
+                        <div style={{ color: '#8B9BBE', fontSize: 11 }}>{entry.email}</div>
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ color: '#38BDF8', fontWeight: 700, fontSize: 14 }}>{entry.reads.toLocaleString('en-IN')} reads</div>
+                        <div style={{ color: '#8B9BBE', fontSize: 11 }}>{entry.articles} articles</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Contest Blog Submissions */}
+            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 24, padding: 28 }}>
+              <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <BookOpen size={18} color="#10B981" /> Contest Blog Submissions
+              </h2>
+              <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>{contestBlogs.length} published / approved articles in the contest</p>
+              {contestBlogs.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: '#8B9BBE', fontSize: 13 }}>No approved blog submissions yet.</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {contestBlogs.slice(0, 20).map((blog: any) => (
+                    <div key={blog.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '12px 16px', gap: 12, flexWrap: 'wrap' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ color: '#fff', fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{blog.title || 'Untitled'}</div>
+                        <div style={{ color: '#8B9BBE', fontSize: 11, marginTop: 2 }}>{blog.authorName || blog.author} · {(blog.reads || 0).toLocaleString('en-IN')} reads</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => handleToggleBlogApproval(blog.id, blog.approved)}
+                          style={{ background: blog.approved !== false ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', border: `1px solid ${blog.approved !== false ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)'}`, color: blog.approved !== false ? '#EF4444' : '#10B981', borderRadius: 8, padding: '5px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          {blog.approved !== false ? 'Disapprove' : 'Approve'}
+                        </button>
+                        <button
+                          onClick={() => setBlogReviewModal({ open: true, item: blog })}
+                          style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', color: '#38BDF8', borderRadius: 8, padding: '5px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Review
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Tab: USERS ── */}
+      {activeTab === 'users' && (() => {
+        if (!usersLoaded) {
+          // Load users on first tab open
+          import('firebase/firestore').then(({ getDocs, collection: col }) => {
+            getDocs(col(db, 'users')).then(snap => {
+              const list: any[] = [];
+              snap.forEach(d => list.push({ uid: d.id, ...d.data() }));
+              list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+              setUsersData(list);
+              setUsersLoaded(true);
+            });
+          });
+        }
+
+        const filtered = usersData.filter(u =>
+          (u.name || '').toLowerCase().includes(usersSearch.toLowerCase()) ||
+          (u.email || '').toLowerCase().includes(usersSearch.toLowerCase()) ||
+          (u.phone || '').includes(usersSearch) ||
+          (u.city || '').toLowerCase().includes(usersSearch.toLowerCase())
+        );
+
+        const handleExpandUser = async (uid: string, email: string) => {
+          if (expandedUserId === uid) { setExpandedUserId(null); return; }
+          setExpandedUserId(uid);
+          if (!userOrders[uid]) {
+            try {
+              const { getDocs, collection: col, query: q, where: w } = await import('firebase/firestore');
+              const snap = await getDocs(q(col(db, 'orders'), w('email', '==', email)));
+              const list: any[] = [];
+              snap.forEach(d => list.push(d.data()));
+              list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+              setUserOrders(prev => ({ ...prev, [uid]: list }));
+            } catch (err) {
+              console.error('Failed to fetch user orders:', err);
+              setUserOrders(prev => ({ ...prev, [uid]: [] }));
+            }
+          }
+        };
+
+        return (
+          <div className="fade-in">
+            <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+              Registered Users
+            </h1>
+            <p style={{ color: '#8B9BBE', fontSize: 15, marginBottom: 24 }}>
+              Browse all customer accounts from the Firestore <code style={{ color: '#38BDF8' }}>users</code> collection.
+            </p>
+
+            {/* Search bar */}
+            <div style={{ position: 'relative', marginBottom: 24, maxWidth: 420 }}>
+              <Search size={15} color="#8B9BBE" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+              <input
+                className="form-input"
+                placeholder="Search by name, email, phone, city..."
+                value={usersSearch}
+                onChange={e => setUsersSearch(e.target.value)}
+                style={{ paddingLeft: 40 }}
+              />
+            </div>
+
+            {!usersLoaded ? (
+              <div style={{ textAlign: 'center', padding: '60px 0', color: '#8B9BBE', fontSize: 14 }}>
+                <div style={{ width: 20, height: 20, border: '2px solid rgba(56,189,248,0.3)', borderTopColor: '#38BDF8', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+                Loading users...
+              </div>
+            ) : filtered.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 0', color: '#8B9BBE', fontSize: 14 }}>
+                {usersSearch ? 'No users match your search.' : 'No registered users found.'}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Header row */}
+                {!isMobile && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 120px 140px 80px', gap: 16, padding: '0 16px', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <span>Name / Email</span><span>Phone</span><span>City</span><span>State</span><span>Member Since</span><span>Orders</span>
+                  </div>
+                )}
+                {filtered.map(u => (
+                  <div key={u.uid}>
+                    <div
+                      onClick={() => handleExpandUser(u.uid, u.email)}
+                      style={{ display: isMobile ? 'flex' : 'grid', gridTemplateColumns: isMobile ? undefined : '1fr 1fr 120px 120px 140px 80px', flexDirection: isMobile ? 'column' : undefined, gap: 16, padding: '14px 16px', background: expandedUserId === u.uid ? 'rgba(56,189,248,0.06)' : '#1a2235', border: `1px solid ${expandedUserId === u.uid ? 'rgba(56,189,248,0.25)' : 'rgba(56,189,248,0.1)'}`, borderRadius: expandedUserId === u.uid ? '16px 16px 0 0' : 16, cursor: 'pointer', transition: 'all 0.2s', alignItems: 'center' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: u.photoURL ? 'transparent' : 'linear-gradient(135deg, #3B82F6, #38BDF8)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          {u.photoURL ? <img src={u.photoURL} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <span style={{ color: '#000', fontSize: 12, fontWeight: 800 }}>{(u.name || u.email || 'U').substring(0, 2).toUpperCase()}</span>}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ color: '#fff', fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name || '—'}</div>
+                          <div style={{ color: '#8B9BBE', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
+                        </div>
+                      </div>
+                      <div style={{ color: '#E8EDF5', fontSize: 13 }}>{u.phone || <span style={{ color: '#8B9BBE', fontStyle: 'italic' }}>No phone</span>}</div>
+                      <div style={{ color: '#E8EDF5', fontSize: 13 }}>{u.city || '—'}</div>
+                      <div style={{ color: '#E8EDF5', fontSize: 13 }}>{u.state || '—'}</div>
+                      <div style={{ color: '#8B9BBE', fontSize: 12 }}>{u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ color: '#38BDF8', fontWeight: 700, fontSize: 13 }}>{userOrders[u.uid]?.length ?? '—'}</span>
+                        <ChevronRight size={14} color="#8B9BBE" style={{ transform: expandedUserId === u.uid ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+                      </div>
+                    </div>
+
+                    {/* Expanded order history drawer */}
+                    {expandedUserId === u.uid && (
+                      <div style={{ background: 'rgba(13,17,23,0.8)', border: '1px solid rgba(56,189,248,0.15)', borderTop: 'none', borderRadius: '0 0 16px 16px', padding: '16px 20px' }}>
+                        {!userOrders[u.uid] ? (
+                          <div style={{ color: '#8B9BBE', fontSize: 13, textAlign: 'center', padding: '16px 0' }}>Loading orders...</div>
+                        ) : userOrders[u.uid].length === 0 ? (
+                          <div style={{ color: '#8B9BBE', fontSize: 13, textAlign: 'center', padding: '16px 0' }}>No orders placed by this user.</div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <div style={{ color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Order History ({userOrders[u.uid].length} orders)</div>
+                            {userOrders[u.uid].map((ord: any) => (
+                              <div key={ord.orderId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px', flexWrap: 'wrap', gap: 8 }}>
+                                <div>
+                                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>#{ord.orderId}</span>
+                                  <span style={{ color: '#8B9BBE', fontSize: 11, marginLeft: 10 }}>{ord.createdAt ? new Date(ord.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                  <span style={{ color: '#10B981', fontWeight: 800, fontSize: 14 }}>₹{(ord.total || 0).toLocaleString('en-IN')}</span>
+                                  <span style={{ background: ord.status === 'Completed' || ord.status === 'Delivered' ? 'rgba(16,185,129,0.1)' : 'rgba(56,189,248,0.1)', color: ord.status === 'Completed' || ord.status === 'Delivered' ? '#10B981' : '#38BDF8', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100, textTransform: 'uppercase' }}>{ord.status || 'Pending'}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      </main>
 
       {/* ── Modal: Banner Form ── */}
       {bannerModal.open && (

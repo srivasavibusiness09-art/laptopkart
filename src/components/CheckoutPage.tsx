@@ -368,10 +368,10 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
       <div style={{ display: "flex", marginBottom: 36, overflowX: isMobile ? "auto" : "visible", paddingBottom: isMobile ? 8 : 0 }}>
         {STEPS.map((s, i) => (
           <div key={s} style={{ flex: 1, minWidth: isMobile ? 88 : 0, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-            <div style={{ width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, borderRadius: "50%", background: i <= step ? COLORS.green : COLORS.cardBg, border: `2px solid ${i <= step ? COLORS.green : COLORS.cardBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: i <= step ? COLORS.black : COLORS.muted, fontWeight: 700, fontSize: isMobile ? 12 : 14, zIndex: 1 }}>
-              {i < step ? <Check size={16} strokeWidth={3} /> : i + 1}
+            <div style={{ width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, borderRadius: "50%", background: i <= step ? COLORS.blue : COLORS.cardBg, border: `2px solid ${i <= step ? COLORS.blue : COLORS.cardBorder}`, display: "flex", alignItems: "center", justifyContent: "center", color: i <= step ? COLORS.black : COLORS.muted, fontWeight: 700, fontSize: isMobile ? 12 : 14, zIndex: 1 }}>
+              {i < step ? <Check size={isMobile ? 16 : 18} /> : i + 1}
             </div>
-            <div style={{ color: i === step ? COLORS.green : COLORS.muted, fontSize: isMobile ? 11 : 12, marginTop: 8, fontWeight: i === step ? 700 : 400, textAlign: "center" }}>{s}</div>
+            <div style={{ color: i === step ? COLORS.blue : COLORS.muted, fontSize: isMobile ? 11 : 12, marginTop: 8, fontWeight: i === step ? 700 : 400, textAlign: "center" }}>{s}</div>
             {i < STEPS.length - 1 && (
               <div
                 style={{
@@ -380,7 +380,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
                   left: "50%",
                   width: isMobile ? "50%" : "100%",
                   height: 2,
-                  background: i < step ? COLORS.green : COLORS.cardBorder,
+                  background: i < step ? COLORS.blue : COLORS.cardBorder,
                 }}
               />
             )}
@@ -396,7 +396,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
           {step === 0 && (
             <div>
               <h2 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
-                <MapPin size={20} color={COLORS.green} /> Delivery Address
+                <MapPin size={20} color={COLORS.blue} /> Delivery Address
               </h2>
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
                 {([["Full Name", "name", "text"], ["Phone", "phone", "tel"], ["Pincode", "pincode", "text"], ["City", "city", "text"], ["State", "state", "text"]] as [string, keyof Address, string][]).map(([label, key, type]) => (
@@ -417,12 +417,12 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
           {step === 1 && (
             <div>
               <h2 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
-                <CreditCard size={20} color={COLORS.green} /> Payment Method
+                <CreditCard size={20} color={COLORS.blue} /> Payment Method
               </h2>
               {PAYMENT_OPTIONS.map(({ val, label, icon }) => (
-                <label key={val} style={{ display: "flex", alignItems: "center", gap: 14, background: payment === val ? "var(--bg-hover)" : COLORS.background, border: `1px solid ${payment === val ? COLORS.green : COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, cursor: "pointer" }}>
-                  <input type="radio" name="payment" value={val} checked={payment === val} onChange={() => setPayment(val)} style={{ accentColor: COLORS.green }} />
-                  <span style={{ color: payment === val ? COLORS.green : COLORS.muted }}>{icon}</span>
+                <label key={val} style={{ display: "flex", alignItems: "center", gap: 14, background: payment === val ? "var(--bg-hover)" : COLORS.background, border: `1px solid ${payment === val ? COLORS.blue : COLORS.cardBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, cursor: "pointer" }}>
+                  <input type="radio" name="payment" value={val} checked={payment === val} onChange={() => setPayment(val)} style={{ accentColor: COLORS.blue }} />
+                  <span style={{ color: payment === val ? COLORS.blue : COLORS.muted }}>{icon}</span>
                   <span style={{ color: COLORS.text, fontWeight: 600 }}>{label}</span>
                 </label>
               ))}
@@ -439,7 +439,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
                 <h2 style={{ color: "var(--error)", fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 28, marginBottom: 12 }}>Payment Failed</h2>
                 <p style={{ color: COLORS.text, fontSize: 16, marginBottom: 8 }}>Transaction for Order #LK-{orderId} was unsuccessful.</p>
                 <p style={{ color: COLORS.muted, marginBottom: 32 }}>Please try checking out again or contact customer support if money was debited.</p>
-                <button onClick={() => { setStep(1); setPaymentStatus(null); }} style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                <button onClick={() => { setStep(1); setPaymentStatus(null); }} style={{ background: "#0062FF", color: "var(--text-inverse)", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
                   Retry Payment
                 </button>
               </div>
@@ -451,7 +451,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
                 <h2 style={{ color: COLORS.green, fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: 28, marginBottom: 12 }}>Order Placed!</h2>
                 <p style={{ color: COLORS.text, fontSize: 16, marginBottom: 8 }}>Order #LK-{orderId}</p>
                 <p style={{ color: COLORS.muted, marginBottom: 32 }}>Your refurbished tech is on its way! Estimated delivery: 3-5 business days.</p>
-                <button onClick={() => { setCart([]); setPage("home"); }} style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                <button onClick={() => { setCart([]); setPage("home"); }} style={{ background: "#0062FF", color: "var(--text-inverse)", border: "none", borderRadius: 12, padding: "14px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
                   Continue Shopping
                 </button>
               </div>
@@ -466,7 +466,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
                   ← Back
                 </button>
               )}
-              <button onClick={handleNext} style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginLeft: "auto", width: isMobile ? "100%" : "auto" }}>
+              <button onClick={handleNext} style={{ background: "#0062FF", color: "var(--text-inverse)", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginLeft: "auto", width: isMobile ? "100%" : "auto" }}>
                 {step === 1 ? (isProcessing ? "Processing..." : "Place Order") : "Continue"}
               </button>
             </div>
@@ -482,7 +482,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
                 <div style={{ color: COLORS.text, fontSize: 13, fontWeight: 600 }}>{item.name}</div>
                 <div style={{ color: COLORS.muted, fontSize: 12 }}>Qty: {item.qty || 1}</div>
               </div>
-              <span style={{ color: COLORS.green, fontWeight: 700 }}>₹{(item.price * (item.qty || 1)).toLocaleString('en-IN')}</span>
+              <span style={{ color: COLORS.text, fontWeight: 700 }}>₹{(item.price * (item.qty || 1)).toLocaleString('en-IN')}</span>
             </div>
           ))}
 
@@ -500,7 +500,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
                   />
                   <button
                     onClick={handleApplyCoupon}
-                    style={{ background: COLORS.green, color: "var(--text-inverse)", border: "none", borderRadius: 10, padding: "0 16px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+                    style={{ background: "#0062FF", color: "var(--text-inverse)", border: "none", borderRadius: 10, padding: "0 16px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
                   >
                     Apply
                   </button>
@@ -534,7 +534,7 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
           )}
           <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 8, borderTop: `1px solid ${COLORS.cardBorder}` }}>
             <span style={{ color: COLORS.text, fontWeight: 700 }}>Total</span>
-            <span style={{ color: COLORS.green, fontWeight: 800, fontSize: 18 }}>₹{finalTotal.toLocaleString('en-IN')}</span>
+            <span style={{ color: COLORS.text, fontWeight: 800, fontSize: 18 }}>₹{finalTotal.toLocaleString('en-IN')}</span>
           </div>
         </div>
       </div>

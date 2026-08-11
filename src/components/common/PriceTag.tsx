@@ -57,7 +57,7 @@ export default function PriceTag({
       </span>
       <span
         style={{
-          color: COLORS.muted,
+          color: "var(--text-3)",
           fontSize: getMrpSize(),
           textDecoration: "line-through",
         }}
@@ -66,7 +66,7 @@ export default function PriceTag({
       </span>
       <span
         style={{
-          background: "var(--error)",
+          background: "var(--green-legacy)",
           color: "#FFFFFF",
           fontSize: size === "sm" ? 8 : 9,
           fontWeight: 700,

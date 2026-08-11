@@ -15,8 +15,8 @@ interface ProductListingProps {
   products: Product[];
   onViewProduct: (p: Product) => void;
   onAddToCart: (p: Product) => void;
-  onWishlist: (id: number) => void;
-  wishlist: number[];
+  onWishlist: (id: number | string) => void;
+  wishlist: (number | string)[];
   initialCategory?: string;
   initialSearch?: string;
   onSearchChange?: (q: string) => void;
@@ -318,7 +318,7 @@ export default function ProductListing({
                     Clear Filters
                   </button>
                   <button onClick={() => setRequestModalOpen(true)} style={{
-                    background: COLORS.green, border: "1px solid var(--success)", color: "var(--text-inverse)",
+                    background: "#0062FF", border: "1px solid #0062FF", color: "var(--text-inverse)",
                     padding: "10px 24px", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'Inter', sans-serif"
                   }}>
                     Request Custom Product
@@ -414,7 +414,7 @@ export default function ProductListing({
               onClick={() => setDrawerOpen(false)}
               style={{
                 width: "100%", marginTop: 28,
-                background: COLORS.green, color: "var(--text-inverse)",
+                background: "#0062FF", color: "var(--text-inverse)",
                 border: "none", borderRadius: 14,
                 padding: "16px", fontWeight: 800, fontSize: 16,
                 cursor: "pointer", fontFamily: "'Sora', sans-serif",

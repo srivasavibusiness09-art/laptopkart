@@ -1,19 +1,20 @@
 "use client";
 
 import { Heart } from "lucide-react";
-import { COLORS, products } from "@/data/products";
+import { COLORS } from "@/data/products";
 import type { Product } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import { useIsMobile } from "@/lib/hooks";
 
 interface WishlistPageProps {
-  wishlist: number[];
+  wishlist: (number | string)[];
+  products: Product[];
   onAddToCart: (p: Product) => void;
   setPage: (p: string) => void;
-  onWishlist: (id: number) => void;
+  onWishlist: (id: number | string) => void;
 }
 
-export default function WishlistPage({ wishlist, onAddToCart, setPage, onWishlist }: WishlistPageProps) {
+export default function WishlistPage({ wishlist, products, onAddToCart, setPage, onWishlist }: WishlistPageProps) {
   const isMobile = useIsMobile();
   const wished = products.filter((p) => wishlist.includes(p.id));
 
@@ -30,7 +31,7 @@ export default function WishlistPage({ wishlist, onAddToCart, setPage, onWishlis
         <button
           onClick={() => setPage("listing")}
           style={{
-            background: COLORS.green, color: "var(--text-inverse)", border: "none",
+            background: "#0062FF", color: "var(--text-inverse)", border: "none",
             borderRadius: 12, padding: "14px 28px", fontWeight: 700,
             fontSize: 15, cursor: "pointer", marginTop: 20,
           }}

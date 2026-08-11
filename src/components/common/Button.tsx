@@ -48,17 +48,17 @@ export default function Button({
     switch (variant) {
       case "secondary":
         return {
-          background: btnHovered ? "var(--bg-3)" : "var(--bg-2)",
-          color: "var(--text)",
-          border: `1px solid ${btnHovered ? "var(--border-hi)" : "var(--border)"}`,
-          boxShadow: "none",
+          background: btnHovered ? "rgba(0, 98, 255, 0.06)" : "#FFFFFF",
+          color: "var(--accent)",
+          border: `1px solid ${btnHovered ? "var(--accent-2)" : "var(--accent)"}`,
+          boxShadow: btnHovered ? "0 6px 18px rgba(0, 98, 255, 0.15)" : "none",
           transform: btnHovered ? "translateY(-1px)" : "none",
         };
       case "ghost":
         return {
           background: btnHovered ? "var(--bg-hover)" : "transparent",
           color: "var(--accent)",
-          border: `1px solid ${btnHovered ? "var(--border-focus)" : "var(--bg-active)"}`,
+          border: `1px solid ${btnHovered ? "var(--border-focus)" : "rgba(0,98,255,0.25)"}`,
           boxShadow: "none",
           transform: btnHovered ? "translateY(-1px)" : "none",
         };
@@ -73,12 +73,12 @@ export default function Button({
       case "primary":
       default:
         return {
-          background: btnHovered ? "#000000" : "var(--text)",
+          background: btnHovered ? "var(--accent-2)" : "var(--accent)",
           color: "#FFFFFF",
           border: "none",
           boxShadow: btnHovered 
-            ? "0 8px 20px rgba(0, 0, 0, 0.15)" 
-            : "0 2px 8px rgba(0, 0, 0, 0.12)",
+            ? "0 8px 20px rgba(0, 98, 255, 0.3)" 
+            : "0 2px 8px rgba(0, 98, 255, 0.2)",
           transform: btnHovered ? "scale(1.01) translateY(-1px)" : "none",
         };
     }

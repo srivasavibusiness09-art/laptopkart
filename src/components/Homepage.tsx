@@ -12,6 +12,7 @@ import type { Product } from "@/data/products";
 import Hero, { HeroBanner, HeroStats } from "@/components/Hero";
 import ProductCard from "@/components/ProductCard";
 import Reveal from "@/components/Reveal";
+import StudentHubBanner from "@/components/StudentHubBanner";
 import { useIsMobile } from "@/lib/hooks";
 import { collection, doc, setDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -54,7 +55,7 @@ function TrustStrip() {
             }}>
               <div style={{
                 width: 36, height: 36, borderRadius: "50%",
-                background: "rgba(118, 194, 39, 0.1)",
+                background: "rgba(0, 98, 255, 0.1)",
                 display: "flex", alignItems: "center", justifyContent: "center"
               }}>
                 {item.icon}
@@ -102,7 +103,7 @@ function TrustStrip() {
           }}>
             <div style={{
               width: 30, height: 30, borderRadius: "50%",
-              background: "rgba(118, 194, 39, 0.1)",
+              background: "rgba(0, 98, 255, 0.1)",
               display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0
             }}>
@@ -191,18 +192,19 @@ interface HomepageProps {
   products: Product[];
   banners: any[];
   heroPosters?: any[];
+  firestoreReady?: boolean;
   setPage: (p: string) => void;
   onViewProduct: (p: Product) => void;
   onAddToCart: (p: Product) => void;
-  onWishlist: (id: number) => void;
-  wishlist: number[];
+  onWishlist: (id: number | string) => void;
+  wishlist: (number | string)[];
   accessories: any[];
   customerReviews: any[];
   user: any;
   triggerAlert: (type: "success" | "warning" | "error", msg: string) => void;
 }
 
-export default function Homepage({ products, banners, heroPosters, setPage, onViewProduct, onAddToCart, onWishlist, wishlist, accessories, customerReviews, user, triggerAlert }: HomepageProps) {
+export default function Homepage({ products, banners, heroPosters, firestoreReady, setPage, onViewProduct, onAddToCart, onWishlist, wishlist, accessories, customerReviews, user, triggerAlert }: HomepageProps) {
   const isMobile = useIsMobile();
   const [step, setStep] = useState(0);
 
@@ -292,9 +294,9 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
         color: "var(--accent)", fontSize: 11, fontWeight: 800,
         letterSpacing: "0.08em", textTransform: "uppercase",
         marginBottom: 10,
-        background: "rgba(118, 194, 39, 0.16)",
+        background: "rgba(0, 98, 255, 0.16)",
         padding: "5px 14px", borderRadius: 100,
-        border: "1px solid rgba(118, 194, 39, 0.4)",
+        border: "1px solid rgba(0, 98, 255, 0.4)",
       }}>
         {videoSettings?.eyebrow || "Introduction"}
       </div>
@@ -332,8 +334,8 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
 
     const showPortrait = !isMobile && videoSettings?.orientation === "portrait";
     const playerBoxStyle = showPortrait
-      ? { width: "calc(100vh * 0.5625)", height: "100vh" }
-      : { width: "max(100vw, 177.78vh)", height: "max(100vh, 56.25vw)" };
+      ? { width: "min(100vw, calc(100dvh * 0.5625))", height: "100dvh", maxWidth: "100vw" }
+      : { width: "min(100vw, calc(100dvh * 1.7778))", aspectRatio: "16 / 9", maxHeight: "100dvh" };
 
     return (
       <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -346,24 +348,24 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
             {videoPosterSrc ? (
               <img src={videoPosterSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
             ) : (
-              <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #0B3B2E 0%, #14532D 45%, #0F766E 100%)" }} />
+              <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #082F49 0%, #0C4A6E 45%, #0369A1 100%)" }} />
             )}
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%)" }} />
-            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 74, height: 74, borderRadius: "50%", background: "rgba(118,194,39,0.95)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 12px 30px rgba(0,0,0,0.35)" }}>
-              <span style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "2px solid rgba(118,194,39,0.7)", animation: "pulse-ring 1.8s ease-out infinite" }} />
+            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 74, height: 74, borderRadius: "50%", background: "rgba(0, 98, 255, 0.95)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 12px 30px rgba(0,0,0,0.35)" }}>
+              <span style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "2px solid rgba(0, 98, 255, 0.7)", animation: "pulse-ring 1.8s ease-out infinite" }} />
               <Play size={30} fill="currentColor" style={{ marginLeft: 3 }} />
             </span>
             <span style={{ position: "absolute", bottom: 18, left: 0, right: 0, color: "#fff", fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>Watch now</span>
           </button>
         ) : videoError ? (
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, background: "#0B3B2E", color: "#fff", textAlign: "center", padding: 24 }}>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, background: "linear-gradient(135deg, #082F49 0%, #0C4A6E 45%, #0369A1 100%)", color: "#fff", textAlign: "center", padding: 24 }}>
             <div style={{ fontSize: 14, fontWeight: 700 }}>Couldn't load the video.</div>
-            <button onClick={handleVideoPlay} style={{ background: "rgba(118,194,39,0.9)", color: "#fff", border: "none", borderRadius: 100, padding: "10px 22px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>Retry</button>
+            <button onClick={handleVideoPlay} style={{ background: "rgba(0, 98, 255, 0.9)", color: "#fff", border: "none", borderRadius: 100, padding: "10px 22px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>Retry</button>
           </div>
         ) : (
           <>
             {videoBuffering && (
-              <div style={{ position: "absolute", inset: 0, zIndex: 3, background: "linear-gradient(90deg, rgba(11,59,46,0.9) 0%, rgba(11,59,46,0.75) 40%, rgba(11,59,46,0.9) 100%)", backgroundSize: "200% 100%", animation: "shimmer 1.6s linear infinite", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ position: "absolute", inset: 0, zIndex: 3, background: "linear-gradient(90deg, rgba(8,47,73,0.9) 0%, rgba(8,47,73,0.75) 40%, rgba(8,47,73,0.9) 100%)", backgroundSize: "200% 100%", animation: "shimmer 1.6s linear infinite", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>Loading video…</span>
               </div>
             )}
@@ -704,14 +706,14 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
       {!isMobile ? (
         // Desktop Layout
         <>
-          <Reveal y={0}><HeroBanner setPage={setPage} banners={heroPosters || []} /></Reveal>
+          <Reveal y={0}><HeroBanner setPage={setPage} banners={heroPosters || []} isLoading={!firestoreReady} /></Reveal>
           <Reveal delay={0.08} y={20}><TrustStrip /></Reveal>
           <Reveal delay={0.16} y={20}><HeroStats /></Reveal>
         </>
       ) : (
         // Mobile Layout
         <>
-          <Reveal y={0}><HeroBanner setPage={setPage} banners={heroPosters || []} /></Reveal>
+          <Reveal y={0}><HeroBanner setPage={setPage} banners={heroPosters || []} isLoading={!firestoreReady} /></Reveal>
           <Reveal delay={0.08} y={20}><TrustStrip /></Reveal>
           {renderTopPicks()}
           <Reveal delay={0.1} y={20}><HeroStats /></Reveal>
@@ -724,7 +726,7 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
           <section
             id="promo-video-section"
             className="full-window-video"
-            style={{ position: "relative", overflow: "hidden", background: "#0B3B2E", marginLeft: "calc(50% - 50vw)" }}
+            style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg, #082F49 0%, #0C4A6E 45%, #0369A1 100%)", marginLeft: "calc(50% - 50vw)" }}
           >
             {renderVideoPlayer()}
             {renderVideoTextOverlay(videoSettings.orientation === "portrait" ? "center" : "left")}
@@ -954,7 +956,7 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
 
             {result ? (
               <div>
-                <p style={{ color: COLORS.green, textAlign: "center", fontWeight: 700, marginBottom: 20, fontSize: 15 }}>
+                <p style={{ color: COLORS.primary, textAlign: "center", fontWeight: 700, marginBottom: 20, fontSize: 15 }}>
                   ✦ Top picks for you
                 </p>
                 <div style={{
@@ -972,7 +974,7 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
                       </div>
                       <div style={{ padding: "14px 16px" }}>
                         <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{p.name}</div>
-                        <div style={{ color: COLORS.green, fontWeight: 800, fontSize: 18, fontFamily: "'Sora', sans-serif" }}>
+                        <div style={{ color: COLORS.primary, fontWeight: 800, fontSize: 18, fontFamily: "'Sora', sans-serif" }}>
                           ₹{p.price.toLocaleString("en-IN")}
                         </div>
                       </div>
@@ -996,7 +998,7 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
                     <div key={i} style={{
                       height: 4, borderRadius: 2,
                       width: i <= step ? 32 : 16,
-                      background: i <= step ? COLORS.green : "var(--border-hi)",
+                      background: i <= step ? COLORS.primary : "var(--border-hi)",
                       transition: "all 0.3s ease",
                     }} />
                   ))}
@@ -1015,7 +1017,7 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
                       onClick={() => answer(opt)}
                       style={{
                         background: "rgba(56,189,248,0.08)",
-                        color: COLORS.green,
+                        color: COLORS.primary,
                         border: "1px solid rgba(56,189,248,0.22)",
                         borderRadius: 100,
                         padding: isMobile ? "10px 16px" : "13px 26px",
@@ -1031,7 +1033,7 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
                       }}
                       onMouseLeave={(e) => {
                         const b = e.currentTarget as HTMLButtonElement;
-                        b.style.background = "rgba(56,189,248,0.08)"; b.style.color = COLORS.green;
+                        b.style.background = "rgba(56,189,248,0.08)"; b.style.color = COLORS.primary;
                         b.style.border = "1px solid rgba(56,189,248,0.22)";
                       }}
                     >{opt}</button>
@@ -1044,6 +1046,9 @@ export default function Homepage({ products, banners, heroPosters, setPage, onVi
         "var(--bg)",
         `${isMobile ? 24 : 40}px ${isMobile ? 18 : 24}px ${isMobile ? 24 : 60}px` // Reduced bottom padding
       )}
+
+      {/* ── Student Hub Banner ── */}
+      <StudentHubBanner setPage={setPage} />
 
       {/* ── Top Picks (Desktop) ───────────────────────────── */}
       {!isMobile && renderTopPicks()}

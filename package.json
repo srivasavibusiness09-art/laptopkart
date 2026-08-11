@@ -11,6 +11,7 @@
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
     "cashfree-pg": "^6.0.4",
+    "cloudinary": "^2.10.0",
     "firebase": "^12.16.0",
     "firebase-admin": "^13.10.0",
     "framer-motion": "^12.42.2",

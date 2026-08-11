@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Shield, Phone, Mail, Clock, ArrowRight } from "lucide-react";
+import { Phone, Mail, Clock, ArrowRight } from "lucide-react";
 import { FaFacebook, FaInstagram, FaXTwitter, FaYoutube, FaLinkedin } from "react-icons/fa6";
-import { COLORS } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -11,8 +10,9 @@ import { db } from "@/lib/firebase";
 interface FooterProps { setPage: (p: string) => void }
 
 const shopLinks = ["Laptops", "Desktops", "MacBooks", "Gaming", "Accessories", "Offers"];
-const companyLinks = ["About Us", "Blog", "Careers"];
+const companyLinks = ["About Us", "Blog", "Careers", "Student Hub"];
 const supportLinks = ["Warranty", "Returns", "Contact", "FAQs", "Shipping", "Track Order"];
+const hubLinks = ["Blog Home", "Giveaways", "Guidelines", "Past Winners", "Leaderboard"];
 
 const social = [
   { icon: <FaFacebook size={14} />, label: "Facebook", href: "https://www.facebook.com/profile.php?id=61552204101896" },
@@ -62,7 +62,12 @@ export default function Footer({ setPage }: FooterProps) {
     if (l === "gaming") return "listing:Gaming";
     if (l === "accessories") return "accessories";
     if (l === "about us" || l === "careers") return "about";
-    if (l === "blog") return "blog";
+    if (l === "blog" || l === "blog home") return "student-hub";
+    if (l === "giveaways") return "student-hub:giveaway";
+    if (l === "guidelines") return "student-hub:guidelines";
+    if (l === "past winners") return "student-hub:past-winners";
+    if (l === "leaderboard") return "student-hub:leaderboard";
+    if (l === "student hub") return "student-hub";
     if (l === "contact") return "contact";
     if (l === "sell laptop" || l === "resell laptop") return "resell";
     if (l === "track order") return "profile";
@@ -73,7 +78,7 @@ export default function Footer({ setPage }: FooterProps) {
   const col = (title: string, links: string[]) => (
     <div>
       <div style={{
-        color: "var(--text)", fontWeight: 700, fontSize: 13,
+        color: "var(--footer-text)", fontWeight: 700, fontSize: 13,
         marginBottom: 18, letterSpacing: "0.02em",
         fontFamily: "'Sora', sans-serif",
       }}>{title}</div>
@@ -82,12 +87,12 @@ export default function Footer({ setPage }: FooterProps) {
           key={link}
           onClick={() => setPage(getFooterLinkTarget(link))}
           style={{
-            color: "var(--text-2)", fontSize: 13, marginBottom: 10,
+            color: "var(--footer-text-2)", fontSize: 13, marginBottom: 10,
             cursor: "pointer", transition: "color 0.15s",
             display: "flex", alignItems: "center", gap: 4,
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.color = COLORS.green; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.color = "var(--text-2)"; }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.color = "var(--accent)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.color = "var(--footer-text-2)"; }}
         >
           {link}
         </div>
@@ -107,8 +112,8 @@ export default function Footer({ setPage }: FooterProps) {
         {/* Main grid */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr 1fr 1fr 1.2fr",
-          gap: isMobile ? 28 : 48,
+          gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr 1fr 1fr 1fr 1.2fr",
+          gap: isMobile ? 28 : 40,
           marginBottom: isMobile ? 28 : 48,
         }}>
 
@@ -126,19 +131,19 @@ export default function Footer({ setPage }: FooterProps) {
                 backgroundImage: "linear-gradient(135deg, var(--accent), #6366F1)",
               }}>Laptopkart</span>
             </div>
-            <p style={{ color: "var(--text-2)", fontSize: 13, lineHeight: 1.7, maxWidth: 260, marginBottom: 20 }}>
+            <p style={{ color: "var(--footer-text-2)", fontSize: 13, lineHeight: 1.7, maxWidth: 260, marginBottom: 20 }}>
               India's most trusted refurbished laptop store. Best prices, best quality, backed by warranty.
             </p>
             {/* Contact info */}
             <div style={{ marginBottom: 20 }}>
               {[
-                { icon: <Phone size={12} color={COLORS.green} />, text: "+91 97503 31313" },
-                { icon: <Mail size={12} color={COLORS.green} />, text: "srivasavibusiness09@gmail.com" },
-                { icon: <Clock size={12} color={COLORS.green} />, text: "Mon–Sat: 10AM – 7PM" },
+                { icon: <Phone size={12} color="var(--accent)" />, text: "+91 97503 31313" },
+                { icon: <Mail size={12} color="var(--accent)" />, text: "srivasavibusiness09@gmail.com" },
+                { icon: <Clock size={12} color="var(--accent)" />, text: "Mon–Sat: 10AM – 7PM" },
               ].map(({ icon, text }) => (
                 <div key={text} style={{
                   display: "flex", alignItems: "center", gap: 8,
-                  color: "var(--text-2)", fontSize: 12, marginBottom: 8,
+                  color: "var(--footer-text-2)", fontSize: 12, marginBottom: 8,
                 }}>
                   {icon}{text}
                 </div>
@@ -154,25 +159,25 @@ export default function Footer({ setPage }: FooterProps) {
                   rel="noopener noreferrer"
                   aria-label={label}
                   style={{
-                    background: "var(--bg)",
-                    border: "1px solid var(--border)",
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.12)",
                     borderRadius: 8, width: 34, height: 34,
-                    cursor: "pointer", color: "var(--text-2)",
+                    cursor: "pointer", color: "var(--footer-text-2)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     transition: "all 0.2s",
                     textDecoration: "none",
                   }}
                   onMouseEnter={(e) => {
                     const b = e.currentTarget as HTMLAnchorElement;
-                    b.style.color = "var(--accent-2)";
-                    b.style.borderColor = "var(--border-focus)";
-                    b.style.background = "var(--bg-active)";
+                    b.style.color = "var(--accent)";
+                    b.style.borderColor = "rgba(0,98,255,0.5)";
+                    b.style.background = "rgba(0,98,255,0.15)";
                   }}
                   onMouseLeave={(e) => {
                     const b = e.currentTarget as HTMLAnchorElement;
-                    b.style.color = "var(--text-2)";
-                    b.style.borderColor = "var(--border)";
-                    b.style.background = "var(--bg)";
+                    b.style.color = "var(--footer-text-2)";
+                    b.style.borderColor = "rgba(255,255,255,0.12)";
+                    b.style.background = "rgba(255,255,255,0.06)";
                   }}
                 >{icon}</a>
               ))}
@@ -190,12 +195,14 @@ export default function Footer({ setPage }: FooterProps) {
               <div style={{ flex: "1 1 120px" }}>{col("Shop", shopLinks)}</div>
               <div style={{ flex: "1 1 120px" }}>{col("Company", companyLinks)}</div>
               <div style={{ flex: "1 1 120px" }}>{col("Support", supportLinks)}</div>
+              <div style={{ flex: "1 1 120px" }}>{col("Student Hub", hubLinks)}</div>
             </div>
           ) : (
             <>
               {col("Shop", shopLinks)}
               {col("Company", companyLinks)}
               {col("Support", supportLinks)}
+              {col("Student Hub", hubLinks)}
             </>
           )}
 
@@ -203,10 +210,10 @@ export default function Footer({ setPage }: FooterProps) {
           {!isMobile && (
             <div>
               <div style={{
-                color: "var(--text)", fontWeight: 700, fontSize: 13,
+                color: "var(--footer-text)", fontWeight: 700, fontSize: 13,
                 marginBottom: 12, fontFamily: "'Sora', sans-serif",
               }}>Stay Updated</div>
-              <p style={{ color: "var(--text-2)", fontSize: 12, marginBottom: 14, lineHeight: 1.6 }}>
+              <p style={{ color: "var(--footer-text-2)", fontSize: 12, marginBottom: 14, lineHeight: 1.6 }}>
                 Get exclusive deals and tech news delivered to you.
               </p>
               <form onSubmit={handleSubscribe} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -217,20 +224,20 @@ export default function Footer({ setPage }: FooterProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={{
-                    background: "var(--bg)",
-                    border: "1px solid var(--border)",
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.14)",
                     borderRadius: 8, padding: "10px 12px",
-                    color: "var(--text)", fontSize: 13, outline: "none",
+                    color: "var(--footer-text)", fontSize: 13, outline: "none",
                     boxSizing: "border-box",
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = "var(--border-focus)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
+                  onFocus={(e) => { e.target.style.borderColor = "rgba(0,98,255,0.7)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.14)"; }}
                 />
                 <button
                   type="submit"
                   disabled={status === "loading"}
                   style={{
-                    background: "linear-gradient(135deg, var(--accent-2), var(--accent))", color: "var(--text-inverse)",
+                    background: "var(--accent)", color: "#fff",
                     border: "none", borderRadius: 8,
                     padding: "10px 16px", fontWeight: 700,
                     fontSize: 13, cursor: "pointer",
@@ -241,7 +248,7 @@ export default function Footer({ setPage }: FooterProps) {
                   {status === "loading" ? "Subscribing..." : <>Subscribe <ArrowRight size={13} /></>}
                 </button>
                 {status === "success" && (
-                  <span style={{ color: COLORS.green, fontSize: 11, fontWeight: 600, marginTop: 4 }}>
+                  <span style={{ color: "var(--success)", fontSize: 11, fontWeight: 600, marginTop: 4 }}>
                     Subscribed successfully!
                   </span>
                 )}
@@ -265,11 +272,11 @@ export default function Footer({ setPage }: FooterProps) {
           flexWrap: "wrap", gap: 12,
         }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ color: "var(--text-2)", fontSize: 12 }}>
+            <div style={{ color: "var(--footer-text-2)", fontSize: 12 }}>
               © 2026 Laptopkart. All Rights Reserved.
             </div>
-            <div style={{ color: "var(--text-2)", fontSize: 11, fontWeight: 500 }}>
-              Developed by <a href="https://www.d2devs.co.in/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--text-2)", textDecoration: "none", transition: "color 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-2)"; }}>D²Devs</a>
+            <div style={{ color: "var(--footer-text-2)", fontSize: 11, fontWeight: 500 }}>
+              Developed by <a href="https://www.d2devs.co.in/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--footer-text-2)", textDecoration: "none", transition: "color 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.color = "var(--footer-text)"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "var(--footer-text-2)"; }}>D²Devs</a>
             </div>
           </div>
           {!isMobile && (
@@ -280,11 +287,11 @@ export default function Footer({ setPage }: FooterProps) {
                 ["Refund Policy", "refund-policy"],
               ] as [string, string][]).map(([label, page]) => (
                 <span key={label} onClick={() => setPage(page)} style={{
-                  color: "var(--text-2)", fontSize: 12, cursor: "pointer",
+                  color: "var(--footer-text-2)", fontSize: 12, cursor: "pointer",
                   transition: "color 0.15s",
                 }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLSpanElement).style.color = "var(--text)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLSpanElement).style.color = "var(--text-2)"; }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLSpanElement).style.color = "var(--footer-text)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLSpanElement).style.color = "var(--footer-text-2)"; }}
                 >{label}</span>
               ))}
             </div>
@@ -292,10 +299,10 @@ export default function Footer({ setPage }: FooterProps) {
           <div style={{ display: "flex", gap: 6 }}>
             {["VISA", "MC", "UPI"].map((p) => (
               <span key={p} style={{
-                background: "var(--bg)",
-                border: "1px solid var(--border)",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
                 borderRadius: 6, padding: "4px 9px",
-                color: "var(--text-2)", fontSize: 10, fontWeight: 800,
+                color: "var(--footer-text-2)", fontSize: 10, fontWeight: 800,
                 letterSpacing: "0.03em",
               }}>{p}</span>
             ))}

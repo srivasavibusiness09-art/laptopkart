@@ -14,8 +14,8 @@ import { useIsMobile } from "@/lib/hooks";
 interface Props {
   product: Product | null;
   onAddToCart: (p: Product) => void;
-  onWishlist: (id: number) => void;
-  wishlist: number[];
+  onWishlist: (id: number | string) => void;
+  wishlist: (number | string)[];
   setPage: (p: string) => void;
   onViewProduct: (p: Product) => void;
   productsList: Product[];
@@ -635,7 +635,7 @@ export default function ProductDetail({ product, onAddToCart, onWishlist, wishli
             fontFamily: "'Sora', sans-serif",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
             transition: "all 0.25s ease",
-            boxShadow: (product.stock !== undefined ? product.stock : 1) <= 0 ? "none" : "0 0 40px rgba(118, 194, 39, 0.35)",
+            boxShadow: (product.stock !== undefined ? product.stock : 1) <= 0 ? "none" : "0 0 40px rgba(0, 98, 255, 0.35)",
           }}
         >
           {(product.stock !== undefined ? product.stock : 1) <= 0 ? (

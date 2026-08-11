@@ -97,11 +97,11 @@ export default function Dropdown({
           cursor: "pointer",
           userSelect: "none",
           transition: "all 0.2s ease",
-          boxShadow: isOpen ? "0 0 0 2px rgba(59, 130, 246, 0.15)" : "none",
+          boxShadow: isOpen ? "0 0 0 2px rgba(0, 98, 255, 0.15)" : "none",
         }}
         onMouseEnter={(e) => {
           if (!isOpen) {
-            e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.4)";
+            e.currentTarget.style.borderColor = "rgba(0, 98, 255, 0.4)";
           }
         }}
         onMouseLeave={(e) => {
@@ -132,8 +132,7 @@ export default function Dropdown({
             top: "calc(100% + 6px)",
             left: 0,
             right: 0,
-            background: "color-mix(in srgb, var(--bg-2) 95%, transparent)",
-            backdropFilter: "blur(12px)",
+            background: "var(--bg-2)",
             border: "1px solid var(--border-hi)",
             borderRadius: 12,
             padding: 6,

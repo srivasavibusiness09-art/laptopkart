@@ -11,29 +11,29 @@
 
 /* ─── Design Tokens ──────────────────────────────────────── */
 :root {
-  /* ☀️ Light Theme (Cream & Terracotta) */
+  /* ☀️ Light Theme (Crisp White & Royal Blue) */
   color-scheme: light;
-  /* Backgrounds — warm premium cream */
-  --bg: #F5F2EE;
-  --bg-1: #EBE6DF;
-  --bg-2: #FDFBF7;
-  --bg-3: #E1DBD2;
-  --bg-footer: #EBE6DF;
+  /* Backgrounds — crisp white / light slate */
+  --bg: #FFFFFF;
+  --bg-1: #F8FAFC;
+  --bg-2: #FFFFFF;
+  --bg-3: #F1F5F9;
+  --bg-footer: #0F172A;
 
-  /* Borders — warm grey tinted */
-  --border: rgba(31, 29, 27, 0.08);
-  --border-hi: rgba(31, 29, 27, 0.15);
-  --border-glow: rgba(0, 113, 227, 0.25);
+  /* Borders — solid Slate */
+  --border: #E2E8F0;
+  --border-hi: #CBD5E1;
+  --border-glow: rgba(0, 98, 255, 0.25);
 
-  /* Text — high contrast warm charcoal */
-  --text: #1F1D1B;
-  --text-2: #6A655F;
-  --text-3: #9C958D;
+  /* Text — slate scale */
+  --text: #0F172A;
+  --text-2: #475569;
+  --text-3: #94A3B8;
 
-  /* Accent colors - Lime Green */
-  --accent: #76C227;
-  --accent-2: #68b92b;
-  --accent-3: #8BC34A;
+  /* Accent colors - Royal Blue */
+  --accent: #0062FF;
+  --accent-2: #0052D6;
+  --accent-3: #3B82F6;
   --accent-indigo: #7C4DFF;
   --gold: #FFD600;
   --red: #FF1744;
@@ -45,16 +45,16 @@
   --r-xl: 36px;
 
   /* Semantic UI Tokens (Light) */
-  --bg-hover: rgba(0, 113, 227, 0.06);
-  --bg-active: rgba(0, 113, 227, 0.12);
-  --border-focus: rgba(0, 113, 227, 0.35);
+  --bg-hover: rgba(0, 98, 255, 0.06);
+  --bg-active: rgba(0, 98, 255, 0.12);
+  --border-focus: rgba(0, 98, 255, 0.35);
 
-  --badge-bg: rgba(0, 113, 227, 0.12);
-  --badge-border: rgba(0, 113, 227, 0.25);
+  --badge-bg: rgba(0, 98, 255, 0.12);
+  --badge-border: rgba(0, 98, 255, 0.25);
 
-  --success-bg: rgba(118, 194, 39, 0.08);
-  --success-border: rgba(118, 194, 39, 0.15);
-  --success: #76C227;
+  --success-bg: rgba(5, 150, 105, 0.08);
+  --success-border: rgba(5, 150, 105, 0.15);
+  --success: #059669;
 
   --error-bg: rgba(239, 68, 68, 0.12);
   --error-border: rgba(239, 68, 68, 0.25);
@@ -64,14 +64,26 @@
   --warning-border: rgba(245, 158, 11, 0.25);
   --warning: #F59E0B;
 
+  /* Brand extension tokens */
+  --hub-bg: #F5F3FF;
+  --hub-accent: #6D28D9;
+  --hub-accent-light: #EDE9FE;
+  --exchange-green: #059669;
+  --badge-new: #FF6B00;
+  --green-legacy: #76C227;
+
+  /* Footer (dark navy in light mode) */
+  --footer-text: #F8FAFC;
+  --footer-text-2: #94A3B8;
+
   --text-inverse: #FFFFFF;
   --bg-overlay: rgba(0, 0, 0, 0.65);
 
   /* Shadows & Glows */
-  --shadow-sm: 0 4px 12px rgba(31, 29, 27, 0.05);
-  --shadow-md: 0 12px 48px rgba(31, 29, 27, 0.08);
-  --shadow-lg: 0 32px 80px rgba(31, 29, 27, 0.12);
-  --shadow-glow: 0 0 30px rgba(0, 113, 227, 0.15), 0 0 60px rgba(71, 161, 250, 0.10);
+  --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 32px 80px rgba(15, 23, 42, 0.12);
+  --shadow-glow: 0 0 30px rgba(0, 98, 255, 0.15), 0 0 60px rgba(59, 130, 246, 0.10);
   --shadow-indigo: 0 0 30px rgba(124, 77, 255, 0.15);
 
   /* Layout & transitions */
@@ -102,10 +114,10 @@
   --text-2: #94A3B8;
   --text-3: #64748B;
 
-  /* Accent colors */
-  --accent: #76C227;
-  --accent-2: #68b92b;
-  --accent-3: #8BC34A;
+  /* Accent colors - Royal Blue (matches light theme) */
+  --accent: #0062FF;
+  --accent-2: #0052D6;
+  --accent-3: #3B82F6;
 
   /* Semantic UI Tokens (Dark) */
   --bg-hover: rgba(56, 189, 248, 0.08);
@@ -115,9 +127,9 @@
   --badge-bg: rgba(56, 189, 248, 0.12);
   --badge-border: rgba(56, 189, 248, 0.25);
 
-  --success-bg: rgba(118, 194, 39, 0.12);
-  --success-border: rgba(118, 194, 39, 0.25);
-  --success: #76C227;
+  --success-bg: rgba(5, 150, 105, 0.12);
+  --success-border: rgba(5, 150, 105, 0.25);
+  --success: #059669;
 
   --error-bg: rgba(239, 68, 68, 0.12);
   --error-border: rgba(239, 68, 68, 0.25);
@@ -129,6 +141,10 @@
 
   --text-inverse: #000000;
   --bg-overlay: rgba(0, 0, 0, 0.85);
+
+  /* Footer (always dark) */
+  --footer-text: #F8FAFC;
+  --footer-text-2: #94A3B8;
 
   /* Shadows & Glows */
   --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.6);
@@ -223,25 +239,25 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-2), var(--accent));
-  color: #000;
-  box-shadow: 0 0 30px rgba(56, 189, 248, 0.25);
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 0 30px rgba(0, 98, 255, 0.25);
 }
 
 .btn-primary:hover {
-  filter: brightness(1.1);
-  box-shadow: 0 0 50px rgba(56, 189, 248, 0.4);
+  filter: brightness(1.08);
+  box-shadow: 0 0 50px rgba(0, 98, 255, 0.4);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: rgba(56, 150, 240, 0.07);
+  background: rgba(0, 98, 255, 0.07);
   color: var(--text);
   border: 1px solid var(--border-hi);
 }
 
 .btn-secondary:hover {
-  background: rgba(56, 150, 240, 0.13);
+  background: rgba(0, 98, 255, 0.13);
   transform: translateY(-1px);
 }
 
@@ -283,13 +299,13 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(56, 189, 248, 0.18);
+  background: rgba(0, 98, 255, 0.18);
   border-radius: 3px;
 }
 
 /* ─── Selection ──────────────────────────────────────────── */
 ::selection {
-  background: rgba(56, 189, 248, 0.3);
+  background: rgba(0, 98, 255, 0.3);
 }
 
 /* ─── Details / FAQ ──────────────────────────────────────── */
@@ -465,7 +481,7 @@ select:focus {
 /* ─── Scrollbar accent ───────────────────────────────────── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(56, 189, 248, 0.18) transparent;
+  scrollbar-color: rgba(0, 98, 255, 0.18) transparent;
 }
 
 /* ─── Responsive helpers ──────────────────────────────────── */
