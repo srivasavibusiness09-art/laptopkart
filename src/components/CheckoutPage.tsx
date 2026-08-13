@@ -342,7 +342,20 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
 
           cashfree.checkout({
             paymentSessionId: data.paymentSessionId,
-            redirectTarget: "_self"
+            redirectTarget: "_modal"
+          }).then((result: any) => {
+            if (result.error) {
+              console.error("Payment error or cancelled", result.error);
+              // alert(result.error.message || "Payment was cancelled or failed.");
+              setIsProcessing(false);
+            }
+            if (result.paymentDetails) {
+              console.log("Payment completed, waiting for redirect...");
+              // Typically, Cashfree auto-redirects the parent window to the return_url on success.
+            }
+          }).catch((err: any) => {
+            console.error("Checkout promise failed:", err);
+            setIsProcessing(false);
           });
         } else {
           throw new Error(data.error || "Failed to retrieve Cashfree payment session.");
@@ -466,7 +479,15 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
                   ← Back
                 </button>
               )}
-              <button onClick={handleNext} style={{ background: "#0062FF", color: "var(--text-inverse)", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 14, cursor: "pointer", marginLeft: "auto", width: isMobile ? "100%" : "auto" }}>
+              <button 
+                onClick={handleNext} 
+                disabled={isProcessing}
+                style={{ 
+                  background: isProcessing ? "var(--bg-hover)" : "#0062FF", 
+                  color: isProcessing ? "var(--text-3)" : "var(--text-inverse)", 
+                  border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 14, 
+                  cursor: isProcessing ? "not-allowed" : "pointer", marginLeft: "auto", width: isMobile ? "100%" : "auto" 
+                }}>
                 {step === 1 ? (isProcessing ? "Processing..." : "Place Order") : "Continue"}
               </button>
             </div>

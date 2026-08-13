@@ -15,11 +15,10 @@ const heroLaptopImg =
   "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&q=80&auto=format&fit=crop";
 
 const stats = [
-  { value: "5K+", label: "Devices Sold", animated: true },
-  { value: "1 Year", label: "Warranty", animated: false },
-  { value: "50+", label: "Point QC Checks", animated: false },
-  { value: "4.9★", label: "Google Rating", animated: false },
-  { value: "10K+", label: "Trusted Customers", animated: false },
+  { value: "5000+", label: "Laptops Sold", animated: true, target: 5000 },
+  { value: "Protection", label: "On Refurbished Laptops", animated: false },
+  { value: "Tested", label: "Tested before dispatch", animated: false },
+  { value: "100+", label: "Reviews", animated: false, link: "https://www.google.com/search?q=sri+vasavi+business+systems&sca_esv=9cac12e99034826d&sxsrf=APpeQnsgEQI8B9HHMExrQOy2_EgiJ04YCA%3A1786641519474&ei=b_x9avq7HKGyhvcPiqGUKQ&biw=1536&bih=730&gs_ssp=eJwFwUEKgCAQBVDaBp2gjZvWzTBK2BG6haKWSC38FXb73uuHeZ-Za2nhQNHUrRM18c4ntuwpUCQJKzWRxEYbbcRa1mHZRtSsXgf3ZuUf5CsCCh_ueOIH_6gaAQ&oq=sri+vas&gs_lp=Egxnd3Mtd2l6LXNlcnAiB3NyaSB2YXMqAggAMgoQLhjHARivARgnMgQQIxgnMgQQIxgnMgQQIxgnMgsQLhiABBjHARivATIKEAAYgAQYFBiHAjIFEAAYgAQyCxAuGIAEGMcBGK8BMgUQABiABDIFEAAYgAQyFxAuGMcBGK8BGJcFGNwEGN4EGOAE2AEBSL0mUIEEWMkecAJ4AZABA5gBmgGgAbQWqgEEMC4yNLgBA8gBAPgBAZgCCqACoQmoAhTCAgoQABhHGNYEGLADwgIHECMY6gIYJ8ICFxAAGIAEGIoFGJECGOcGGOoCGLQC2AEBwgIQEAAYAxiPARjqAhi0AtgBAcICEBAuGAMYjwEY6gIYtALYAQHCAgsQABiABBiKBRiRAsICCxAAGIAEGLEDGIMBwgIIEAAYgAQYsQPCAg4QABiABBiKBRixAxiDAcICERAuGIAEGIoFGJECGMcBGK8BwgIIEC4YgAQYsQPCAgUQLhiABMICCxAuGIAEGLEDGIMBmAMG8QVssaaTnMN1_YgGAZAGCLoGBggBEAEYAZIHAzIuOKAH2eMBsgcDMC44uAeUCcIHBTItNC42yAdSgAgB&sclient=gws-wiz-serp#lrd=0x3babf191b0d0e03d:0x33f15454539914d7,1,,,," },
 ];
 
 export function HeroBanner({ setPage, banners = [], isLoading = false }: HeroProps) {
@@ -56,38 +55,35 @@ export function HeroBanner({ setPage, banners = [], isLoading = false }: HeroPro
           position: "relative",
           width: "100%",
           overflow: "hidden",
-          background: "linear-gradient(135deg, #082F49 0%, #0C4A6E 60%, #0369A1 100%)",
-          minHeight: isMobile ? 480 : 560,
+          background: "var(--bg)",
         }}
       >
-        <div style={{ position: "absolute", inset: 0 }}>
-          <div style={{
-            display: "flex",
-            height: "100%",
-            transform: `translateX(-${currentIndex * 100}%)`,
-            transition: "transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)",
-            willChange: "transform",
-          }}>
-            {activeBanners.map((b, idx) => (
-              <div
-                key={idx}
-                onClick={() => setPage(b.target || "listing")}
-                style={{
-                  flex: "0 0 100%",
-                  width: "100%",
-                  height: "100%",
-                  position: "relative",
-                  cursor: "pointer",
-                }}
-              >
-                <img
-                  src={isMobile && b.mobileSrc ? b.mobileSrc : b.src}
-                  alt={b.title || `Banner ${idx + 1}`}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" }}
-                />
-              </div>
-            ))}
-          </div>
+        <div style={{
+          display: "flex",
+          width: "100%",
+          transform: `translateX(-${currentIndex * 100}%)`,
+          transition: "transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)",
+          willChange: "transform",
+        }}>
+          {activeBanners.map((b, idx) => (
+            <div
+              key={idx}
+              onClick={() => setPage(b.target || "listing")}
+              style={{
+                flex: "0 0 100%",
+                width: "100%",
+                position: "relative",
+                cursor: "pointer",
+                aspectRatio: isMobile ? "1/1" : "21/9",
+              }}
+            >
+              <img
+                src={isMobile && b.mobileSrc ? b.mobileSrc : b.src}
+                alt={b.title || `Banner ${idx + 1}`}
+                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", pointerEvents: "none", background: "var(--bg-1)" }}
+              />
+            </div>
+          ))}
         </div>
 
         {/* Navigation Arrows */}
@@ -303,7 +299,7 @@ export function HeroStats() {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.max(1, Math.round(eased * target)));
+      setCount(Math.max(1, Math.round(eased * 5000)));
       if (progress < 1) rafId = requestAnimationFrame(tick);
     };
 
@@ -314,7 +310,7 @@ export function HeroStats() {
   return (
     <div style={{
       maxWidth: 1200, margin: "0 auto", width: "100%",
-      padding: isMobile ? "24px 16px 8px" : "40px 24px 8px",
+      padding: isMobile ? "24px 16px 32px" : "40px 24px 64px",
     }}>
       <div style={{
         background: "var(--bg-2)",
@@ -322,22 +318,22 @@ export function HeroStats() {
         borderRadius: 16,
         boxShadow: "var(--shadow-sm)",
         display: "grid",
-        gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(5, 1fr)",
+        gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
         gap: 0,
         overflow: "hidden",
       }}>
         {stats.map((s, i) => {
-          const isRating = s.label === "Google Rating";
+          const isRating = s.label === "Reviews";
           return (
             <Card
               key={s.label}
               hoverable={false}
-              onClick={isRating ? () => window.open("https://www.google.com/search?q=Laptopkart+Reviews", "_blank") : undefined}
+              onClick={isRating && s.link ? () => window.open(s.link, "_blank") : undefined}
               style={{
                 background: "transparent",
                 gridColumn: isMobile && i === stats.length - 1 && stats.length % 2 !== 0 ? "span 2" : "auto",
                 border: "none",
-                borderLeft: isMobile 
+                borderLeft: isMobile
                   ? (i % 2 !== 0 ? "1px solid var(--border)" : "none")
                   : (i > 0 ? "1px solid var(--border)" : "none"),
                 borderTop: isMobile && i >= 2 ? "1px solid var(--border)" : "none",
@@ -354,9 +350,9 @@ export function HeroStats() {
                 color: isRating ? "var(--warning)" : "var(--accent)",
                 marginBottom: 6,
               }}>
-                {s.animated ? `${Math.min(count, 50000).toLocaleString("en-IN")}+` : s.value}
+                {s.animated ? `${Math.min(count, 5000).toLocaleString("en-IN")}+` : s.value}
               </div>
-              <div style={{ color: "var(--text-2)", fontSize: isMobile ? 11 : 13, fontWeight: 500, letterSpacing: "0.02em" }}>
+              <div style={{ color: "var(--text-2)", fontSize: isMobile ? 11 : 13, fontWeight: 500, letterSpacing: "0.02em", whiteSpace: "nowrap" }}>
                 {s.label}
               </div>
             </Card>
@@ -376,7 +372,6 @@ export default function Hero({ setPage, banners = [] }: HeroProps) {
       paddingBottom: isMobile ? 8 : 60,
     }}>
       <HeroBanner setPage={setPage} banners={banners} />
-      <HeroStats />
     </section>
   );
 }

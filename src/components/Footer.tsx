@@ -70,7 +70,7 @@ export default function Footer({ setPage }: FooterProps) {
     if (l === "student hub") return "student-hub";
     if (l === "contact") return "contact";
     if (l === "sell laptop" || l === "resell laptop") return "resell";
-    if (l === "track order") return "profile";
+    if (l === "track order") return "profile-orders";
     if (l === "warranty" || l === "returns" || l === "faqs" || l === "shipping") return "why-refurbished";
     return "home";
   };

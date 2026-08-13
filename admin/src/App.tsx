@@ -283,7 +283,7 @@ export default function App() {
   const [subscribers, setSubscribers] = useState<any[]>([]);
 
   // Student Hub state
-  const [giveawayConfig, setGiveawayConfig] = useState<{prizeTitle: string, prizeImage: string, deadline: string, prizeImagePublicId?: string}>({ prizeTitle: '', prizeImage: '', deadline: '' });
+  const [giveawayConfig, setGiveawayConfig] = useState<{ prizeTitle: string, prizeImage: string, deadline: string, prizeImagePublicId?: string }>({ prizeTitle: '', prizeImage: '', deadline: '' });
   const [winnerForm, setWinnerForm] = useState({ name: '', city: '', blogTitle: '', photo: '' });
   const [lastWinnerData, setLastWinnerData] = useState<any>(null);
   const [hubSaving, setHubSaving] = useState(false);
@@ -878,19 +878,19 @@ export default function App() {
         if (data.videoPosterPublicId) await deleteCloudinaryAssets([data.videoPosterPublicId], "image");
       }
       await deleteDoc(doc(db, "homepage_settings", "video"));
-        setVideoTitle("Explore Laptopkart in Action");
-        setVideoSubtitle("Watch our certified refurbishment process and see why thousands trust us.");
-        setVideoUrl("");
-        setVideoPublicId("");
-        setVideoPoster("");
-        setVideoPosterPublicId("");
-        setVideoOrientation("landscape");
-        setVideoEyebrow("Introduction");
-        triggerAlert('success', 'Promo video deleted successfully!');
-      } catch (err) {
-        console.error(err);
-        triggerAlert('danger', 'Error deleting promo video.');
-      }
+      setVideoTitle("Explore Laptopkart in Action");
+      setVideoSubtitle("Watch our certified refurbishment process and see why thousands trust us.");
+      setVideoUrl("");
+      setVideoPublicId("");
+      setVideoPoster("");
+      setVideoPosterPublicId("");
+      setVideoOrientation("landscape");
+      setVideoEyebrow("Introduction");
+      triggerAlert('success', 'Promo video deleted successfully!');
+    } catch (err) {
+      console.error(err);
+      triggerAlert('danger', 'Error deleting promo video.');
+    }
   };
 
   interface Order {
@@ -915,14 +915,14 @@ export default function App() {
   // Fetch current Student Hub contest and last winner
   useEffect(() => {
     if (!admin) return;
-    
+
     const fetchGiveawayData = async () => {
       try {
         const currentDoc = await getDoc(doc(db, "giveaway", "current"));
         if (currentDoc.exists()) {
           setGiveawayConfig(currentDoc.data() as any);
         }
-        
+
         const lastWinnerDoc = await getDoc(doc(db, "giveaway", "lastWinner"));
         if (lastWinnerDoc.exists()) {
           setLastWinnerData(lastWinnerDoc.data());
@@ -931,7 +931,7 @@ export default function App() {
         console.error("Error fetching giveaway data:", err);
       }
     };
-    
+
     fetchGiveawayData();
   }, [admin]);
 
@@ -1134,7 +1134,7 @@ export default function App() {
       storage: storageString,
       availableStorages: storageString.split(',').map(s => s.trim()).filter(Boolean),
       badge: productForm.badge as "Best Seller" | "Gaming" | "Value Deal" | "Top Rated" || 'Top Rated',
-      stock: productForm.stock !== undefined ? productForm.stock : 1,
+      stock: productForm.stock !== undefined ? Number(productForm.stock) : 1,
       amazon_url: productForm.amazon_url || '',
       flipkart_url: productForm.flipkart_url || '',
       croma_url: productForm.croma_url || '',
@@ -1215,7 +1215,7 @@ export default function App() {
 
   const handleProductDelete = async (id: any) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
-    
+
     const product = products.find(p => p.id === id);
     if (product) {
       const ids = [
@@ -1481,7 +1481,7 @@ export default function App() {
   const handleDeleteHeroPoster = async (docId: string) => {
     if (!confirm('Are you sure you want to delete this hero poster?')) return;
 
-    const poster = heroPosters.find((p: any) => p.id === docId || p.title?.replace(/[^a-zA-Z0-9]/g,"_").toLowerCase() === docId);
+    const poster = heroPosters.find((p: any) => p.id === docId || p.title?.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase() === docId);
     if (poster) {
       const ids = [poster.imagePublicId, poster.mobileSrcPublicId].filter(Boolean) as string[];
       await deleteCloudinaryAssets(ids);
@@ -1526,7 +1526,7 @@ export default function App() {
   // Filter lists
   const filteredProducts = products.filter(p =>
     (p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-    p.brand.toLowerCase().includes(productSearch.toLowerCase())) &&
+      p.brand.toLowerCase().includes(productSearch.toLowerCase())) &&
     (stockFilter === 'all' || getStockStatus(p.stock) === stockFilter)
   );
 
@@ -1737,7 +1737,7 @@ export default function App() {
       )}
 
       {/* ── Left Sidebar ── */}
-      <aside style={{
+      <aside className="thin-scrollbar" style={{
         width: 260,
         background: '#131a24',
         borderRight: '1px solid rgba(56, 189, 248, 0.12)',
@@ -1745,6 +1745,7 @@ export default function App() {
         display: 'flex',
         flexDirection: 'column',
         gap: 32,
+        overflowY: 'auto',
         ...(isMobile ? {
           position: 'fixed',
           top: 0,
@@ -1753,7 +1754,9 @@ export default function App() {
           zIndex: 50,
           transition: 'left 0.3s ease'
         } : {
-          position: 'relative'
+          position: 'sticky',
+          top: 0,
+          height: '100vh'
         })
       }}>
         {/* Logo */}
@@ -1781,9 +1784,9 @@ export default function App() {
             { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> },
             { id: 'products', label: 'Laptops & PCs', icon: <Laptop size={18} /> },
             { id: 'accessories', label: 'Accessories', icon: <Keyboard size={18} /> },
+            { id: 'orders', label: 'Customer Orders', icon: <FileText size={18} /> },
             { id: 'banners', label: 'Banners', icon: <ImageIcon size={18} /> },
             { id: 'hero_posters', label: 'Hero Posters', icon: <ImageIcon size={18} /> },
-            { id: 'orders', label: 'Customer Orders', icon: <FileText size={18} /> },
             { id: 'blogs', label: 'Tech Blogs', icon: <BookOpen size={18} /> },
             { id: 'video', label: 'Promo Video', icon: <Video size={18} /> },
             { id: 'subscribers', label: 'Newsletter', icon: <Mail size={18} /> },
@@ -2186,75 +2189,75 @@ export default function App() {
                 </p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 260, overflowY: 'auto', paddingRight: 4 }}>
-                  {orders.map((ord) => (
-                      <div
-                        key={ord.orderId}
-                        onClick={() => { setActiveTab('orders'); setOrdersFilter('active'); }}
-                        style={{
-                          background: 'rgba(255,255,255,0.02)',
-                          border: '1px solid rgba(56,189,248,0.06)',
-                          borderRadius: 12, padding: 12,
-                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          cursor: 'pointer', transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = 'rgba(56, 189, 248, 0.05)';
-                          e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.18)';
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
-                          e.currentTarget.style.borderColor = 'rgba(56,189,248,0.06)';
-                        }}
-                      >
-                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                          <img src={ord.items[0]?.img} style={{ width: 44, height: 33, borderRadius: 4, objectFit: 'cover' }} />
-                          <div>
-                            <div style={{ color: '#fff', fontWeight: 700, fontSize: 12 }}>Order #{ord.orderId}</div>
-                            <div style={{ color: '#8B9BBE', fontSize: 11, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {ord.items.map(it => `${it.name} (x${it.qty})`).join(', ')}
-                            </div>
-                            <div style={{ color: '#38BDF8', fontSize: 10 }}>By {ord.address.name} • {ord.address.city}</div>
+                  {orders.slice(0, 5).map((ord) => (
+                    <div
+                      key={ord.orderId}
+                      onClick={() => { setActiveTab('orders'); setOrdersFilter('active'); }}
+                      style={{
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(56,189,248,0.06)',
+                        borderRadius: 12, padding: 12,
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = 'rgba(56, 189, 248, 0.05)';
+                        e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.18)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                        e.currentTarget.style.borderColor = 'rgba(56,189,248,0.06)';
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <img src={ord.items[0]?.img} style={{ width: 44, height: 33, borderRadius: 4, objectFit: 'cover' }} />
+                        <div>
+                          <div style={{ color: '#fff', fontWeight: 700, fontSize: 12 }}>Order #{ord.orderId}</div>
+                          <div style={{ color: '#8B9BBE', fontSize: 11, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {ord.items.map(it => `${it.name} (x${it.qty})`).join(', ')}
                           </div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ color: '#38BDF8', fontWeight: 850, fontSize: 13 }}>₹{ord.total.toLocaleString('en-IN')}</div>
-                          {(() => {
-                            const status = ord.status || 'Pending';
-                            let bg = 'rgba(56,189,248,0.1)';
-                            let color = '#38BDF8';
-                            if (status === 'Cancelled') {
-                              bg = 'rgba(239,68,68,0.1)';
-                              color = '#EF4444';
-                            } else if (status === 'Pending (COD)') {
-                              bg = 'rgba(245,158,11,0.1)';
-                              color = '#F59E0B';
-                            } else if (status === 'Completed') {
-                              bg = 'rgba(16,185,129,0.1)';
-                              color = '#10B981';
-                            }
-                            return (
-                              <span style={{
-                                fontSize: 9,
-                                background: bg,
-                                color: color,
-                                padding: '2px 6px',
-                                borderRadius: 100,
-                                display: 'inline-block',
-                                marginTop: 2,
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.02em'
-                              }}>
-                                {status}
-                              </span>
-                            );
-                          })()}
+                          <div style={{ color: '#38BDF8', fontSize: 10 }}>By {ord.address.name} • {ord.address.city}</div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ color: '#38BDF8', fontWeight: 850, fontSize: 13 }}>₹{ord.total.toLocaleString('en-IN')}</div>
+                        {(() => {
+                          const status = ord.status || 'Pending';
+                          let bg = 'rgba(56,189,248,0.1)';
+                          let color = '#38BDF8';
+                          if (status === 'Cancelled') {
+                            bg = 'rgba(239,68,68,0.1)';
+                            color = '#EF4444';
+                          } else if (status === 'Pending (COD)') {
+                            bg = 'rgba(245,158,11,0.1)';
+                            color = '#F59E0B';
+                          } else if (status === 'Completed') {
+                            bg = 'rgba(16,185,129,0.1)';
+                            color = '#10B981';
+                          }
+                          return (
+                            <span style={{
+                              fontSize: 9,
+                              background: bg,
+                              color: color,
+                              padding: '2px 6px',
+                              borderRadius: 100,
+                              display: 'inline-block',
+                              marginTop: 2,
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.02em'
+                            }}>
+                              {status}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -2455,7 +2458,8 @@ export default function App() {
                           ><PackageX size={15} /></button>
                           <button
                             onClick={() => {
-                              const input = window.prompt(`Restock quantity for "${p.name}"`, String((p.stock === undefined ? 0 : p.stock) + LOW_STOCK_THRESHOLD + 1));
+                              const currentStock = p.stock === undefined ? 0 : Number(p.stock);
+                              const input = window.prompt(`Restock quantity for "${p.name}"`, String(currentStock + LOW_STOCK_THRESHOLD + 1));
                               if (input !== null) handleQuickStockUpdate(p.id, Number(input));
                             }}
                             title="Restock units"
@@ -4069,1394 +4073,1394 @@ export default function App() {
           </div>
         )}
 
-      {/* ── Modal: Product Form ── */}
-      {productModal.open && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 10000,
-          background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
-        }}>
-          <div className="fade-in" style={{
-            background: '#131a24', border: '1px solid rgba(56,189,248,0.15)',
-            borderRadius: 24, width: '100%', maxWidth: 700, padding: 32,
-            boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
-            maxHeight: '90vh', overflowY: 'auto'
+        {/* ── Modal: Product Form ── */}
+        {productModal.open && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 10000,
+            background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ fontFamily: 'Sora', fontSize: 22, color: '#fff', fontWeight: 800 }}>
-                {productModal.mode === 'add' ? 'Add Laptop / Desktop' : 'Edit Product'}
-              </h2>
-              <button onClick={() => setProductModal({ open: false, mode: 'add' })} style={{ background: 'transparent', border: 'none', color: '#8B9BBE', cursor: 'pointer' }}><X size={20} /></button>
-            </div>
-
-            <form onSubmit={handleProductSubmit} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
-
-              {/* Form Navigation Tabs */}
-              <div style={{
-                display: 'flex', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.06)',
-                paddingBottom: 16, marginBottom: 12, gridColumn: isMobile ? 'span 1' : 'span 2'
-              }}>
-                {(['basic', 'specs', 'media'] as const).map(tab => (
-                  <button
-                    key={tab} type="button"
-                    onClick={() => setModalTab(tab)}
-                    style={{
-                      background: modalTab === tab ? 'rgba(56,189,248,0.1)' : 'transparent',
-                      border: `1px solid ${modalTab === tab ? 'rgba(56,189,248,0.25)' : 'transparent'}`,
-                      borderRadius: 12, padding: '10px 20px',
-                      color: modalTab === tab ? '#38BDF8' : '#8B9BBE',
-                      fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
-                      fontFamily: 'Sora'
-                    }}
-                  >
-                    {tab === 'basic' && '📦 Basic Details'}
-                    {tab === 'specs' && '⚙️ Specs & Upgrades'}
-                    {tab === 'media' && '🔗 Media & Retail Links'}
-                  </button>
-                ))}
+            <div className="fade-in" style={{
+              background: '#131a24', border: '1px solid rgba(56,189,248,0.15)',
+              borderRadius: 24, width: '100%', maxWidth: 700, padding: 32,
+              boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+              maxHeight: '90vh', overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <h2 style={{ fontFamily: 'Sora', fontSize: 22, color: '#fff', fontWeight: 800 }}>
+                  {productModal.mode === 'add' ? 'Add Laptop / Desktop' : 'Edit Product'}
+                </h2>
+                <button onClick={() => setProductModal({ open: false, mode: 'add' })} style={{ background: 'transparent', border: 'none', color: '#8B9BBE', cursor: 'pointer' }}><X size={20} /></button>
               </div>
 
-              {modalTab === 'basic' && (
-                <>
-                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', display: 'flex', gap: 12, alignItems: 'flex-end' }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Product Name</label>
+              <form onSubmit={handleProductSubmit} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+
+                {/* Form Navigation Tabs */}
+                <div style={{
+                  display: 'flex', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.06)',
+                  paddingBottom: 16, marginBottom: 12, gridColumn: isMobile ? 'span 1' : 'span 2'
+                }}>
+                  {(['basic', 'specs', 'media'] as const).map(tab => (
+                    <button
+                      key={tab} type="button"
+                      onClick={() => setModalTab(tab)}
+                      style={{
+                        background: modalTab === tab ? 'rgba(56,189,248,0.1)' : 'transparent',
+                        border: `1px solid ${modalTab === tab ? 'rgba(56,189,248,0.25)' : 'transparent'}`,
+                        borderRadius: 12, padding: '10px 20px',
+                        color: modalTab === tab ? '#38BDF8' : '#8B9BBE',
+                        fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                        fontFamily: 'Sora'
+                      }}
+                    >
+                      {tab === 'basic' && '📦 Basic Details'}
+                      {tab === 'specs' && '⚙️ Specs & Upgrades'}
+                      {tab === 'media' && '🔗 Media & Retail Links'}
+                    </button>
+                  ))}
+                </div>
+
+                {modalTab === 'basic' && (
+                  <>
+                    <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Product Name</label>
+                        <input
+                          type="text" required placeholder="e.g. Dell Latitude 5400"
+                          value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })}
+                          className="form-input"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleAutoFillSpecs}
+                        style={{
+                          background: 'linear-gradient(135deg, #10B981, #059669)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 12,
+                          height: 44,
+                          padding: '0 16px',
+                          fontSize: 12,
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          fontFamily: 'Sora',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6
+                        }}
+                      >
+                        <Sparkles size={14} /> ⚡ Auto-Fill Details
+                      </button>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Brand</label>
+                      <select
+                        value={productForm.brand} onChange={e => setProductForm({ ...productForm, brand: e.target.value })}
+                        className="form-input" style={{ background: '#0d1117' }}
+                      >
+                        {['Dell', 'HP', 'Lenovo', 'Apple', 'Asus', 'Acer'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Device Type</label>
+                      <select
+                        value={productForm.deviceType || 'Laptop'}
+                        onChange={e => {
+                          const type = e.target.value as any;
+                          setProductForm({
+                            ...productForm,
+                            deviceType: type,
+                            category: type === 'Desktop' ? 'Desktops' : 'Business'
+                          });
+                        }}
+                        className="form-input" style={{ background: '#0d1117' }}
+                      >
+                        <option value="Laptop">Laptop</option>
+                        <option value="Desktop">Desktop</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Category</label>
+                      <select
+                        value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })}
+                        className="form-input" style={{ background: '#0d1117' }}
+                      >
+                        {productForm.deviceType === 'Desktop'
+                          ? ['Desktops', 'Workstations', 'Gaming'].map(opt => <option key={opt} value={opt}>{opt}</option>)
+                          : ['Business', 'Gaming', 'MacBooks', 'Ultrabooks', 'Workstations'].map(opt => <option key={opt} value={opt}>{opt}</option>)
+                        }
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Condition</label>
+                      <select
+                        value={productForm.condition} onChange={e => setProductForm({ ...productForm, condition: e.target.value as any })}
+                        className="form-input" style={{ background: '#0d1117' }}
+                      >
+                        <option value="Refurbished">Refurbished</option>
+                        <option value="Brand New">Brand New</option>
+                      </select>
+                    </div>
+
+                    {productForm.condition === 'Refurbished' && (
+                      <div>
+                        <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Quality Grade</label>
+                        <select
+                          value={productForm.grade} onChange={e => setProductForm({ ...productForm, grade: e.target.value as any })}
+                          className="form-input" style={{ background: '#0d1117' }}
+                        >
+                          <option value="A+">Grade A+</option>
+                          <option value="A">Grade A</option>
+                          <option value="B+">Grade B+</option>
+                        </select>
+                      </div>
+                    )}
+
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Product Badge</label>
+                      <select
+                        value={productForm.badge} onChange={e => setProductForm({ ...productForm, badge: e.target.value as any })}
+                        className="form-input" style={{ background: '#0d1117' }}
+                      >
+                        {['Best Seller', 'Gaming', 'Value Deal', 'Top Rated'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Listing Price (₹)</label>
                       <input
-                        type="text" required placeholder="e.g. Dell Latitude 5400"
-                        value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })}
+                        type="number" required placeholder="e.g. 29999"
+                        value={productForm.price || ''} onChange={e => setProductForm({ ...productForm, price: Number(e.target.value) })}
                         className="form-input"
                       />
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleAutoFillSpecs}
-                      style={{
-                        background: 'linear-gradient(135deg, #10B981, #059669)',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: 12,
-                        height: 44,
-                        padding: '0 16px',
-                        fontSize: 12,
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        fontFamily: 'Sora',
+
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Rating (out of 5)</label>
+                      <input
+                        type="number" required step="0.1" min="1" max="5" placeholder="e.g. 4.8"
+                        value={productForm.rating || ''} onChange={e => setProductForm({ ...productForm, rating: Number(e.target.value) })}
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Reviews Count</label>
+                      <input
+                        type="number" required min="0" placeholder="e.g. 125"
+                        value={productForm.reviews || ''} onChange={e => setProductForm({ ...productForm, reviews: Number(e.target.value) })}
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Original MRP (₹)</label>
+                      <input
+                        type="number" required placeholder="e.g. 59999"
+                        value={productForm.mrp || ''} onChange={e => setProductForm({ ...productForm, mrp: Number(e.target.value) })}
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Warranty Duration</label>
+                      <input
+                        type="text" placeholder="e.g. 1 Year Warranty"
+                        value={productForm.warranty} onChange={e => setProductForm({ ...productForm, warranty: e.target.value })}
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Stock Quantity</label>
+                      <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 6
-                      }}
-                    >
-                      <Sparkles size={14} /> ⚡ Auto-Fill Details
-                    </button>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Brand</label>
-                    <select
-                      value={productForm.brand} onChange={e => setProductForm({ ...productForm, brand: e.target.value })}
-                      className="form-input" style={{ background: '#0d1117' }}
-                    >
-                      {['Dell', 'HP', 'Lenovo', 'Apple', 'Asus', 'Acer'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Device Type</label>
-                    <select
-                      value={productForm.deviceType || 'Laptop'}
-                      onChange={e => {
-                        const type = e.target.value as any;
-                        setProductForm({
-                          ...productForm,
-                          deviceType: type,
-                          category: type === 'Desktop' ? 'Desktops' : 'Business'
-                        });
-                      }}
-                      className="form-input" style={{ background: '#0d1117' }}
-                    >
-                      <option value="Laptop">Laptop</option>
-                      <option value="Desktop">Desktop</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Category</label>
-                    <select
-                      value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })}
-                      className="form-input" style={{ background: '#0d1117' }}
-                    >
-                      {productForm.deviceType === 'Desktop'
-                        ? ['Desktops', 'Workstations', 'Gaming'].map(opt => <option key={opt} value={opt}>{opt}</option>)
-                        : ['Business', 'Gaming', 'MacBooks', 'Ultrabooks', 'Workstations'].map(opt => <option key={opt} value={opt}>{opt}</option>)
-                      }
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Condition</label>
-                    <select
-                      value={productForm.condition} onChange={e => setProductForm({ ...productForm, condition: e.target.value as any })}
-                      className="form-input" style={{ background: '#0d1117' }}
-                    >
-                      <option value="Refurbished">Refurbished</option>
-                      <option value="Brand New">Brand New</option>
-                    </select>
-                  </div>
-
-                  {productForm.condition === 'Refurbished' && (
-                    <div>
-                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Quality Grade</label>
-                      <select
-                        value={productForm.grade} onChange={e => setProductForm({ ...productForm, grade: e.target.value as any })}
-                        className="form-input" style={{ background: '#0d1117' }}
-                      >
-                        <option value="A+">Grade A+</option>
-                        <option value="A">Grade A</option>
-                        <option value="B+">Grade B+</option>
-                      </select>
+                        background: 'rgba(13, 17, 23, 0.7)',
+                        border: '1px solid rgba(56, 189, 248, 0.15)',
+                        borderRadius: 12,
+                        overflow: 'hidden',
+                        height: 44
+                      }}>
+                        <button
+                          type="button"
+                          onClick={() => setProductForm(prev => ({ ...prev, stock: Math.max(0, (prev.stock === undefined ? 1 : prev.stock) - 1) }))}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.02)',
+                            border: 'none',
+                            color: '#8B9BBE',
+                            width: 44,
+                            height: '100%',
+                            cursor: 'pointer',
+                            fontSize: 20,
+                            fontWeight: 'bold',
+                            transition: 'background 0.2s',
+                            outline: 'none'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                        >−</button>
+                        <input
+                          type="number"
+                          min="0"
+                          required
+                          value={productForm.stock === undefined ? 1 : productForm.stock}
+                          onChange={e => setProductForm({ ...productForm, stock: Math.max(0, Number(e.target.value)) })}
+                          style={{
+                            flex: 1,
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#fff',
+                            textAlign: 'center',
+                            fontWeight: 700,
+                            fontSize: 14,
+                            outline: 'none',
+                            width: '100%',
+                            padding: 0
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setProductForm(prev => ({ ...prev, stock: (prev.stock === undefined ? 1 : prev.stock) + 1 }))}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.02)',
+                            border: 'none',
+                            color: '#8B9BBE',
+                            width: 44,
+                            height: '100%',
+                            cursor: 'pointer',
+                            fontSize: 20,
+                            fontWeight: 'bold',
+                            transition: 'background 0.2s',
+                            outline: 'none'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)'}
+                        >+</button>
+                      </div>
                     </div>
-                  )}
+                  </>
+                )}
 
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Product Badge</label>
-                    <select
-                      value={productForm.badge} onChange={e => setProductForm({ ...productForm, badge: e.target.value as any })}
-                      className="form-input" style={{ background: '#0d1117' }}
-                    >
-                      {['Best Seller', 'Gaming', 'Value Deal', 'Top Rated'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Listing Price (₹)</label>
-                    <input
-                      type="number" required placeholder="e.g. 29999"
-                      value={productForm.price || ''} onChange={e => setProductForm({ ...productForm, price: Number(e.target.value) })}
-                      className="form-input"
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Rating (out of 5)</label>
-                    <input
-                      type="number" required step="0.1" min="1" max="5" placeholder="e.g. 4.8"
-                      value={productForm.rating || ''} onChange={e => setProductForm({ ...productForm, rating: Number(e.target.value) })}
-                      className="form-input"
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Reviews Count</label>
-                    <input
-                      type="number" required min="0" placeholder="e.g. 125"
-                      value={productForm.reviews || ''} onChange={e => setProductForm({ ...productForm, reviews: Number(e.target.value) })}
-                      className="form-input"
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Original MRP (₹)</label>
-                    <input
-                      type="number" required placeholder="e.g. 59999"
-                      value={productForm.mrp || ''} onChange={e => setProductForm({ ...productForm, mrp: Number(e.target.value) })}
-                      className="form-input"
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Warranty Duration</label>
-                    <input
-                      type="text" placeholder="e.g. 1 Year Warranty"
-                      value={productForm.warranty} onChange={e => setProductForm({ ...productForm, warranty: e.target.value })}
-                      className="form-input"
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Stock Quantity</label>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: 'rgba(13, 17, 23, 0.7)',
-                      border: '1px solid rgba(56, 189, 248, 0.15)',
-                      borderRadius: 12,
-                      overflow: 'hidden',
-                      height: 44
-                    }}>
-                      <button
-                        type="button"
-                        onClick={() => setProductForm(prev => ({ ...prev, stock: Math.max(0, (prev.stock === undefined ? 1 : prev.stock) - 1) }))}
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.02)',
-                          border: 'none',
-                          color: '#8B9BBE',
-                          width: 44,
-                          height: '100%',
-                          cursor: 'pointer',
-                          fontSize: 20,
-                          fontWeight: 'bold',
-                          transition: 'background 0.2s',
-                          outline: 'none'
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                      >−</button>
+                {modalTab === 'specs' && (
+                  <>
+                    <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Processor Details</label>
                       <input
-                        type="number"
-                        min="0"
-                        required
-                        value={productForm.stock === undefined ? 1 : productForm.stock}
-                        onChange={e => setProductForm({ ...productForm, stock: Math.max(0, Number(e.target.value)) })}
-                        style={{
-                          flex: 1,
-                          background: 'transparent',
-                          border: 'none',
-                          color: '#fff',
-                          textAlign: 'center',
-                          fontWeight: 700,
-                          fontSize: 14,
-                          outline: 'none',
-                          width: '100%',
-                          padding: 0
-                        }}
+                        type="text" placeholder="e.g. Intel Core i5 8265U"
+                        value={productForm.processor} onChange={e => setProductForm({ ...productForm, processor: e.target.value })}
+                        className="form-input"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setProductForm(prev => ({ ...prev, stock: (prev.stock === undefined ? 1 : prev.stock) + 1 }))}
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.02)',
-                          border: 'none',
-                          color: '#8B9BBE',
-                          width: 44,
-                          height: '100%',
-                          cursor: 'pointer',
-                          fontSize: 20,
-                          fontWeight: 'bold',
-                          transition: 'background 0.2s',
-                          outline: 'none'
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)'}
-                      >+</button>
                     </div>
-                  </div>
-                </>
-              )}
 
-              {modalTab === 'specs' && (
-                <>
-                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Processor Details</label>
-                    <input
-                      type="text" placeholder="e.g. Intel Core i5 8265U"
-                      value={productForm.processor} onChange={e => setProductForm({ ...productForm, processor: e.target.value })}
-                      className="form-input"
-                    />
-                  </div>
-
-                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Specifications Tagline</label>
-                    <input
-                      type="text" placeholder="e.g. Intel i5 8th Gen • 16GB RAM • 512GB SSD"
-                      value={productForm.specs} onChange={e => setProductForm({ ...productForm, specs: e.target.value })}
-                      className="form-input"
-                    />
-                  </div>
-
-                  {/* RAM Custom Visual Toggle & Offset Input */}
-                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', background: '#0d1117', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 18, padding: 18 }}>
-                    <label style={{ display: 'block', color: '#38BDF8', fontSize: 12, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase' }}>Memory Configuration (RAM Options)</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
-                      {Object.entries(selectedRamOptions).map(([size, opt]) => (
-                        <div key={size} style={{
-                          background: opt.enabled ? 'rgba(56,189,248,0.03)' : 'rgba(255,255,255,0.01)',
-                          border: `1px solid ${opt.enabled ? 'rgba(56,189,248,0.3)' : 'rgba(255,255,255,0.05)'}`,
-                          borderRadius: 14, padding: 12, transition: 'all 0.2s'
-                        }}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedRamOptions(prev => ({
-                                ...prev,
-                                [size]: { ...prev[size], enabled: !prev[size].enabled }
-                              }));
-                            }}
-                            style={{
-                              width: '100%', textTransform: 'none', background: 'transparent', border: 'none',
-                              color: opt.enabled ? '#38BDF8' : '#8B9BBE', display: 'flex', alignItems: 'center',
-                              justifyContent: 'space-between', cursor: 'pointer', outline: 'none', padding: 0
-                            }}
-                          >
-                            <span style={{ fontSize: 13, fontWeight: 700 }}>{size}</span>
-                            <div style={{
-                              width: 14, height: 14, borderRadius: 4,
-                              background: opt.enabled ? '#38BDF8' : 'rgba(255,255,255,0.05)',
-                              border: '1px solid rgba(255,255,255,0.1)',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#000', fontWeight: 'bold'
-                            }}>
-                              {opt.enabled && '✓'}
-                            </div>
-                          </button>
-                          {opt.enabled && (
-                            <div style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8 }}>
-                              <label style={{ display: 'block', color: '#8B9BBE', fontSize: 10, marginBottom: 4 }}>Price Upgrade Cost (₹)</label>
-                              <input
-                                type="number"
-                                placeholder="Upgrade Price addition..."
-                                value={opt.offset || ''}
-                                onChange={e => {
-                                  const val = Number(e.target.value) || 0;
-                                  setSelectedRamOptions(prev => ({
-                                    ...prev,
-                                    [size]: { ...prev[size], offset: val }
-                                  }));
-                                }}
-                                className="form-input"
-                                style={{ height: 34, padding: '4px 8px', fontSize: 12 }}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                    <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Specifications Tagline</label>
+                      <input
+                        type="text" placeholder="e.g. Intel i5 8th Gen • 16GB RAM • 512GB SSD"
+                        value={productForm.specs} onChange={e => setProductForm({ ...productForm, specs: e.target.value })}
+                        className="form-input"
+                      />
                     </div>
-                  </div>
 
-                  {/* Storage Custom Visual Toggle & Offset Input */}
-                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', background: '#0d1117', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 18, padding: 18 }}>
-                    <label style={{ display: 'block', color: '#38BDF8', fontSize: 12, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase' }}>Storage Configuration Options</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
-                      {Object.entries(selectedStorageOptions).map(([size, opt]) => (
-                        <div key={size} style={{
-                          background: opt.enabled ? 'rgba(56,189,248,0.03)' : 'rgba(255,255,255,0.01)',
-                          border: `1px solid ${opt.enabled ? 'rgba(56,189,248,0.3)' : 'rgba(255,255,255,0.05)'}`,
-                          borderRadius: 14, padding: 12, transition: 'all 0.2s'
-                        }}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedStorageOptions(prev => ({
-                                ...prev,
-                                [size]: { ...prev[size], enabled: !prev[size].enabled }
-                              }));
-                            }}
-                            style={{
-                              width: '100%', textTransform: 'none', background: 'transparent', border: 'none',
-                              color: opt.enabled ? '#38BDF8' : '#8B9BBE', display: 'flex', alignItems: 'center',
-                              justifyContent: 'space-between', cursor: 'pointer', outline: 'none', padding: 0
-                            }}
-                          >
-                            <span style={{ fontSize: 13, fontWeight: 700 }}>{size}</span>
-                            <div style={{
-                              width: 14, height: 14, borderRadius: 4,
-                              background: opt.enabled ? '#38BDF8' : 'rgba(255,255,255,0.05)',
-                              border: '1px solid rgba(255,255,255,0.1)',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#000', fontWeight: 'bold'
-                            }}>
-                              {opt.enabled && '✓'}
-                            </div>
-                          </button>
-                          {opt.enabled && (
-                            <div style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8 }}>
-                              <label style={{ display: 'block', color: '#8B9BBE', fontSize: 10, marginBottom: 4 }}>Price Upgrade Cost (₹)</label>
-                              <input
-                                type="number"
-                                placeholder="Upgrade Price addition..."
-                                value={opt.offset || ''}
-                                onChange={e => {
-                                  const val = Number(e.target.value) || 0;
-                                  setSelectedStorageOptions(prev => ({
-                                    ...prev,
-                                    [size]: { ...prev[size], offset: val }
-                                  }));
-                                }}
-                                className="form-input"
-                                style={{ height: 34, padding: '4px 8px', fontSize: 12 }}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {modalTab === 'media' && (
-                <>
-                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Description (Optional, overrides auto-template)</label>
-                    <textarea
-                      placeholder="e.g. This laptop features high performance with dual channel RAM..."
-                      value={productForm.description || ''} onChange={e => setProductForm({ ...productForm, description: e.target.value })}
-                      className="form-input" style={{ minHeight: 70, resize: 'vertical' }}
-                    />
-                  </div>
-
-                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Box Contents (Optional, comma-separated)</label>
-                    <input
-                      type="text" placeholder="e.g. Refurbished Grade A+ Laptop, Original Power Adapter, Certification Booklet"
-                      value={productForm.boxContents || ''} onChange={e => setProductForm({ ...productForm, boxContents: e.target.value })}
-                      className="form-input"
-                    />
-                  </div>
-
-                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>
-                      Product Images Gallery (Max 5, Drag & Drop or Click to Select)
-                    </label>
-
-                    {/* Previews Grid */}
-                    {(productForm.images && productForm.images.length > 0) && (
-                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-                        {productForm.images.map((imgUrl, i) => (
-                          <div key={i} style={{ position: 'relative', width: 90, height: 68, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
-                            <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {/* RAM Custom Visual Toggle & Offset Input */}
+                    <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', background: '#0d1117', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 18, padding: 18 }}>
+                      <label style={{ display: 'block', color: '#38BDF8', fontSize: 12, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase' }}>Memory Configuration (RAM Options)</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                        {Object.entries(selectedRamOptions).map(([size, opt]) => (
+                          <div key={size} style={{
+                            background: opt.enabled ? 'rgba(56,189,248,0.03)' : 'rgba(255,255,255,0.01)',
+                            border: `1px solid ${opt.enabled ? 'rgba(56,189,248,0.3)' : 'rgba(255,255,255,0.05)'}`,
+                            borderRadius: 14, padding: 12, transition: 'all 0.2s'
+                          }}>
                             <button
                               type="button"
-                              onClick={() => handleRemoveProductImage(i)}
+                              onClick={() => {
+                                setSelectedRamOptions(prev => ({
+                                  ...prev,
+                                  [size]: { ...prev[size], enabled: !prev[size].enabled }
+                                }));
+                              }}
                               style={{
-                                position: 'absolute', top: 4, right: 4,
-                                background: '#EF4444', color: '#fff', border: 'none',
-                                borderRadius: '50%', width: 18, height: 18,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                cursor: 'pointer', fontSize: 10, fontWeight: 'bold',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                                width: '100%', textTransform: 'none', background: 'transparent', border: 'none',
+                                color: opt.enabled ? '#38BDF8' : '#8B9BBE', display: 'flex', alignItems: 'center',
+                                justifyContent: 'space-between', cursor: 'pointer', outline: 'none', padding: 0
                               }}
                             >
-                              ✕
+                              <span style={{ fontSize: 13, fontWeight: 700 }}>{size}</span>
+                              <div style={{
+                                width: 14, height: 14, borderRadius: 4,
+                                background: opt.enabled ? '#38BDF8' : 'rgba(255,255,255,0.05)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#000', fontWeight: 'bold'
+                              }}>
+                                {opt.enabled && '✓'}
+                              </div>
                             </button>
+                            {opt.enabled && (
+                              <div style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8 }}>
+                                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 10, marginBottom: 4 }}>Price Upgrade Cost (₹)</label>
+                                <input
+                                  type="number"
+                                  placeholder="Upgrade Price addition..."
+                                  value={opt.offset || ''}
+                                  onChange={e => {
+                                    const val = Number(e.target.value) || 0;
+                                    setSelectedRamOptions(prev => ({
+                                      ...prev,
+                                      [size]: { ...prev[size], offset: val }
+                                    }));
+                                  }}
+                                  className="form-input"
+                                  style={{ height: 34, padding: '4px 8px', fontSize: 12 }}
+                                />
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
-                    )}
-
-                    <div
-                      onClick={() => document.getElementById('product-file-input')?.click()}
-                      style={{
-                        background: 'rgba(26, 34, 53, 0.4)',
-                        border: '2px dashed rgba(56,189,248,0.25)',
-                        borderRadius: 16,
-                        padding: '24px 20px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = '#38BDF8';
-                        e.currentTarget.style.background = 'rgba(56,189,248,0.04)';
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = 'rgba(56,189,248,0.25)';
-                        e.currentTarget.style.background = 'rgba(26, 34, 53, 0.4)';
-                      }}
-                    >
-                      <ImageIcon size={30} color="#38BDF8" style={{ marginBottom: 8 }} />
-                      <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Browse local computer files</div>
-                      <div style={{ color: '#8B9BBE', fontSize: 11 }}>Supports up to 5 images • Auto compressed</div>
-                      <input
-                        id="product-file-input"
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleProductImageUpload}
-                        disabled={(productForm.images?.length || 0) >= 5}
-                        style={{ display: 'none' }}
-                      />
                     </div>
 
-                    <span style={{ color: '#8B9BBE', fontSize: 11 }}>
-                      {(productForm.images?.length || 0)}/5 images uploaded. {(productForm.images?.length || 0) >= 5 ? "Max image limit reached." : ""}
-                    </span>
-
-                    <div style={{ marginTop: 10 }}>
-                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter thumbnail URL:</label>
-                      <input
-                        type="text" placeholder="Paste direct image link..."
-                        value={productForm.img} onChange={e => setProductForm({ ...productForm, img: e.target.value })}
-                        className="form-input"
-                      />
+                    {/* Storage Custom Visual Toggle & Offset Input */}
+                    <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', background: '#0d1117', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 18, padding: 18 }}>
+                      <label style={{ display: 'block', color: '#38BDF8', fontSize: 12, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase' }}>Storage Configuration Options</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                        {Object.entries(selectedStorageOptions).map(([size, opt]) => (
+                          <div key={size} style={{
+                            background: opt.enabled ? 'rgba(56,189,248,0.03)' : 'rgba(255,255,255,0.01)',
+                            border: `1px solid ${opt.enabled ? 'rgba(56,189,248,0.3)' : 'rgba(255,255,255,0.05)'}`,
+                            borderRadius: 14, padding: 12, transition: 'all 0.2s'
+                          }}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedStorageOptions(prev => ({
+                                  ...prev,
+                                  [size]: { ...prev[size], enabled: !prev[size].enabled }
+                                }));
+                              }}
+                              style={{
+                                width: '100%', textTransform: 'none', background: 'transparent', border: 'none',
+                                color: opt.enabled ? '#38BDF8' : '#8B9BBE', display: 'flex', alignItems: 'center',
+                                justifyContent: 'space-between', cursor: 'pointer', outline: 'none', padding: 0
+                              }}
+                            >
+                              <span style={{ fontSize: 13, fontWeight: 700 }}>{size}</span>
+                              <div style={{
+                                width: 14, height: 14, borderRadius: 4,
+                                background: opt.enabled ? '#38BDF8' : 'rgba(255,255,255,0.05)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#000', fontWeight: 'bold'
+                              }}>
+                                {opt.enabled && '✓'}
+                              </div>
+                            </button>
+                            {opt.enabled && (
+                              <div style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8 }}>
+                                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 10, marginBottom: 4 }}>Price Upgrade Cost (₹)</label>
+                                <input
+                                  type="number"
+                                  placeholder="Upgrade Price addition..."
+                                  value={opt.offset || ''}
+                                  onChange={e => {
+                                    const val = Number(e.target.value) || 0;
+                                    setSelectedStorageOptions(prev => ({
+                                      ...prev,
+                                      [size]: { ...prev[size], offset: val }
+                                    }));
+                                  }}
+                                  className="form-input"
+                                  style={{ height: 34, padding: '4px 8px', fontSize: 12 }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-
-                    <div style={{ marginTop: 10 }}>
-                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter gallery image URLs (comma-separated):</label>
-                      <textarea
-                        placeholder="Paste direct image links separated by commas... e.g. https://link1.com, https://link2.com"
-                        value={galleryLinksText}
-                        onChange={e => {
-                          const text = e.target.value;
-                          setGalleryLinksText(text);
-
-                          const urls = text.split(',')
-                            .map(url => url.trim())
-                            .filter(url => url.length > 0);
-
-                          setProductForm(prev => ({
-                            ...prev,
-                            images: urls,
-                            img: prev.img ? prev.img : (urls[0] || '')
-                          }));
-                        }}
-                        className="form-input"
-                        style={{ minHeight: 60, resize: 'vertical', background: '#0d1117', color: '#fff', border: '1px solid rgba(56,189,248,0.15)', borderRadius: 10, padding: 10 }}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
-                <button
-                  type="button" onClick={() => setProductModal({ open: false, mode: 'add' })}
-                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8B9BBE', borderRadius: 12, padding: '12px 24px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 600 }}
-                >Cancel</button>
-                <button
-                  type="submit"
-                  style={{ background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', color: '#000', border: 'none', borderRadius: 12, padding: '12px 28px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 800 }}
-                >
-                  {productModal.mode === 'add' ? 'Save Product' : 'Update Product'}
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal: Accessory Form ── */}
-      {accessoryModal.open && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 10000,
-          background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
-        }}>
-          <div className="fade-in" style={{
-            background: '#131a24', border: '1px solid rgba(56,189,248,0.15)',
-            borderRadius: 24, width: '100%', maxWidth: 550, padding: 32,
-            boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
-            maxHeight: '90vh', overflowY: 'auto'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ fontFamily: 'Sora', fontSize: 22, color: '#fff', fontWeight: 800 }}>
-                {accessoryModal.mode === 'add' ? 'Add Store Accessory' : 'Edit Accessory'}
-              </h2>
-              <button onClick={() => setAccessoryModal({ open: false, mode: 'add' })} style={{ background: 'transparent', border: 'none', color: '#8B9BBE', cursor: 'pointer' }}><X size={20} /></button>
-            </div>
-
-            <form onSubmit={handleAccessorySubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Accessory Name</label>
-                <input
-                  type="text" required placeholder="e.g. Logitech MX Master Mouse"
-                  value={accessoryForm.name} onChange={e => setAccessoryForm({ ...accessoryForm, name: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
-                <div>
-                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Brand</label>
-                  <input
-                    type="text" required placeholder="e.g. Logitech"
-                    value={accessoryForm.brand} onChange={e => setAccessoryForm({ ...accessoryForm, brand: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Category</label>
-                  <select
-                    value={['Monitors', 'Docking Stations', 'Mice & Keyboards', 'Chargers & Power', 'Bags & Sleeves'].includes(accessoryForm.category || '') ? (accessoryForm.category || '') : 'Other'}
-                    onChange={e => {
-                      const val = e.target.value;
-                      if (val === 'Other') {
-                        setShowCustomCategoryInput(true);
-                        setAccessoryForm({ ...accessoryForm, category: '' });
-                      } else {
-                        setShowCustomCategoryInput(false);
-                        setAccessoryForm({ ...accessoryForm, category: val });
-                      }
-                    }}
-                    className="form-input" style={{ background: '#0d1117' }}
-                  >
-                    {['Monitors', 'Docking Stations', 'Mice & Keyboards', 'Chargers & Power', 'Bags & Sleeves', 'Other'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {showCustomCategoryInput && (
-                <div>
-                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Category Name</label>
-                  <input
-                    type="text" required placeholder="e.g. Adapters or Cooling Pads"
-                    value={accessoryForm.category || ''}
-                    onChange={e => setAccessoryForm({ ...accessoryForm, category: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
-              )}
-
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
-                <div>
-                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Selling Price (₹)</label>
-                  <input
-                    type="number" required placeholder="e.g. 3999"
-                    value={accessoryForm.price || ''} onChange={e => setAccessoryForm({ ...accessoryForm, price: Number(e.target.value) })}
-                    className="form-input"
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Original MRP (₹)</label>
-                  <input
-                    type="number" required placeholder="e.g. 5999"
-                    value={accessoryForm.mrp || ''} onChange={e => setAccessoryForm({ ...accessoryForm, mrp: Number(e.target.value) })}
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Short Specifications</label>
-                <input
-                  type="text" placeholder="e.g. 8K DPI • Wireless Bluetooth • Ergonomic Layout"
-                  value={accessoryForm.specs} onChange={e => setAccessoryForm({ ...accessoryForm, specs: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>
-                  Accessory Image (Drag & Drop or Click to Select)
-                </label>
-
-                {/* Preview Thumbnail */}
-                {accessoryForm.img && (
-                  <div style={{ position: 'relative', width: 90, height: 68, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
-                    <img src={accessoryForm.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <button
-                      type="button"
-                      onClick={() => setAccessoryForm(prev => ({ ...prev, img: '' }))}
-                      style={{
-                        position: 'absolute', top: 4, right: 4,
-                        background: '#EF4444', color: '#fff', border: 'none',
-                        borderRadius: '50%', width: 18, height: 18,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer', fontSize: 10, fontWeight: 'bold',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                      }}
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  </>
                 )}
 
-                <div
-                  onClick={() => document.getElementById('accessory-file-input')?.click()}
-                  style={{
-                    background: 'rgba(26, 34, 53, 0.4)',
-                    border: '2px dashed rgba(56,189,248,0.25)',
-                    borderRadius: 16,
-                    padding: '24px 20px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = '#38BDF8';
-                    e.currentTarget.style.background = 'rgba(56,189,248,0.04)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'rgba(56,189,248,0.25)';
-                    e.currentTarget.style.background = 'rgba(26, 34, 53, 0.4)';
-                  }}
-                >
-                  <ImageIcon size={28} color="#38BDF8" style={{ marginBottom: 8 }} />
-                  <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Browse local computer files</div>
-                  <div style={{ color: '#8B9BBE', fontSize: 11 }}>Choose 1 image • Auto compressed</div>
-                  <input
-                    id="accessory-file-input"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAccessoryImageUpload}
-                    style={{ display: 'none' }}
-                  />
-                </div>
-
-                <div style={{ marginTop: 6 }}>
-                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter image URL:</label>
-                  <input
-                    type="text" placeholder="Paste direct image link..."
-                    value={accessoryForm.img} onChange={e => setAccessoryForm({ ...accessoryForm, img: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
-                <button
-                  type="button" onClick={() => setAccessoryModal({ open: false, mode: 'add' })}
-                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8B9BBE', borderRadius: 12, padding: '12px 24px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 600 }}
-                >Cancel</button>
-                <button
-                  type="submit"
-                  style={{ background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', color: '#000', border: 'none', borderRadius: 12, padding: '12px 28px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 800 }}
-                >
-                  {accessoryModal.mode === 'add' ? 'Save Accessory' : 'Update Accessory'}
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal: Hero Poster Form ── */}
-      {heroPosterModal.open && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 10000,
-          background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
-        }}>
-          <div className="fade-in" style={{
-            background: '#131a24', border: '1px solid rgba(56,189,248,0.15)',
-            borderRadius: 24, width: '100%', maxWidth: 550, padding: 32,
-            boxShadow: '0 24px 60px rgba(0,0,0,0.6)', maxHeight: '90vh', overflowY: 'auto'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ fontFamily: 'Sora', fontSize: 22, color: '#fff', fontWeight: 800 }}>Add Hero Poster</h2>
-              <button onClick={() => setHeroPosterModal({ open: false })} style={{ background: 'transparent', border: 'none', color: '#8B9BBE', cursor: 'pointer' }}><X size={20} /></button>
-            </div>
-
-            <form onSubmit={handleHeroPosterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Poster Title</label>
-                <input
-                  type="text" required placeholder="e.g. Diwali Mega Sale"
-                  value={heroPosterForm.title} onChange={e => setHeroPosterForm({ ...heroPosterForm, title: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Click Destination Page</label>
-                <select
-                  value={heroPosterForm.target} onChange={e => setHeroPosterForm({ ...heroPosterForm, target: e.target.value })}
-                  className="form-input" style={{ background: '#0d1117' }}
-                >
-                  <option value="listing">Shop Laptops</option>
-                  <option value="accessories">Shop Accessories</option>
-                  <option value="resell">Sell Laptop</option>
-                  <option value="contact">Contact Us</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', gap: 16 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Laptop/Desktop Poster</label>
-                  {heroPosterForm.src && (
-                    <div style={{ position: 'relative', width: '100%', aspectRatio: '1920/480', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
-                      <img src={heroPosterForm.src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {modalTab === 'media' && (
+                  <>
+                    <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Description (Optional, overrides auto-template)</label>
+                      <textarea
+                        placeholder="e.g. This laptop features high performance with dual channel RAM..."
+                        value={productForm.description || ''} onChange={e => setProductForm({ ...productForm, description: e.target.value })}
+                        className="form-input" style={{ minHeight: 70, resize: 'vertical' }}
+                      />
                     </div>
-                  )}
-                  <div
-                    onClick={() => { if (!uploadingHeroPoster) document.getElementById('hero-poster-file-input')?.click(); }}
-                    style={{
-                      background: 'rgba(26, 34, 53, 0.4)', border: '2px dashed rgba(56,189,248,0.25)',
-                      borderRadius: 16, padding: '24px 20px', textAlign: 'center',
-                      cursor: uploadingHeroPoster ? 'wait' : 'pointer', transition: 'all 0.2s ease',
-                    }}
-                  >
-                    <ImageIcon size={28} color="#38BDF8" style={{ marginBottom: 8 }} />
-                    <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
-                      {uploadingHeroPoster ? 'Uploading image...' : 'Browse files'}
+
+                    <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Box Contents (Optional, comma-separated)</label>
+                      <input
+                        type="text" placeholder="e.g. Refurbished Grade A+ Laptop, Original Power Adapter, Certification Booklet"
+                        value={productForm.boxContents || ''} onChange={e => setProductForm({ ...productForm, boxContents: e.target.value })}
+                        className="form-input"
+                      />
                     </div>
-                    <div style={{ color: '#8B9BBE', fontSize: 11, lineHeight: 1.5, marginTop: 4 }}>
-                      Recommended: 1920x480px (4:1 Ratio)
-                    </div>
-                    <input
-                      id="hero-poster-file-input" type="file" accept="image/*"
-                      disabled={uploadingHeroPoster} onChange={handleHeroPosterImageUpload} style={{ display: 'none' }}
-                    />
-                  </div>
-                  <div style={{ marginTop: 8 }}>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or enter image URL:</label>
-                    <input
-                      type="text" placeholder="Paste direct image link..."
-                      value={heroPosterForm.src || ''} onChange={e => setHeroPosterForm({ ...heroPosterForm, src: e.target.value })}
-                      className="form-input"
-                    />
-                  </div>
-                </div>
 
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Mobile Poster</label>
-                  {heroPosterForm.mobileSrc && (
-                    <div style={{ position: 'relative', width: '100%', aspectRatio: '3/2', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
-                      <img src={heroPosterForm.mobileSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                  )}
-                  <div
-                    onClick={() => { if (!uploadingHeroPosterMobile) document.getElementById('hero-poster-mobile-file-input')?.click(); }}
-                    style={{
-                      background: 'rgba(26, 34, 53, 0.4)', border: '2px dashed rgba(56,189,248,0.25)',
-                      borderRadius: 16, padding: '24px 20px', textAlign: 'center',
-                      cursor: uploadingHeroPosterMobile ? 'wait' : 'pointer', transition: 'all 0.2s ease',
-                    }}
-                  >
-                    <ImageIcon size={28} color="#38BDF8" style={{ marginBottom: 8 }} />
-                    <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
-                      {uploadingHeroPosterMobile ? 'Uploading image...' : 'Browse files'}
-                    </div>
-                    <div style={{ color: '#8B9BBE', fontSize: 11, lineHeight: 1.5, marginTop: 4 }}>
-                      Recommended: 800x600px (4:3 or 3:2 Ratio)
-                    </div>
-                    <input
-                      id="hero-poster-mobile-file-input" type="file" accept="image/*"
-                      disabled={uploadingHeroPosterMobile} onChange={handleHeroPosterMobileImageUpload} style={{ display: 'none' }}
-                    />
-                  </div>
-                  <div style={{ marginTop: 8 }}>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or enter image URL:</label>
-                    <input
-                      type="text" placeholder="Paste direct image link..."
-                      value={heroPosterForm.mobileSrc || ''} onChange={e => setHeroPosterForm({ ...heroPosterForm, mobileSrc: e.target.value })}
-                      className="form-input"
-                    />
-                  </div>
-                </div>
-              </div>
+                    <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>
+                        Product Images Gallery (Max 5, Drag & Drop or Click to Select)
+                      </label>
 
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
-                <button type="button" onClick={() => setHeroPosterModal({ open: false })} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8B9BBE', borderRadius: 12, padding: '12px 24px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 600 }}>Cancel</button>
-                <button type="submit" disabled={uploadingHeroPoster} style={{ background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', border: 'none', color: '#000', borderRadius: 12, padding: '12px 24px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 800 }}>Save Poster</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                      {/* Previews Grid */}
+                      {(productForm.images && productForm.images.length > 0) && (
+                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
+                          {productForm.images.map((imgUrl, i) => (
+                            <div key={i} style={{ position: 'relative', width: 90, height: 68, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
+                              <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveProductImage(i)}
+                                style={{
+                                  position: 'absolute', top: 4, right: 4,
+                                  background: '#EF4444', color: '#fff', border: 'none',
+                                  borderRadius: '50%', width: 18, height: 18,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  cursor: 'pointer', fontSize: 10, fontWeight: 'bold',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
-      {/* ── Tab: STUDENT HUB ── */}
-      {activeTab === 'student_hub' && (() => {
-        // Build leaderboard from blogs state
-        if (!hubBlogsLoaded && blogs.length > 0) {
-          const byEmail: Record<string, { email: string; name: string; articles: number; reads: number }> = {};
-          blogs.forEach((b: any) => {
-            const email = (b.authorEmail || '').toLowerCase();
-            if (!email) return;
-            if (!byEmail[email]) byEmail[email] = { email, name: b.authorName || b.author || email.split('@')[0], articles: 0, reads: 0 };
-            byEmail[email].articles += 1;
-            byEmail[email].reads += (b.reads || 0);
-          });
-          const board = Object.values(byEmail).sort((a, b) => b.reads !== a.reads ? b.reads - a.reads : b.articles - a.articles);
-          if (board.length !== hubLeaderboard.length) {
-            setHubLeaderboard(board);
-            setHubBlogsLoaded(true);
-          }
-        }
-
-        const handleSaveGiveaway = async () => {
-          if (!giveawayConfig.prizeTitle.trim()) return triggerAlert('danger', 'Prize title is required.');
-          setHubSaving(true);
-          try {
-            await setDoc(doc(db, 'giveaway', 'current'), {
-              ...giveawayConfig,
-              updatedAt: new Date().toISOString()
-            });
-            triggerAlert('success', 'Giveaway config saved to Firestore!');
-          } catch (err) {
-            triggerAlert('danger', 'Failed to save giveaway config.');
-          } finally {
-            setHubSaving(false);
-          }
-        };
-
-        const handleDeleteGiveaway = async () => {
-          if (!window.confirm("Are you sure you want to clear the current contest?")) return;
-          setHubSaving(true);
-          try {
-            if (giveawayConfig.prizeImagePublicId) {
-              await deleteCloudinaryAssets([giveawayConfig.prizeImagePublicId]);
-            }
-            await deleteDoc(doc(db, 'giveaway', 'current'));
-            setGiveawayConfig({ prizeTitle: '', prizeImage: '', deadline: '' });
-            triggerAlert('success', 'Giveaway contest cleared!');
-          } catch (err) {
-            triggerAlert('danger', 'Failed to clear contest.');
-          } finally {
-            setHubSaving(false);
-          }
-        };
-
-
-        const handlePrizeImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-          const files = e.target.files;
-          if (!files || files.length === 0) return;
-          setHubImageUploading(true);
-          try {
-            const { url, publicId } = await uploadProductImage(files[0]);
-            setGiveawayConfig(p => ({ ...p, prizeImage: url, prizeImagePublicId: publicId }));
-            triggerAlert('success', 'Prize image uploaded successfully.');
-          } catch (err) {
-            console.error(err);
-            triggerAlert('danger', 'Error uploading prize image.');
-          } finally {
-            setHubImageUploading(false);
-            if (e.target) e.target.value = '';
-          }
-        };
-
-        const handleAnnounceWinner = async () => {
-          if (!winnerForm.name.trim() || !winnerForm.blogTitle.trim()) return triggerAlert('danger', 'Winner name and blog title are required.');
-          setHubSaving(true);
-          try {
-            await setDoc(doc(db, 'giveaway', 'lastWinner'), {
-              ...winnerForm,
-              announcedAt: new Date().toISOString()
-            });
-            triggerAlert('success', 'Winner announced and saved to Firestore!');
-            setWinnerForm({ name: '', city: '', blogTitle: '', photo: '' });
-          } catch (err) {
-            triggerAlert('danger', 'Failed to announce winner.');
-          } finally {
-            setHubSaving(false);
-          }
-        };
-
-        const contestBlogs = blogs.filter((b: any) => b.approved !== false);
-
-        return (
-          <div className="fade-in">
-            <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
-              Student Hub Management
-            </h1>
-            <p style={{ color: '#8B9BBE', fontSize: 15, marginBottom: 32 }}>
-              Manage the weekly blog contest giveaway, leaderboard, and contest submissions.
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24, marginBottom: 32 }}>
-
-              {/* Giveaway Config Card */}
-              <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.15)', borderRadius: 24, padding: 28 }}>
-                <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Sparkles size={18} color="#F59E0B" /> Current Giveaway Prize
-                </h2>
-                <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>Saved to Firestore <code style={{ color: '#38BDF8' }}>giveaway/current</code></p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Prize Title</label>
-                    <input
-                      className="form-input"
-                      placeholder="e.g. Win a Bluetooth Neckband"
-                      value={giveawayConfig.prizeTitle}
-                      onChange={e => setGiveawayConfig(p => ({ ...p, prizeTitle: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Prize Image</label>
-                    {giveawayConfig.prizeImage && (
-                      <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
-                        <img src={giveawayConfig.prizeImage} alt="Prize preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        <button
-                          onClick={async () => {
-                            setHubImageUploading(true);
-                            try {
-                              if (giveawayConfig.prizeImagePublicId) {
-                                await deleteCloudinaryAssets([giveawayConfig.prizeImagePublicId]);
-                              }
-                              await setDoc(doc(db, 'giveaway', 'current'), { prizeImage: '', prizeImagePublicId: '' }, { merge: true });
-                              triggerAlert('success', 'Prize image removed.');
-                            } catch (err) {
-                              console.error(err);
-                              triggerAlert('danger', 'Failed to remove prize image.');
-                            } finally {
-                              setHubImageUploading(false);
-                            }
-                            setGiveawayConfig(p => ({ ...p, prizeImage: '', prizeImagePublicId: '' }));
-                          }}
-                          title="Remove image"
-                          style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    )}
-                    <div
-                      onClick={() => { if (!hubImageUploading) document.getElementById('prize-file-input')?.click(); }}
-                      style={{
-                        background: 'rgba(26, 34, 53, 0.4)',
-                        border: '2px dashed rgba(56,189,248,0.25)',
-                        borderRadius: 16,
-                        padding: '20px 16px',
-                        textAlign: 'center',
-                        cursor: hubImageUploading ? 'wait' : 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={e => {
-                        if (!hubImageUploading) {
+                      <div
+                        onClick={() => document.getElementById('product-file-input')?.click()}
+                        style={{
+                          background: 'rgba(26, 34, 53, 0.4)',
+                          border: '2px dashed rgba(56,189,248,0.25)',
+                          borderRadius: 16,
+                          padding: '24px 20px',
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={e => {
                           e.currentTarget.style.borderColor = '#38BDF8';
                           e.currentTarget.style.background = 'rgba(56,189,248,0.04)';
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if (!hubImageUploading) {
+                        }}
+                        onMouseLeave={e => {
                           e.currentTarget.style.borderColor = 'rgba(56,189,248,0.25)';
                           e.currentTarget.style.background = 'rgba(26, 34, 53, 0.4)';
-                        }
-                      }}
-                    >
-                      <ImageIcon size={26} color="#38BDF8" style={{ marginBottom: 6 }} />
-                      <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
-                        {hubImageUploading ? 'Uploading image...' : 'Upload prize image'}
+                        }}
+                      >
+                        <ImageIcon size={30} color="#38BDF8" style={{ marginBottom: 8 }} />
+                        <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Browse local computer files</div>
+                        <div style={{ color: '#8B9BBE', fontSize: 11 }}>Supports up to 5 images • Auto compressed</div>
+                        <input
+                          id="product-file-input"
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleProductImageUpload}
+                          disabled={(productForm.images?.length || 0) >= 5}
+                          style={{ display: 'none' }}
+                        />
                       </div>
-                      <div style={{ color: '#8B9BBE', fontSize: 11 }}>Click to browse files (JPG / PNG)</div>
-                      <input
-                        id="prize-file-input"
-                        type="file"
-                        accept="image/*"
-                        disabled={hubImageUploading}
-                        onChange={handlePrizeImageUpload}
-                        style={{ display: 'none' }}
-                      />
+
+                      <span style={{ color: '#8B9BBE', fontSize: 11 }}>
+                        {(productForm.images?.length || 0)}/5 images uploaded. {(productForm.images?.length || 0) >= 5 ? "Max image limit reached." : ""}
+                      </span>
+
+                      <div style={{ marginTop: 10 }}>
+                        <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter thumbnail URL:</label>
+                        <input
+                          type="text" placeholder="Paste direct image link..."
+                          value={productForm.img} onChange={e => setProductForm({ ...productForm, img: e.target.value })}
+                          className="form-input"
+                        />
+                      </div>
+
+                      <div style={{ marginTop: 10 }}>
+                        <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter gallery image URLs (comma-separated):</label>
+                        <textarea
+                          placeholder="Paste direct image links separated by commas... e.g. https://link1.com, https://link2.com"
+                          value={galleryLinksText}
+                          onChange={e => {
+                            const text = e.target.value;
+                            setGalleryLinksText(text);
+
+                            const urls = text.split(',')
+                              .map(url => url.trim())
+                              .filter(url => url.length > 0);
+
+                            setProductForm(prev => ({
+                              ...prev,
+                              images: urls,
+                              img: prev.img ? prev.img : (urls[0] || '')
+                            }));
+                          }}
+                          className="form-input"
+                          style={{ minHeight: 60, resize: 'vertical', background: '#0d1117', color: '#fff', border: '1px solid rgba(56,189,248,0.15)', borderRadius: 10, padding: 10 }}
+                        />
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
-                      <div style={{ flex: 1, height: 1, background: 'rgba(139,155,190,0.2)' }} />
-                      <span style={{ color: '#8B9BBE', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>or paste a URL</span>
-                      <div style={{ flex: 1, height: 1, background: 'rgba(139,155,190,0.2)' }} />
-                    </div>
+                  </>
+                )}
+
+                <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2', display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
+                  <button
+                    type="button" onClick={() => setProductModal({ open: false, mode: 'add' })}
+                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8B9BBE', borderRadius: 12, padding: '12px 24px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 600 }}
+                  >Cancel</button>
+                  <button
+                    type="submit"
+                    style={{ background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', color: '#000', border: 'none', borderRadius: 12, padding: '12px 28px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 800 }}
+                  >
+                    {productModal.mode === 'add' ? 'Save Product' : 'Update Product'}
+                  </button>
+                </div>
+
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ── Modal: Accessory Form ── */}
+        {accessoryModal.open && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 10000,
+            background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+          }}>
+            <div className="fade-in" style={{
+              background: '#131a24', border: '1px solid rgba(56,189,248,0.15)',
+              borderRadius: 24, width: '100%', maxWidth: 550, padding: 32,
+              boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+              maxHeight: '90vh', overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <h2 style={{ fontFamily: 'Sora', fontSize: 22, color: '#fff', fontWeight: 800 }}>
+                  {accessoryModal.mode === 'add' ? 'Add Store Accessory' : 'Edit Accessory'}
+                </h2>
+                <button onClick={() => setAccessoryModal({ open: false, mode: 'add' })} style={{ background: 'transparent', border: 'none', color: '#8B9BBE', cursor: 'pointer' }}><X size={20} /></button>
+              </div>
+
+              <form onSubmit={handleAccessorySubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                <div>
+                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Accessory Name</label>
+                  <input
+                    type="text" required placeholder="e.g. Logitech MX Master Mouse"
+                    value={accessoryForm.name} onChange={e => setAccessoryForm({ ...accessoryForm, name: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Brand</label>
                     <input
+                      type="text" required placeholder="e.g. Logitech"
+                      value={accessoryForm.brand} onChange={e => setAccessoryForm({ ...accessoryForm, brand: e.target.value })}
                       className="form-input"
-                      placeholder="https://..."
-                      value={giveawayConfig.prizeImage}
-                      onChange={e => setGiveawayConfig(p => ({ ...p, prizeImage: e.target.value }))}
-                      style={{ marginTop: 10 }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Contest Deadline</label>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                      <div style={{ position: "relative" }}>
-                        <div style={{ position: "absolute", left: 14, top: 0, bottom: 0, display: "flex", alignItems: "center", pointerEvents: "none" }}>
-                          <Calendar size={16} color="#8B9BBE" />
-                        </div>
-                        <input
-                          type="date"
-                          value={giveawayConfig.deadline ? giveawayConfig.deadline.split("T")[0] : ""}
-                          onChange={(e) => {
-                            const date = e.target.value;
-                            const time = giveawayConfig.deadline && giveawayConfig.deadline.includes("T") 
-                              ? giveawayConfig.deadline.split("T")[1] 
-                              : "12:00";
-                            setGiveawayConfig(p => ({ ...p, deadline: `${date}T${time}` }));
-                          }}
-                          style={{
-                            width: "100%", background: "#0d1117", border: "1px solid #30363d", borderRadius: 8, padding: "12px 14px 12px 40px", color: "#e6edf3", outline: "none", fontSize: 13, colorScheme: "dark", boxSizing: "border-box", transition: "border-color 0.2s"
-                          }}
-                          onFocus={e => e.target.style.borderColor = "#38BDF8"}
-                          onBlur={e => e.target.style.borderColor = "#30363d"}
-                        />
-                      </div>
-                      <div style={{ position: "relative" }}>
-                        <div style={{ position: "absolute", left: 14, top: 0, bottom: 0, display: "flex", alignItems: "center", pointerEvents: "none" }}>
-                          <Clock size={16} color="#8B9BBE" />
-                        </div>
-                        <input
-                          type="time"
-                          value={giveawayConfig.deadline && giveawayConfig.deadline.includes("T") ? giveawayConfig.deadline.split("T")[1] : ""}
-                          onChange={(e) => {
-                            const time = e.target.value;
-                            const date = giveawayConfig.deadline ? giveawayConfig.deadline.split("T")[0] : new Date().toISOString().split("T")[0];
-                            setGiveawayConfig(p => ({ ...p, deadline: `${date}T${time}` }));
-                          }}
-                          style={{
-                            width: "100%", background: "#0d1117", border: "1px solid #30363d", borderRadius: 8, padding: "12px 14px 12px 40px", color: "#e6edf3", outline: "none", fontSize: 13, colorScheme: "dark", boxSizing: "border-box", transition: "border-color 0.2s"
-                          }}
-                          onFocus={e => e.target.style.borderColor = "#38BDF8"}
-                          onBlur={e => e.target.style.borderColor = "#30363d"}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 12 }}>
-                    <button
-                      onClick={handleSaveGiveaway}
-                      disabled={hubSaving}
-                      style={{ flex: 1, background: 'linear-gradient(135deg, #F59E0B, #EF4444)', color: '#000', border: 'none', borderRadius: 12, padding: '12px 0', fontWeight: 800, fontFamily: 'Sora', cursor: 'pointer', fontSize: 14 }}
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Category</label>
+                    <select
+                      value={['Monitors', 'Docking Stations', 'Mice & Keyboards', 'Chargers & Power', 'Bags & Sleeves'].includes(accessoryForm.category || '') ? (accessoryForm.category || '') : 'Other'}
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val === 'Other') {
+                          setShowCustomCategoryInput(true);
+                          setAccessoryForm({ ...accessoryForm, category: '' });
+                        } else {
+                          setShowCustomCategoryInput(false);
+                          setAccessoryForm({ ...accessoryForm, category: val });
+                        }
+                      }}
+                      className="form-input" style={{ background: '#0d1117' }}
                     >
-                      {hubSaving ? 'Saving...' : 'Save Giveaway Config'}
-                    </button>
-                    <button
-                      onClick={handleDeleteGiveaway}
-                      disabled={hubSaving}
-                      style={{ flex: 1, background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 12, padding: '12px 0', fontWeight: 800, fontFamily: 'Sora', cursor: 'pointer', fontSize: 14 }}
-                    >
-                      Clear Contest
-                    </button>
+                      {['Monitors', 'Docking Stations', 'Mice & Keyboards', 'Chargers & Power', 'Bags & Sleeves', 'Other'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
                   </div>
                 </div>
-              </div>
 
-              {/* Announce Winner Card */}
-              <div style={{ background: '#1a2235', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 24, padding: 28 }}>
-                <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Award size={18} color="#8B5CF6" /> Announce Last Week's Winner
-                </h2>
-                <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>Saved to Firestore <code style={{ color: '#38BDF8' }}>giveaway/lastWinner</code></p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {showCustomCategoryInput && (
                   <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winner's Name</label>
-                    <input className="form-input" placeholder="e.g. Rahul Verma" value={winnerForm.name} onChange={e => setWinnerForm(p => ({ ...p, name: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>City / College</label>
-                    <input className="form-input" placeholder="e.g. VIT, Chennai" value={winnerForm.city} onChange={e => setWinnerForm(p => ({ ...p, city: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winning Blog Title</label>
-                    <input className="form-input" placeholder="e.g. 10 AI Tools That Changed My College Life" value={winnerForm.blogTitle} onChange={e => setWinnerForm(p => ({ ...p, blogTitle: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winner Photo URL (optional)</label>
-                    <input className="form-input" placeholder="https://..." value={winnerForm.photo} onChange={e => setWinnerForm(p => ({ ...p, photo: e.target.value }))} />
-                  </div>
-                  <button
-                    onClick={handleAnnounceWinner}
-                    disabled={hubSaving}
-                    style={{ background: 'linear-gradient(135deg, #8B5CF6, #38BDF8)', color: '#000', border: 'none', borderRadius: 12, padding: '12px 0', fontWeight: 800, fontFamily: 'Sora', cursor: 'pointer', fontSize: 14 }}
-                  >
-                    {hubSaving ? 'Announcing...' : '🏆 Announce Winner'}
-                  </button>
-                </div>
-              </div>
-
-              {lastWinnerData && (
-                <div style={{ background: '#1a2235', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 24, padding: 28, marginTop: 24 }}>
-                  <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Award size={18} color="#10B981" /> Currently Announced Winner
-                  </h2>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    {lastWinnerData.photo ? (
-                      <img src={lastWinnerData.photo} alt={lastWinnerData.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
-                    ) : (
-                      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #10B981, #34D399)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 800, fontSize: 24 }}>
-                        {lastWinnerData.name?.substring(0, 2).toUpperCase() || "W"}
-                      </div>
-                    )}
-                    <div>
-                      <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{lastWinnerData.name}</div>
-                      <div style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 4 }}>{lastWinnerData.city}</div>
-                      <div style={{ color: '#38BDF8', fontSize: 13, fontWeight: 600 }}>{lastWinnerData.blogTitle}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            </div>
-
-            {/* Leaderboard Preview */}
-            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 24, padding: 28, marginBottom: 32 }}>
-              <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <TrendingUp size={18} color="#38BDF8" /> Leaderboard Preview
-              </h2>
-              <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>Ranked by total reads, then article count. Derived from the <code style={{ color: '#38BDF8' }}>blogs</code> collection.</p>
-              {hubLeaderboard.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '32px 0', color: '#8B9BBE', fontSize: 13 }}>No blog data yet.</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {hubLeaderboard.slice(0, 10).map((entry, idx) => (
-                    <div key={entry.email} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '12px 16px' }}>
-                      <span style={{ fontSize: 16, width: 30, textAlign: 'center', flexShrink: 0 }}>{['🥇', '🥈', '🥉'][idx] || `#${idx + 1}`}</span>
-                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
-                        {entry.name.substring(0, 2).toUpperCase()}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.name}</div>
-                        <div style={{ color: '#8B9BBE', fontSize: 11 }}>{entry.email}</div>
-                      </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ color: '#38BDF8', fontWeight: 700, fontSize: 14 }}>{entry.reads.toLocaleString('en-IN')} reads</div>
-                        <div style={{ color: '#8B9BBE', fontSize: 11 }}>{entry.articles} articles</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Contest Blog Submissions */}
-            <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 24, padding: 28 }}>
-              <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <BookOpen size={18} color="#10B981" /> Contest Blog Submissions
-              </h2>
-              <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>{contestBlogs.length} published / approved articles in the contest</p>
-              {contestBlogs.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '32px 0', color: '#8B9BBE', fontSize: 13 }}>No approved blog submissions yet.</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {contestBlogs.slice(0, 20).map((blog: any) => (
-                    <div key={blog.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '12px 16px', gap: 12, flexWrap: 'wrap' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ color: '#fff', fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{blog.title || 'Untitled'}</div>
-                        <div style={{ color: '#8B9BBE', fontSize: 11, marginTop: 2 }}>{blog.authorName || blog.author} · {(blog.reads || 0).toLocaleString('en-IN')} reads</div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button
-                          onClick={() => handleToggleBlogApproval(blog.id, blog.approved)}
-                          style={{ background: blog.approved !== false ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', border: `1px solid ${blog.approved !== false ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)'}`, color: blog.approved !== false ? '#EF4444' : '#10B981', borderRadius: 8, padding: '5px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-                        >
-                          {blog.approved !== false ? 'Disapprove' : 'Approve'}
-                        </button>
-                        <button
-                          onClick={() => setBlogReviewModal({ open: true, item: blog })}
-                          style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', color: '#38BDF8', borderRadius: 8, padding: '5px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-                        >
-                          Review
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* ── Tab: USERS ── */}
-      {activeTab === 'users' && (() => {
-        if (!usersLoaded) {
-          // Load users on first tab open
-          import('firebase/firestore').then(({ getDocs, collection: col }) => {
-            getDocs(col(db, 'users')).then(snap => {
-              const list: any[] = [];
-              snap.forEach(d => list.push({ uid: d.id, ...d.data() }));
-              list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-              setUsersData(list);
-              setUsersLoaded(true);
-            });
-          });
-        }
-
-        const filtered = usersData.filter(u =>
-          (u.name || '').toLowerCase().includes(usersSearch.toLowerCase()) ||
-          (u.email || '').toLowerCase().includes(usersSearch.toLowerCase()) ||
-          (u.phone || '').includes(usersSearch) ||
-          (u.city || '').toLowerCase().includes(usersSearch.toLowerCase())
-        );
-
-        const handleExpandUser = async (uid: string, email: string) => {
-          if (expandedUserId === uid) { setExpandedUserId(null); return; }
-          setExpandedUserId(uid);
-          if (!userOrders[uid]) {
-            try {
-              const { getDocs, collection: col, query: q, where: w } = await import('firebase/firestore');
-              const snap = await getDocs(q(col(db, 'orders'), w('email', '==', email)));
-              const list: any[] = [];
-              snap.forEach(d => list.push(d.data()));
-              list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-              setUserOrders(prev => ({ ...prev, [uid]: list }));
-            } catch (err) {
-              console.error('Failed to fetch user orders:', err);
-              setUserOrders(prev => ({ ...prev, [uid]: [] }));
-            }
-          }
-        };
-
-        return (
-          <div className="fade-in">
-            <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
-              Registered Users
-            </h1>
-            <p style={{ color: '#8B9BBE', fontSize: 15, marginBottom: 24 }}>
-              Browse all customer accounts from the Firestore <code style={{ color: '#38BDF8' }}>users</code> collection.
-            </p>
-
-            {/* Search bar */}
-            <div style={{ position: 'relative', marginBottom: 24, maxWidth: 420 }}>
-              <Search size={15} color="#8B9BBE" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
-              <input
-                className="form-input"
-                placeholder="Search by name, email, phone, city..."
-                value={usersSearch}
-                onChange={e => setUsersSearch(e.target.value)}
-                style={{ paddingLeft: 40 }}
-              />
-            </div>
-
-            {!usersLoaded ? (
-              <div style={{ textAlign: 'center', padding: '60px 0', color: '#8B9BBE', fontSize: 14 }}>
-                <div style={{ width: 20, height: 20, border: '2px solid rgba(56,189,248,0.3)', borderTopColor: '#38BDF8', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
-                Loading users...
-              </div>
-            ) : filtered.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 0', color: '#8B9BBE', fontSize: 14 }}>
-                {usersSearch ? 'No users match your search.' : 'No registered users found.'}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {/* Header row */}
-                {!isMobile && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 120px 140px 80px', gap: 16, padding: '0 16px', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    <span>Name / Email</span><span>Phone</span><span>City</span><span>State</span><span>Member Since</span><span>Orders</span>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Custom Category Name</label>
+                    <input
+                      type="text" required placeholder="e.g. Adapters or Cooling Pads"
+                      value={accessoryForm.category || ''}
+                      onChange={e => setAccessoryForm({ ...accessoryForm, category: e.target.value })}
+                      className="form-input"
+                    />
                   </div>
                 )}
-                {filtered.map(u => (
-                  <div key={u.uid}>
-                    <div
-                      onClick={() => handleExpandUser(u.uid, u.email)}
-                      style={{ display: isMobile ? 'flex' : 'grid', gridTemplateColumns: isMobile ? undefined : '1fr 1fr 120px 120px 140px 80px', flexDirection: isMobile ? 'column' : undefined, gap: 16, padding: '14px 16px', background: expandedUserId === u.uid ? 'rgba(56,189,248,0.06)' : '#1a2235', border: `1px solid ${expandedUserId === u.uid ? 'rgba(56,189,248,0.25)' : 'rgba(56,189,248,0.1)'}`, borderRadius: expandedUserId === u.uid ? '16px 16px 0 0' : 16, cursor: 'pointer', transition: 'all 0.2s', alignItems: 'center' }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: u.photoURL ? 'transparent' : 'linear-gradient(135deg, #3B82F6, #38BDF8)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          {u.photoURL ? <img src={u.photoURL} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <span style={{ color: '#000', fontSize: 12, fontWeight: 800 }}>{(u.name || u.email || 'U').substring(0, 2).toUpperCase()}</span>}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ color: '#fff', fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name || '—'}</div>
-                          <div style={{ color: '#8B9BBE', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
-                        </div>
-                      </div>
-                      <div style={{ color: '#E8EDF5', fontSize: 13 }}>{u.phone || <span style={{ color: '#8B9BBE', fontStyle: 'italic' }}>No phone</span>}</div>
-                      <div style={{ color: '#E8EDF5', fontSize: 13 }}>{u.city || '—'}</div>
-                      <div style={{ color: '#E8EDF5', fontSize: 13 }}>{u.state || '—'}</div>
-                      <div style={{ color: '#8B9BBE', fontSize: 12 }}>{u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ color: '#38BDF8', fontWeight: 700, fontSize: 13 }}>{userOrders[u.uid]?.length ?? '—'}</span>
-                        <ChevronRight size={14} color="#8B9BBE" style={{ transform: expandedUserId === u.uid ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
-                      </div>
-                    </div>
 
-                    {/* Expanded order history drawer */}
-                    {expandedUserId === u.uid && (
-                      <div style={{ background: 'rgba(13,17,23,0.8)', border: '1px solid rgba(56,189,248,0.15)', borderTop: 'none', borderRadius: '0 0 16px 16px', padding: '16px 20px' }}>
-                        {!userOrders[u.uid] ? (
-                          <div style={{ color: '#8B9BBE', fontSize: 13, textAlign: 'center', padding: '16px 0' }}>Loading orders...</div>
-                        ) : userOrders[u.uid].length === 0 ? (
-                          <div style={{ color: '#8B9BBE', fontSize: 13, textAlign: 'center', padding: '16px 0' }}>No orders placed by this user.</div>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                            <div style={{ color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Order History ({userOrders[u.uid].length} orders)</div>
-                            {userOrders[u.uid].map((ord: any) => (
-                              <div key={ord.orderId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px', flexWrap: 'wrap', gap: 8 }}>
-                                <div>
-                                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>#{ord.orderId}</span>
-                                  <span style={{ color: '#8B9BBE', fontSize: 11, marginLeft: 10 }}>{ord.createdAt ? new Date(ord.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                  <span style={{ color: '#10B981', fontWeight: 800, fontSize: 14 }}>₹{(ord.total || 0).toLocaleString('en-IN')}</span>
-                                  <span style={{ background: ord.status === 'Completed' || ord.status === 'Delivered' ? 'rgba(16,185,129,0.1)' : 'rgba(56,189,248,0.1)', color: ord.status === 'Completed' || ord.status === 'Delivered' ? '#10B981' : '#38BDF8', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100, textTransform: 'uppercase' }}>{ord.status || 'Pending'}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Selling Price (₹)</label>
+                    <input
+                      type="number" required placeholder="e.g. 3999"
+                      value={accessoryForm.price || ''} onChange={e => setAccessoryForm({ ...accessoryForm, price: Number(e.target.value) })}
+                      className="form-input"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Original MRP (₹)</label>
+                    <input
+                      type="number" required placeholder="e.g. 5999"
+                      value={accessoryForm.mrp || ''} onChange={e => setAccessoryForm({ ...accessoryForm, mrp: Number(e.target.value) })}
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Short Specifications</label>
+                  <input
+                    type="text" placeholder="e.g. 8K DPI • Wireless Bluetooth • Ergonomic Layout"
+                    value={accessoryForm.specs} onChange={e => setAccessoryForm({ ...accessoryForm, specs: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>
+                    Accessory Image (Drag & Drop or Click to Select)
+                  </label>
+
+                  {/* Preview Thumbnail */}
+                  {accessoryForm.img && (
+                    <div style={{ position: 'relative', width: 90, height: 68, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
+                      <img src={accessoryForm.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button
+                        type="button"
+                        onClick={() => setAccessoryForm(prev => ({ ...prev, img: '' }))}
+                        style={{
+                          position: 'absolute', top: 4, right: 4,
+                          background: '#EF4444', color: '#fff', border: 'none',
+                          borderRadius: '50%', width: 18, height: 18,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', fontSize: 10, fontWeight: 'bold',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+
+                  <div
+                    onClick={() => document.getElementById('accessory-file-input')?.click()}
+                    style={{
+                      background: 'rgba(26, 34, 53, 0.4)',
+                      border: '2px dashed rgba(56,189,248,0.25)',
+                      borderRadius: 16,
+                      padding: '24px 20px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = '#38BDF8';
+                      e.currentTarget.style.background = 'rgba(56,189,248,0.04)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = 'rgba(56,189,248,0.25)';
+                      e.currentTarget.style.background = 'rgba(26, 34, 53, 0.4)';
+                    }}
+                  >
+                    <ImageIcon size={28} color="#38BDF8" style={{ marginBottom: 8 }} />
+                    <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Browse local computer files</div>
+                    <div style={{ color: '#8B9BBE', fontSize: 11 }}>Choose 1 image • Auto compressed</div>
+                    <input
+                      id="accessory-file-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAccessoryImageUpload}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+
+                  <div style={{ marginTop: 6 }}>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or manually enter image URL:</label>
+                    <input
+                      type="text" placeholder="Paste direct image link..."
+                      value={accessoryForm.img} onChange={e => setAccessoryForm({ ...accessoryForm, img: e.target.value })}
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
+                  <button
+                    type="button" onClick={() => setAccessoryModal({ open: false, mode: 'add' })}
+                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8B9BBE', borderRadius: 12, padding: '12px 24px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 600 }}
+                  >Cancel</button>
+                  <button
+                    type="submit"
+                    style={{ background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', color: '#000', border: 'none', borderRadius: 12, padding: '12px 28px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 800 }}
+                  >
+                    {accessoryModal.mode === 'add' ? 'Save Accessory' : 'Update Accessory'}
+                  </button>
+                </div>
+
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ── Modal: Hero Poster Form ── */}
+        {heroPosterModal.open && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 10000,
+            background: 'rgba(13,17,23,0.85)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+          }}>
+            <div className="fade-in" style={{
+              background: '#131a24', border: '1px solid rgba(56,189,248,0.15)',
+              borderRadius: 24, width: '100%', maxWidth: 550, padding: 32,
+              boxShadow: '0 24px 60px rgba(0,0,0,0.6)', maxHeight: '90vh', overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <h2 style={{ fontFamily: 'Sora', fontSize: 22, color: '#fff', fontWeight: 800 }}>Add Hero Poster</h2>
+                <button onClick={() => setHeroPosterModal({ open: false })} style={{ background: 'transparent', border: 'none', color: '#8B9BBE', cursor: 'pointer' }}><X size={20} /></button>
+              </div>
+
+              <form onSubmit={handleHeroPosterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Poster Title</label>
+                  <input
+                    type="text" required placeholder="e.g. Diwali Mega Sale"
+                    value={heroPosterForm.title} onChange={e => setHeroPosterForm({ ...heroPosterForm, title: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Click Destination Page</label>
+                  <select
+                    value={heroPosterForm.target} onChange={e => setHeroPosterForm({ ...heroPosterForm, target: e.target.value })}
+                    className="form-input" style={{ background: '#0d1117' }}
+                  >
+                    <option value="listing">Shop Laptops</option>
+                    <option value="accessories">Shop Accessories</option>
+                    <option value="resell">Sell Laptop</option>
+                    <option value="contact">Contact Us</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', gap: 16 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Laptop/Desktop Poster</label>
+                    {heroPosterForm.src && (
+                      <div style={{ position: 'relative', width: '100%', aspectRatio: '1920/480', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
+                        <img src={heroPosterForm.src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
                     )}
+                    <div
+                      onClick={() => { if (!uploadingHeroPoster) document.getElementById('hero-poster-file-input')?.click(); }}
+                      style={{
+                        background: 'rgba(26, 34, 53, 0.4)', border: '2px dashed rgba(56,189,248,0.25)',
+                        borderRadius: 16, padding: '24px 20px', textAlign: 'center',
+                        cursor: uploadingHeroPoster ? 'wait' : 'pointer', transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <ImageIcon size={28} color="#38BDF8" style={{ marginBottom: 8 }} />
+                      <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
+                        {uploadingHeroPoster ? 'Uploading image...' : 'Browse files'}
+                      </div>
+                      <div style={{ color: '#8B9BBE', fontSize: 11, lineHeight: 1.5, marginTop: 4 }}>
+                        Recommended: 1920x480px (4:1 Ratio)
+                      </div>
+                      <input
+                        id="hero-poster-file-input" type="file" accept="image/*"
+                        disabled={uploadingHeroPoster} onChange={handleHeroPosterImageUpload} style={{ display: 'none' }}
+                      />
+                    </div>
+                    <div style={{ marginTop: 8 }}>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or enter image URL:</label>
+                      <input
+                        type="text" placeholder="Paste direct image link..."
+                        value={heroPosterForm.src || ''} onChange={e => setHeroPosterForm({ ...heroPosterForm, src: e.target.value })}
+                        className="form-input"
+                      />
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
+
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', color: '#8B9BBE', fontSize: 12, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>Mobile Poster</label>
+                    {heroPosterForm.mobileSrc && (
+                      <div style={{ position: 'relative', width: '100%', aspectRatio: '3/2', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
+                        <img src={heroPosterForm.mobileSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )}
+                    <div
+                      onClick={() => { if (!uploadingHeroPosterMobile) document.getElementById('hero-poster-mobile-file-input')?.click(); }}
+                      style={{
+                        background: 'rgba(26, 34, 53, 0.4)', border: '2px dashed rgba(56,189,248,0.25)',
+                        borderRadius: 16, padding: '24px 20px', textAlign: 'center',
+                        cursor: uploadingHeroPosterMobile ? 'wait' : 'pointer', transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <ImageIcon size={28} color="#38BDF8" style={{ marginBottom: 8 }} />
+                      <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
+                        {uploadingHeroPosterMobile ? 'Uploading image...' : 'Browse files'}
+                      </div>
+                      <div style={{ color: '#8B9BBE', fontSize: 11, lineHeight: 1.5, marginTop: 4 }}>
+                        Recommended: 800x600px (4:3 or 3:2 Ratio)
+                      </div>
+                      <input
+                        id="hero-poster-mobile-file-input" type="file" accept="image/*"
+                        disabled={uploadingHeroPosterMobile} onChange={handleHeroPosterMobileImageUpload} style={{ display: 'none' }}
+                      />
+                    </div>
+                    <div style={{ marginTop: 8 }}>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, marginBottom: 6 }}>Or enter image URL:</label>
+                      <input
+                        type="text" placeholder="Paste direct image link..."
+                        value={heroPosterForm.mobileSrc || ''} onChange={e => setHeroPosterForm({ ...heroPosterForm, mobileSrc: e.target.value })}
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
+                  <button type="button" onClick={() => setHeroPosterModal({ open: false })} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8B9BBE', borderRadius: 12, padding: '12px 24px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 600 }}>Cancel</button>
+                  <button type="submit" disabled={uploadingHeroPoster} style={{ background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', border: 'none', color: '#000', borderRadius: 12, padding: '12px 24px', cursor: 'pointer', fontFamily: 'Sora', fontWeight: 800 }}>Save Poster</button>
+                </div>
+              </form>
+            </div>
           </div>
-        );
-      })()}
+        )}
+
+        {/* ── Tab: STUDENT HUB ── */}
+        {activeTab === 'student_hub' && (() => {
+          // Build leaderboard from blogs state
+          if (!hubBlogsLoaded && blogs.length > 0) {
+            const byEmail: Record<string, { email: string; name: string; articles: number; reads: number }> = {};
+            blogs.forEach((b: any) => {
+              const email = (b.authorEmail || '').toLowerCase();
+              if (!email) return;
+              if (!byEmail[email]) byEmail[email] = { email, name: b.authorName || b.author || email.split('@')[0], articles: 0, reads: 0 };
+              byEmail[email].articles += 1;
+              byEmail[email].reads += (b.reads || 0);
+            });
+            const board = Object.values(byEmail).sort((a, b) => b.reads !== a.reads ? b.reads - a.reads : b.articles - a.articles);
+            if (board.length !== hubLeaderboard.length) {
+              setHubLeaderboard(board);
+              setHubBlogsLoaded(true);
+            }
+          }
+
+          const handleSaveGiveaway = async () => {
+            if (!giveawayConfig.prizeTitle.trim()) return triggerAlert('danger', 'Prize title is required.');
+            setHubSaving(true);
+            try {
+              await setDoc(doc(db, 'giveaway', 'current'), {
+                ...giveawayConfig,
+                updatedAt: new Date().toISOString()
+              });
+              triggerAlert('success', 'Giveaway config saved to Firestore!');
+            } catch (err) {
+              triggerAlert('danger', 'Failed to save giveaway config.');
+            } finally {
+              setHubSaving(false);
+            }
+          };
+
+          const handleDeleteGiveaway = async () => {
+            if (!window.confirm("Are you sure you want to clear the current contest?")) return;
+            setHubSaving(true);
+            try {
+              if (giveawayConfig.prizeImagePublicId) {
+                await deleteCloudinaryAssets([giveawayConfig.prizeImagePublicId]);
+              }
+              await deleteDoc(doc(db, 'giveaway', 'current'));
+              setGiveawayConfig({ prizeTitle: '', prizeImage: '', deadline: '' });
+              triggerAlert('success', 'Giveaway contest cleared!');
+            } catch (err) {
+              triggerAlert('danger', 'Failed to clear contest.');
+            } finally {
+              setHubSaving(false);
+            }
+          };
+
+
+          const handlePrizeImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+            setHubImageUploading(true);
+            try {
+              const { url, publicId } = await uploadProductImage(files[0]);
+              setGiveawayConfig(p => ({ ...p, prizeImage: url, prizeImagePublicId: publicId }));
+              triggerAlert('success', 'Prize image uploaded successfully.');
+            } catch (err) {
+              console.error(err);
+              triggerAlert('danger', 'Error uploading prize image.');
+            } finally {
+              setHubImageUploading(false);
+              if (e.target) e.target.value = '';
+            }
+          };
+
+          const handleAnnounceWinner = async () => {
+            if (!winnerForm.name.trim() || !winnerForm.blogTitle.trim()) return triggerAlert('danger', 'Winner name and blog title are required.');
+            setHubSaving(true);
+            try {
+              await setDoc(doc(db, 'giveaway', 'lastWinner'), {
+                ...winnerForm,
+                announcedAt: new Date().toISOString()
+              });
+              triggerAlert('success', 'Winner announced and saved to Firestore!');
+              setWinnerForm({ name: '', city: '', blogTitle: '', photo: '' });
+            } catch (err) {
+              triggerAlert('danger', 'Failed to announce winner.');
+            } finally {
+              setHubSaving(false);
+            }
+          };
+
+          const contestBlogs = blogs.filter((b: any) => b.approved !== false);
+
+          return (
+            <div className="fade-in">
+              <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+                Student Hub Management
+              </h1>
+              <p style={{ color: '#8B9BBE', fontSize: 15, marginBottom: 32 }}>
+                Manage the weekly blog contest giveaway, leaderboard, and contest submissions.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24, marginBottom: 32 }}>
+
+                {/* Giveaway Config Card */}
+                <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.15)', borderRadius: 24, padding: 28 }}>
+                  <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Sparkles size={18} color="#F59E0B" /> Current Giveaway Prize
+                  </h2>
+                  <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>Saved to Firestore <code style={{ color: '#38BDF8' }}>giveaway/current</code></p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Prize Title</label>
+                      <input
+                        className="form-input"
+                        placeholder="e.g. Win a Bluetooth Neckband"
+                        value={giveawayConfig.prizeTitle}
+                        onChange={e => setGiveawayConfig(p => ({ ...p, prizeTitle: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Prize Image</label>
+                      {giveawayConfig.prizeImage && (
+                        <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
+                          <img src={giveawayConfig.prizeImage} alt="Prize preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <button
+                            onClick={async () => {
+                              setHubImageUploading(true);
+                              try {
+                                if (giveawayConfig.prizeImagePublicId) {
+                                  await deleteCloudinaryAssets([giveawayConfig.prizeImagePublicId]);
+                                }
+                                await setDoc(doc(db, 'giveaway', 'current'), { prizeImage: '', prizeImagePublicId: '' }, { merge: true });
+                                triggerAlert('success', 'Prize image removed.');
+                              } catch (err) {
+                                console.error(err);
+                                triggerAlert('danger', 'Failed to remove prize image.');
+                              } finally {
+                                setHubImageUploading(false);
+                              }
+                              setGiveawayConfig(p => ({ ...p, prizeImage: '', prizeImagePublicId: '' }));
+                            }}
+                            title="Remove image"
+                            style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      )}
+                      <div
+                        onClick={() => { if (!hubImageUploading) document.getElementById('prize-file-input')?.click(); }}
+                        style={{
+                          background: 'rgba(26, 34, 53, 0.4)',
+                          border: '2px dashed rgba(56,189,248,0.25)',
+                          borderRadius: 16,
+                          padding: '20px 16px',
+                          textAlign: 'center',
+                          cursor: hubImageUploading ? 'wait' : 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={e => {
+                          if (!hubImageUploading) {
+                            e.currentTarget.style.borderColor = '#38BDF8';
+                            e.currentTarget.style.background = 'rgba(56,189,248,0.04)';
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (!hubImageUploading) {
+                            e.currentTarget.style.borderColor = 'rgba(56,189,248,0.25)';
+                            e.currentTarget.style.background = 'rgba(26, 34, 53, 0.4)';
+                          }
+                        }}
+                      >
+                        <ImageIcon size={26} color="#38BDF8" style={{ marginBottom: 6 }} />
+                        <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
+                          {hubImageUploading ? 'Uploading image...' : 'Upload prize image'}
+                        </div>
+                        <div style={{ color: '#8B9BBE', fontSize: 11 }}>Click to browse files (JPG / PNG)</div>
+                        <input
+                          id="prize-file-input"
+                          type="file"
+                          accept="image/*"
+                          disabled={hubImageUploading}
+                          onChange={handlePrizeImageUpload}
+                          style={{ display: 'none' }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                        <div style={{ flex: 1, height: 1, background: 'rgba(139,155,190,0.2)' }} />
+                        <span style={{ color: '#8B9BBE', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>or paste a URL</span>
+                        <div style={{ flex: 1, height: 1, background: 'rgba(139,155,190,0.2)' }} />
+                      </div>
+                      <input
+                        className="form-input"
+                        placeholder="https://..."
+                        value={giveawayConfig.prizeImage}
+                        onChange={e => setGiveawayConfig(p => ({ ...p, prizeImage: e.target.value }))}
+                        style={{ marginTop: 10 }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Contest Deadline</label>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        <div style={{ position: "relative" }}>
+                          <div style={{ position: "absolute", left: 14, top: 0, bottom: 0, display: "flex", alignItems: "center", pointerEvents: "none" }}>
+                            <Calendar size={16} color="#8B9BBE" />
+                          </div>
+                          <input
+                            type="date"
+                            value={giveawayConfig.deadline ? giveawayConfig.deadline.split("T")[0] : ""}
+                            onChange={(e) => {
+                              const date = e.target.value;
+                              const time = giveawayConfig.deadline && giveawayConfig.deadline.includes("T")
+                                ? giveawayConfig.deadline.split("T")[1]
+                                : "12:00";
+                              setGiveawayConfig(p => ({ ...p, deadline: `${date}T${time}` }));
+                            }}
+                            style={{
+                              width: "100%", background: "#0d1117", border: "1px solid #30363d", borderRadius: 8, padding: "12px 14px 12px 40px", color: "#e6edf3", outline: "none", fontSize: 13, colorScheme: "dark", boxSizing: "border-box", transition: "border-color 0.2s"
+                            }}
+                            onFocus={e => e.target.style.borderColor = "#38BDF8"}
+                            onBlur={e => e.target.style.borderColor = "#30363d"}
+                          />
+                        </div>
+                        <div style={{ position: "relative" }}>
+                          <div style={{ position: "absolute", left: 14, top: 0, bottom: 0, display: "flex", alignItems: "center", pointerEvents: "none" }}>
+                            <Clock size={16} color="#8B9BBE" />
+                          </div>
+                          <input
+                            type="time"
+                            value={giveawayConfig.deadline && giveawayConfig.deadline.includes("T") ? giveawayConfig.deadline.split("T")[1] : ""}
+                            onChange={(e) => {
+                              const time = e.target.value;
+                              const date = giveawayConfig.deadline ? giveawayConfig.deadline.split("T")[0] : new Date().toISOString().split("T")[0];
+                              setGiveawayConfig(p => ({ ...p, deadline: `${date}T${time}` }));
+                            }}
+                            style={{
+                              width: "100%", background: "#0d1117", border: "1px solid #30363d", borderRadius: 8, padding: "12px 14px 12px 40px", color: "#e6edf3", outline: "none", fontSize: 13, colorScheme: "dark", boxSizing: "border-box", transition: "border-color 0.2s"
+                            }}
+                            onFocus={e => e.target.style.borderColor = "#38BDF8"}
+                            onBlur={e => e.target.style.borderColor = "#30363d"}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <button
+                        onClick={handleSaveGiveaway}
+                        disabled={hubSaving}
+                        style={{ flex: 1, background: 'linear-gradient(135deg, #F59E0B, #EF4444)', color: '#000', border: 'none', borderRadius: 12, padding: '12px 0', fontWeight: 800, fontFamily: 'Sora', cursor: 'pointer', fontSize: 14 }}
+                      >
+                        {hubSaving ? 'Saving...' : 'Save Giveaway Config'}
+                      </button>
+                      <button
+                        onClick={handleDeleteGiveaway}
+                        disabled={hubSaving}
+                        style={{ flex: 1, background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 12, padding: '12px 0', fontWeight: 800, fontFamily: 'Sora', cursor: 'pointer', fontSize: 14 }}
+                      >
+                        Clear Contest
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Announce Winner Card */}
+                <div style={{ background: '#1a2235', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 24, padding: 28 }}>
+                  <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Award size={18} color="#8B5CF6" /> Announce Last Week's Winner
+                  </h2>
+                  <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>Saved to Firestore <code style={{ color: '#38BDF8' }}>giveaway/lastWinner</code></p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winner's Name</label>
+                      <input className="form-input" placeholder="e.g. Rahul Verma" value={winnerForm.name} onChange={e => setWinnerForm(p => ({ ...p, name: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>City / College</label>
+                      <input className="form-input" placeholder="e.g. VIT, Chennai" value={winnerForm.city} onChange={e => setWinnerForm(p => ({ ...p, city: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winning Blog Title</label>
+                      <input className="form-input" placeholder="e.g. 10 AI Tools That Changed My College Life" value={winnerForm.blogTitle} onChange={e => setWinnerForm(p => ({ ...p, blogTitle: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winner Photo URL (optional)</label>
+                      <input className="form-input" placeholder="https://..." value={winnerForm.photo} onChange={e => setWinnerForm(p => ({ ...p, photo: e.target.value }))} />
+                    </div>
+                    <button
+                      onClick={handleAnnounceWinner}
+                      disabled={hubSaving}
+                      style={{ background: 'linear-gradient(135deg, #8B5CF6, #38BDF8)', color: '#000', border: 'none', borderRadius: 12, padding: '12px 0', fontWeight: 800, fontFamily: 'Sora', cursor: 'pointer', fontSize: 14 }}
+                    >
+                      {hubSaving ? 'Announcing...' : '🏆 Announce Winner'}
+                    </button>
+                  </div>
+                </div>
+
+                {lastWinnerData && (
+                  <div style={{ background: '#1a2235', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 24, padding: 28, marginTop: 24 }}>
+                    <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Award size={18} color="#10B981" /> Currently Announced Winner
+                    </h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                      {lastWinnerData.photo ? (
+                        <img src={lastWinnerData.photo} alt={lastWinnerData.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #10B981, #34D399)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 800, fontSize: 24 }}>
+                          {lastWinnerData.name?.substring(0, 2).toUpperCase() || "W"}
+                        </div>
+                      )}
+                      <div>
+                        <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{lastWinnerData.name}</div>
+                        <div style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 4 }}>{lastWinnerData.city}</div>
+                        <div style={{ color: '#38BDF8', fontSize: 13, fontWeight: 600 }}>{lastWinnerData.blogTitle}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+
+              {/* Leaderboard Preview */}
+              <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 24, padding: 28, marginBottom: 32 }}>
+                <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <TrendingUp size={18} color="#38BDF8" /> Leaderboard Preview
+                </h2>
+                <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>Ranked by total reads, then article count. Derived from the <code style={{ color: '#38BDF8' }}>blogs</code> collection.</p>
+                {hubLeaderboard.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '32px 0', color: '#8B9BBE', fontSize: 13 }}>No blog data yet.</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {hubLeaderboard.slice(0, 10).map((entry, idx) => (
+                      <div key={entry.email} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '12px 16px' }}>
+                        <span style={{ fontSize: 16, width: 30, textAlign: 'center', flexShrink: 0 }}>{['🥇', '🥈', '🥉'][idx] || `#${idx + 1}`}</span>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #38BDF8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
+                          {entry.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: '#fff', fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.name}</div>
+                          <div style={{ color: '#8B9BBE', fontSize: 11 }}>{entry.email}</div>
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ color: '#38BDF8', fontWeight: 700, fontSize: 14 }}>{entry.reads.toLocaleString('en-IN')} reads</div>
+                          <div style={{ color: '#8B9BBE', fontSize: 11 }}>{entry.articles} articles</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Contest Blog Submissions */}
+              <div style={{ background: '#1a2235', border: '1px solid rgba(56,189,248,0.12)', borderRadius: 24, padding: 28 }}>
+                <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <BookOpen size={18} color="#10B981" /> Contest Blog Submissions
+                </h2>
+                <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>{contestBlogs.length} published / approved articles in the contest</p>
+                {contestBlogs.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '32px 0', color: '#8B9BBE', fontSize: 13 }}>No approved blog submissions yet.</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {contestBlogs.slice(0, 20).map((blog: any) => (
+                      <div key={blog.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '12px 16px', gap: 12, flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: '#fff', fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{blog.title || 'Untitled'}</div>
+                          <div style={{ color: '#8B9BBE', fontSize: 11, marginTop: 2 }}>{blog.authorName || blog.author} · {(blog.reads || 0).toLocaleString('en-IN')} reads</div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            onClick={() => handleToggleBlogApproval(blog.id, blog.approved)}
+                            style={{ background: blog.approved !== false ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', border: `1px solid ${blog.approved !== false ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)'}`, color: blog.approved !== false ? '#EF4444' : '#10B981', borderRadius: 8, padding: '5px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            {blog.approved !== false ? 'Disapprove' : 'Approve'}
+                          </button>
+                          <button
+                            onClick={() => setBlogReviewModal({ open: true, item: blog })}
+                            style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', color: '#38BDF8', borderRadius: 8, padding: '5px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            Review
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── Tab: USERS ── */}
+        {activeTab === 'users' && (() => {
+          if (!usersLoaded) {
+            // Load users on first tab open
+            import('firebase/firestore').then(({ getDocs, collection: col }) => {
+              getDocs(col(db, 'users')).then(snap => {
+                const list: any[] = [];
+                snap.forEach(d => list.push({ uid: d.id, ...d.data() }));
+                list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+                setUsersData(list);
+                setUsersLoaded(true);
+              });
+            });
+          }
+
+          const filtered = usersData.filter(u =>
+            (u.name || '').toLowerCase().includes(usersSearch.toLowerCase()) ||
+            (u.email || '').toLowerCase().includes(usersSearch.toLowerCase()) ||
+            (u.phone || '').includes(usersSearch) ||
+            (u.city || '').toLowerCase().includes(usersSearch.toLowerCase())
+          );
+
+          const handleExpandUser = async (uid: string, email: string) => {
+            if (expandedUserId === uid) { setExpandedUserId(null); return; }
+            setExpandedUserId(uid);
+            if (!userOrders[uid]) {
+              try {
+                const { getDocs, collection: col, query: q, where: w } = await import('firebase/firestore');
+                const snap = await getDocs(q(col(db, 'orders'), w('email', '==', email)));
+                const list: any[] = [];
+                snap.forEach(d => list.push(d.data()));
+                list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+                setUserOrders(prev => ({ ...prev, [uid]: list }));
+              } catch (err) {
+                console.error('Failed to fetch user orders:', err);
+                setUserOrders(prev => ({ ...prev, [uid]: [] }));
+              }
+            }
+          };
+
+          return (
+            <div className="fade-in">
+              <h1 style={{ fontFamily: 'Sora', fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+                Registered Users
+              </h1>
+              <p style={{ color: '#8B9BBE', fontSize: 15, marginBottom: 24 }}>
+                Browse all customer accounts from the Firestore <code style={{ color: '#38BDF8' }}>users</code> collection.
+              </p>
+
+              {/* Search bar */}
+              <div style={{ position: 'relative', marginBottom: 24, maxWidth: 420 }}>
+                <Search size={15} color="#8B9BBE" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+                <input
+                  className="form-input"
+                  placeholder="Search by name, email, phone, city..."
+                  value={usersSearch}
+                  onChange={e => setUsersSearch(e.target.value)}
+                  style={{ paddingLeft: 40 }}
+                />
+              </div>
+
+              {!usersLoaded ? (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: '#8B9BBE', fontSize: 14 }}>
+                  <div style={{ width: 20, height: 20, border: '2px solid rgba(56,189,248,0.3)', borderTopColor: '#38BDF8', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+                  Loading users...
+                </div>
+              ) : filtered.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: '#8B9BBE', fontSize: 14 }}>
+                  {usersSearch ? 'No users match your search.' : 'No registered users found.'}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {/* Header row */}
+                  {!isMobile && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 120px 140px 80px', gap: 16, padding: '0 16px', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      <span>Name / Email</span><span>Phone</span><span>City</span><span>State</span><span>Member Since</span><span>Orders</span>
+                    </div>
+                  )}
+                  {filtered.map(u => (
+                    <div key={u.uid}>
+                      <div
+                        onClick={() => handleExpandUser(u.uid, u.email)}
+                        style={{ display: isMobile ? 'flex' : 'grid', gridTemplateColumns: isMobile ? undefined : '1fr 1fr 120px 120px 140px 80px', flexDirection: isMobile ? 'column' : undefined, gap: 16, padding: '14px 16px', background: expandedUserId === u.uid ? 'rgba(56,189,248,0.06)' : '#1a2235', border: `1px solid ${expandedUserId === u.uid ? 'rgba(56,189,248,0.25)' : 'rgba(56,189,248,0.1)'}`, borderRadius: expandedUserId === u.uid ? '16px 16px 0 0' : 16, cursor: 'pointer', transition: 'all 0.2s', alignItems: 'center' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: '50%', background: u.photoURL ? 'transparent' : 'linear-gradient(135deg, #3B82F6, #38BDF8)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {u.photoURL ? <img src={u.photoURL} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <span style={{ color: '#000', fontSize: 12, fontWeight: 800 }}>{(u.name || u.email || 'U').substring(0, 2).toUpperCase()}</span>}
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ color: '#fff', fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name || '—'}</div>
+                            <div style={{ color: '#8B9BBE', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
+                          </div>
+                        </div>
+                        <div style={{ color: '#E8EDF5', fontSize: 13 }}>{u.phone || <span style={{ color: '#8B9BBE', fontStyle: 'italic' }}>No phone</span>}</div>
+                        <div style={{ color: '#E8EDF5', fontSize: 13 }}>{u.city || '—'}</div>
+                        <div style={{ color: '#E8EDF5', fontSize: 13 }}>{u.state || '—'}</div>
+                        <div style={{ color: '#8B9BBE', fontSize: 12 }}>{u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ color: '#38BDF8', fontWeight: 700, fontSize: 13 }}>{userOrders[u.uid]?.length ?? '—'}</span>
+                          <ChevronRight size={14} color="#8B9BBE" style={{ transform: expandedUserId === u.uid ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+                        </div>
+                      </div>
+
+                      {/* Expanded order history drawer */}
+                      {expandedUserId === u.uid && (
+                        <div style={{ background: 'rgba(13,17,23,0.8)', border: '1px solid rgba(56,189,248,0.15)', borderTop: 'none', borderRadius: '0 0 16px 16px', padding: '16px 20px' }}>
+                          {!userOrders[u.uid] ? (
+                            <div style={{ color: '#8B9BBE', fontSize: 13, textAlign: 'center', padding: '16px 0' }}>Loading orders...</div>
+                          ) : userOrders[u.uid].length === 0 ? (
+                            <div style={{ color: '#8B9BBE', fontSize: 13, textAlign: 'center', padding: '16px 0' }}>No orders placed by this user.</div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                              <div style={{ color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Order History ({userOrders[u.uid].length} orders)</div>
+                              {userOrders[u.uid].map((ord: any) => (
+                                <div key={ord.orderId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px', flexWrap: 'wrap', gap: 8 }}>
+                                  <div>
+                                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>#{ord.orderId}</span>
+                                    <span style={{ color: '#8B9BBE', fontSize: 11, marginLeft: 10 }}>{ord.createdAt ? new Date(ord.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</span>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <span style={{ color: '#10B981', fontWeight: 800, fontSize: 14 }}>₹{(ord.total || 0).toLocaleString('en-IN')}</span>
+                                    <span style={{ background: ord.status === 'Completed' || ord.status === 'Delivered' ? 'rgba(16,185,129,0.1)' : 'rgba(56,189,248,0.1)', color: ord.status === 'Completed' || ord.status === 'Delivered' ? '#10B981' : '#38BDF8', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100, textTransform: 'uppercase' }}>{ord.status || 'Pending'}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
       </main>
 

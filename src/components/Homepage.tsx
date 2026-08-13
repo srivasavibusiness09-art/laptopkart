@@ -3,7 +3,7 @@
 import {
   Shield, RefreshCw, Truck, CreditCard, CheckCircle2,
   Microscope, BadgeDollarSign, ArrowRight, Recycle, Star,
-  Laptop, X, FileText, Package, Undo2, Play
+  Laptop, X, FileText, Package, Undo2, Play, Headset, VolumeX, Volume2
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,12 +24,11 @@ import Script from "next/script";
 
 /* ── Trust Strip ──────────────────────────────────────── */
 const trustItems = [
-  { icon: <Shield size={18} color="var(--accent)" />, title: "Warranty Available", desc: "On select laptops" },
-  { icon: <CheckCircle2 size={18} color="var(--accent)" />, title: "Multi-Point Quality Checks", desc: "Certified Refurbished" },
-  { icon: <CreditCard size={18} color="var(--accent)" />, title: "Secure Payments", desc: "100% Safe Checkout" },
-  { icon: <Truck size={18} color="var(--accent)" />, title: "Fast Delivery", desc: "Across India" },
-  { icon: <Undo2 size={18} color="var(--accent)" />, title: "Easy Returns", desc: "7 Days Return Policy" },
-  { icon: <RefreshCw size={18} color="var(--accent)" />, title: "Exchange Offer", desc: "Best value for old laptop" },
+  { icon: <Shield size={18} color="var(--accent)" />, title: "1-Year Warranty", desc: "Protection on refurbished laptops" },
+  { icon: <CheckCircle2 size={18} color="var(--accent)" />, title: "Tested before dispatch", desc: "50+ point strict quality check" },
+  { icon: <Microscope size={18} color="var(--accent)" />, title: "Key components verified", desc: "Battery, screen & performance assured" },
+  { icon: <Truck size={18} color="var(--accent)" />, title: "We deliver across India", desc: "Fast & secure shipping nationwide" },
+  { icon: <Headset size={18} color="var(--accent)" />, title: "Need a specific model? We'll help you find it", desc: "Contact us for custom requirements" },
 ];
 
 function TrustStrip() {
@@ -240,9 +239,36 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
     posterUrl?: string;
     eyebrow?: string;
   } | null>(null);
-  const [videoPlaying, setVideoPlaying] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(true);
   const [videoError, setVideoError] = useState(false);
   const [videoBuffering, setVideoBuffering] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoSectionRef = useRef<HTMLElement>(null);
+  const [showVideoText, setShowVideoText] = useState(true);
+
+  useEffect(() => {
+    if (!videoSectionRef.current) return;
+    let textTimeoutId: ReturnType<typeof setTimeout>;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (videoRef.current) videoRef.current.play().catch(() => { });
+          setShowVideoText(true);
+          textTimeoutId = setTimeout(() => setShowVideoText(false), 4000);
+        } else {
+          if (videoRef.current) videoRef.current.pause();
+          clearTimeout(textTimeoutId);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    observer.observe(videoSectionRef.current);
+    return () => {
+      observer.disconnect();
+      clearTimeout(textTimeoutId);
+    };
+  }, [videoSettings, videoPlaying]);
 
   // Subscribe to Promo Video settings in Firestore
   useEffect(() => {
@@ -287,7 +313,9 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
       position: "absolute", left: 0, right: 0, bottom: 0,
       padding: isMobile ? "22px 20px" : "38px 44px",
       textAlign: align, pointerEvents: "none",
-      background: "linear-gradient(0deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.35) 55%, transparent 100%)",
+      background: showVideoText ? "linear-gradient(0deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.35) 55%, transparent 100%)" : "transparent",
+      opacity: showVideoText ? 1 : 0,
+      transition: "opacity 0.8s ease-in-out, background 0.8s ease-in-out",
     }}>
       <div style={{
         display: "inline-block",
@@ -335,7 +363,7 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
     const showPortrait = videoSettings?.orientation === "portrait";
     const playerBoxStyle = showPortrait
       ? { width: "min(100vw, calc(100dvh * 0.5625))", height: "100dvh", maxWidth: "100vw" }
-      : { width: "min(100vw, calc(100dvh * 1.7778))", aspectRatio: "16 / 9", maxHeight: "100dvh" };
+      : { width: "100vw", height: "auto", aspectRatio: "16 / 9" };
 
     return (
       <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -393,14 +421,60 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
                 ...playerBoxStyle,
               }}>
                 <video
+                  ref={videoRef}
                   src={videoSettings.videoUrl}
-                  controls
                   autoPlay
                   playsInline
+                  muted={isMuted}
+                  onVolumeChange={(e) => setIsMuted(e.currentTarget.muted)}
                   style={{ width: "100%", height: "100%", objectFit: "cover", background: "#000" }}
                   onLoadedData={() => setVideoBuffering(false)}
                   onError={() => { setVideoError(true); setVideoBuffering(false); }}
                 />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (videoRef.current) {
+                      videoRef.current.muted = !isMuted;
+                      setIsMuted(!isMuted);
+                    }
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: isMobile ? 16 : 32,
+                    right: isMobile ? 16 : 48,
+                    background: "rgba(0, 0, 0, 0.3)",
+                    color: "#fff",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    borderRadius: 100,
+                    padding: isMobile ? "10px" : "12px 24px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: isMobile ? 0 : 10,
+                    cursor: "pointer",
+                    zIndex: 10,
+                    backdropFilter: "blur(12px)",
+                    fontWeight: 700,
+                    fontSize: isMobile ? 12 : 16,
+                    boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
+                    transition: "background 0.2s ease"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(0, 0, 0, 0.45)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(0, 0, 0, 0.3)"}
+                >
+                  {isMuted ? (
+                    <>
+                      <VolumeX size={isMobile ? 18 : 20} />
+                      {!isMobile && "Tap to Unmute"}
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 size={isMobile ? 18 : 20} />
+                      {!isMobile && "Mute"}
+                    </>
+                  )}
+                </button>
               </div>
             )}
           </>
@@ -519,8 +593,57 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
   const answer = (a: string) => {
     const na = { ...answers, [step]: a };
     setAnswers(na);
-    if (step < finderQ.length - 1) setStep(step + 1);
-    else setResult(products.slice(0, 3));
+    if (step < finderQ.length - 1) {
+      setStep(step + 1);
+    } else {
+      const b = na[0];
+      const u = na[1];
+      const r = na[2];
+      const br = na[3];
+
+      let filtered = products.filter(p => {
+        let budgetMatch = true;
+        if (b === "Under ₹20,000") budgetMatch = p.price < 20000;
+        else if (b === "₹20K–₹40K") budgetMatch = p.price >= 20000 && p.price <= 40000;
+        else if (b === "₹40K–₹70K") budgetMatch = p.price > 40000 && p.price <= 70000;
+        else if (b === "₹70K+") budgetMatch = p.price > 70000;
+
+        let usageMatch = true;
+        if (u === "Gaming") usageMatch = !!(p.category?.toLowerCase().includes("gaming") || p.badge === "Gaming");
+        else if (u === "Creative Work") usageMatch = !!(p.category?.toLowerCase().includes("macbook") || p.ram === "16GB" || p.ram === "32GB");
+        else if (u === "Business") usageMatch = !!(p.category?.toLowerCase().includes("business"));
+
+        let ramMatch = true;
+        if (r !== "Any") ramMatch = p.ram === r;
+
+        let brandMatch = true;
+        if (br !== "Any") brandMatch = p.brand?.toLowerCase() === br.toLowerCase();
+
+        return budgetMatch && usageMatch && ramMatch && brandMatch;
+      });
+
+      if (filtered.length < 3) {
+        const lessStrict = products.filter(p => {
+          let budgetMatch = true;
+          if (b === "Under ₹20,000") budgetMatch = p.price <= 30000;
+          else if (b === "₹20K–₹40K") budgetMatch = p.price >= 15000 && p.price <= 50000;
+          else if (b === "₹40K–₹70K") budgetMatch = p.price >= 30000;
+
+          let brandMatch = true;
+          if (br !== "Any") brandMatch = p.brand?.toLowerCase() === br.toLowerCase();
+          return budgetMatch && brandMatch;
+        });
+        const merged = [...filtered, ...lessStrict].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+        filtered = merged;
+      }
+
+      if (filtered.length < 3) {
+        const merged = [...filtered, ...products].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+        filtered = merged;
+      }
+
+      setResult(filtered.slice(0, 3));
+    }
   };
   const reset = () => { setStep(0); setAnswers({}); setResult(null); };
 
@@ -708,15 +831,15 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
         <>
           <Reveal y={0}><HeroBanner setPage={setPage} banners={heroPosters || []} isLoading={!firestoreReady} /></Reveal>
           <Reveal delay={0.08} y={20}><TrustStrip /></Reveal>
-          <Reveal delay={0.16} y={20}><HeroStats /></Reveal>
+          <Reveal delay={0.12} y={20}><HeroStats /></Reveal>
         </>
       ) : (
         // Mobile Layout
         <>
           <Reveal y={0}><HeroBanner setPage={setPage} banners={heroPosters || []} isLoading={!firestoreReady} /></Reveal>
           <Reveal delay={0.08} y={20}><TrustStrip /></Reveal>
+          <Reveal delay={0.12} y={20}><HeroStats /></Reveal>
           {renderTopPicks()}
-          <Reveal delay={0.1} y={20}><HeroStats /></Reveal>
         </>
       )}
 
@@ -724,9 +847,17 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
       {videoSettings && videoSettings.videoUrl && (
         <Reveal y={0}>
           <section
+            ref={videoSectionRef}
             id="promo-video-section"
-            className="full-window-video"
-            style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg, #082F49 0%, #0C4A6E 45%, #0369A1 100%)", marginLeft: "calc(50% - 50vw)" }}
+            className={videoSettings.orientation === "portrait" ? "full-window-video" : ""}
+            style={{ 
+              position: "relative", 
+              overflow: "hidden", 
+              background: "linear-gradient(135deg, #082F49 0%, #0C4A6E 45%, #0369A1 100%)", 
+              marginLeft: "calc(50% - 50vw)",
+              width: "100vw",
+              aspectRatio: videoSettings.orientation === "portrait" ? "auto" : "16/9"
+            }}
           >
             {renderVideoPlayer()}
             {renderVideoTextOverlay(videoSettings.orientation === "portrait" ? "center" : "left")}

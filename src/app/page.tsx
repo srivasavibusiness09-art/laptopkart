@@ -767,6 +767,8 @@ export default function App() {
 
       <Navbar
         setPage={handleNavigate}
+        currentPage={page}
+        activeListingCategory={listingCategory}
         cart={cart}
         wishlist={wishlist}
         user={user}
@@ -862,8 +864,8 @@ export default function App() {
             )}{displayPage === "contact" && <ContactPage />}
             {displayPage === "resell" && <SellLaptopPage setPage={handleNavigate} user={user} triggerAlert={triggerStoreAlert} />}
             {displayPage === "login" && <LoginPage setPage={handleNavigate} onLogin={handleLogin} triggerAlert={triggerStoreAlert} />}
-            {displayPage === "profile" && user && (
-              <ProfilePage user={user} setUser={setUser} setPage={handleNavigate} triggerAlert={triggerStoreAlert} />
+            {displayPage.startsWith("profile") && user && (
+              <ProfilePage user={user} setUser={setUser} setPage={handleNavigate} triggerAlert={triggerStoreAlert} initialTab={displayPage === "profile" ? "overview" : displayPage.replace("profile-", "") as any} />
             )}
             {displayPage === "student-hub" && user && (
               <StudentHubPage setPage={handleNavigate} user={user} initialSection={hubSection} />

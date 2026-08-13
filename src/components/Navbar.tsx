@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from "react";
 import {
-  Search, Heart, ShoppingCart, User, Scale,
-  Flame, Laptop, Monitor, Keyboard, RefreshCw, Tag, Info, X, Menu, Phone, ChevronDown, GraduationCap, Truck
+  Heart, ShoppingCart, User, Scale,
+  X, Menu, Phone, ChevronDown, Truck
 } from "lucide-react";
-import { COLORS, navLinks, categories } from "@/data/products";
+import { navLinks, categories } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
 import { ThemeToggle } from "./ThemeToggle";
 import RequestProductModal from "./RequestProductModal";
 
 interface NavbarProps {
   setPage: (page: string) => void;
+  currentPage: string;
+  activeListingCategory?: string;
   cart: { id: number }[];
   wishlist: (number | string)[];
   user: any;
@@ -19,36 +21,28 @@ interface NavbarProps {
   searchQuery?: string;
 }
 
-const linkIcons: Record<string, React.ReactNode> = {
-  Offers: <Flame size={13} color="var(--warning)" />,
-  Laptops: <Laptop size={13} />,
-  Desktops: <Monitor size={13} />,
-  "Student Hub": <GraduationCap size={13} color="var(--hub-accent)" />,
-  Accessories: <Keyboard size={13} />,
-  "Resell Laptop": <RefreshCw size={13} />,
-  Blog: <Tag size={13} />,
-};
-
 const getTarget = (link: string) => ({
   Laptops: "listing:Laptops", Desktops: "listing:Desktops", Accessories: "accessories",
   Blog: "blog", Offers: "listing:Offers", "Resell Laptop": "resell", "Student Hub": "student-hub",
 } as Record<string, string>)[link] ?? "home";
 
-export default function Navbar({ setPage, cart, wishlist, user, onSearch, searchQuery = "" }: NavbarProps) {
+export default function Navbar({ setPage, currentPage, activeListingCategory = "", cart, wishlist, user, onSearch, searchQuery = "" }: NavbarProps) {
   const [search, setSearch] = useState(searchQuery);
-  const [searchActive, setSearchActive] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [bulkDropdownOpen, setBulkDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [offersActive, setOffersActive] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     setSearch(searchQuery);
-    if (searchQuery) {
-      setSearchActive(true);
-    }
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (currentPage !== "home") {
+      setOffersActive(false);
+    }
+  }, [currentPage]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -60,6 +54,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
 
   const handleNavClick = (link: string) => {
     if (link === "Offers") {
+      setOffersActive(true);
       setPage("home");
       setMenuOpen(false);
       setTimeout(() => {
@@ -69,8 +64,34 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
         }
       }, 100);
     } else {
+      setOffersActive(false);
       go(getTarget(link));
     }
+  };
+
+  const isLinkActive = (link: string) => {
+    if (link === "Laptops") {
+      return currentPage === "listing" && activeListingCategory === "Laptops";
+    }
+    if (link === "Desktops") {
+      return currentPage === "listing" && activeListingCategory === "Desktops";
+    }
+    if (link === "Accessories") {
+      return currentPage === "accessories";
+    }
+    if (link === "Student Hub") {
+      return currentPage === "student-hub";
+    }
+    if (link === "Resell Laptop") {
+      return currentPage === "resell";
+    }
+    if (link === "Blog") {
+      return currentPage === "blog" || currentPage === "blog-detail" || currentPage === "write-blog";
+    }
+    if (link === "Offers") {
+      return offersActive || (currentPage === "listing" && activeListingCategory === "Offers");
+    }
+    return false;
   };
 
   const navBg = scrolled
@@ -161,7 +182,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
             )}
 
             {!isMobile && (
-              <IconBtn onClick={() => go("profile")} label="Track Order" className="nav-extra-btn">
+              <IconBtn onClick={() => go("profile-orders")} label="Track Order" className="nav-extra-btn">
                 <Truck size={20} color="var(--text-2)" />
               </IconBtn>
             )}
@@ -227,17 +248,20 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
               <div className="nav-bottom-links" style={{ display: "flex", alignItems: "center", gap: 24 }}>
                 {navLinks.map((link) => (
                   <div key={link} className="nav-dropdown-wrapper" style={{ position: "relative" }}>
+                    {(() => {
+                      const active = isLinkActive(link);
+                      return (
                     <button
+                      className={`nav-link-btn ${active ? "is-active" : ""}`}
+                      aria-current={active ? "page" : undefined}
                       onClick={() => handleNavClick(link)}
                       style={{
                         background: "transparent", border: "none", cursor: "pointer",
-                        color: link === "Offers" ? "var(--warning)" : "var(--text-2)",
-                        fontSize: 13, fontWeight: 500,
+                        color: active ? (link === "Offers" ? "var(--warning)" : "#0062FF") : (link === "Offers" ? "var(--warning)" : "var(--text-2)"),
+                        fontSize: 13, fontWeight: active ? 700 : 500,
                         display: "flex", alignItems: "center", gap: 6, padding: "14px 0",
                         transition: "color 0.2s"
                       }}
-                      onMouseEnter={(e) => { if (link !== "Offers") e.currentTarget.style.color = "#0062FF"; }}
-                      onMouseLeave={(e) => { if (link !== "Offers") e.currentTarget.style.color = "var(--text-2)"; }}
                     >
                       {link}
                       {link === "Laptops" && <ChevronDown size={14} />}
@@ -249,6 +273,8 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                         }}>NEW</span>
                       )}
                     </button>
+                      );
+                    })()}
 
                     {/* Dropdown for Laptops */}
                     {link === "Laptops" && (
@@ -278,7 +304,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
               <div className="nav-phone" style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <Phone size={20} color="var(--text-2)" />
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.2 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)" }}>+91 80560 12345</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-2)" }}>+91 97503 31313</span>
                   <span style={{ fontSize: 10, fontWeight: 500, color: "var(--text-2)" }}>Mon-Sat 10AM-7PM</span>
                 </div>
               </div>
@@ -293,15 +319,22 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
             maxHeight: "calc(100vh - 120px)", overflowY: "auto"
           }}>
             {navLinks.map((link) => (
+              (() => {
+                const active = isLinkActive(link);
+                return (
               <button
                 key={link}
                 onClick={() => handleNavClick(link)}
+                aria-current={active ? "page" : undefined}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   width: "100%", textAlign: "left", background: "transparent", border: "none",
-                  color: link === "Offers" ? "var(--warning)" : "var(--text-2)",
+                  color: active ? (link === "Offers" ? "var(--warning)" : "#0062FF") : (link === "Offers" ? "var(--warning)" : "var(--text-2)"),
                   padding: "16px 0", cursor: "pointer",
-                  fontSize: 14, fontWeight: 600, borderBottom: "1px solid var(--border)",
+                  fontSize: 14, fontWeight: active ? 700 : 600, borderBottom: "1px solid var(--border)",
+                  borderLeft: active ? "3px solid #0062FF" : "3px solid transparent",
+                  paddingLeft: active ? 10 : 0,
+                  transition: "color 0.2s, border-color 0.2s, padding-left 0.2s",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -312,16 +345,18 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                 </div>
                 {link === "Laptops" && <ChevronDown size={18} />}
               </button>
+                );
+              })()
             ))}
 
             <div style={{ padding: "20px 0", borderBottom: "1px solid var(--border)", display: "flex", gap: 16 }}>
               <IconBtn onClick={() => go("profile")} label="Profile">
                 <User size={20} color="var(--text-2)" />
               </IconBtn>
-              <IconBtn onClick={() => go("compare")} count={0} label="Compare">
+              <IconBtn onClick={() => go("compare")} label="Compare">
                 <Scale size={20} color="var(--text-2)" />
               </IconBtn>
-              <IconBtn onClick={() => go("profile")} label="Track Order">
+              <IconBtn onClick={() => go("profile-orders")} label="Track Order">
                 <Truck size={20} color="var(--text-2)" />
               </IconBtn>
             </div>
@@ -332,7 +367,7 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
                   <Phone size={20} color="var(--text-2)" />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.3 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-2)" }}>+91 80560 12345</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-2)" }}>+91 97503 31313</span>
                   <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-2)" }}>Mon-Sat 10AM-7PM</span>
                 </div>
               </div>
@@ -343,6 +378,34 @@ export default function Navbar({ setPage, cart, wishlist, user, onSearch, search
         <style>{`
           .nav-dropdown-wrapper:hover .nav-dropdown {
             display: flex !important;
+          }
+          .nav-link-btn {
+            position: relative;
+          }
+          .nav-link-btn::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 6px;
+            height: 2px;
+            border-radius: 2px;
+            background: #0062FF;
+            transform: scaleX(0);
+            transform-origin: left center;
+            transition: transform 0.22s ease;
+          }
+          .nav-link-btn:hover {
+            color: #0062FF !important;
+          }
+          .nav-link-btn:hover::after,
+          .nav-link-btn.is-active::after {
+            transform: scaleX(1);
+          }
+          .nav-link-btn:focus-visible {
+            outline: 2px solid #0062FF;
+            outline-offset: 4px;
+            border-radius: 4px;
           }
           @media (max-width: 1280px) {
             .nav-btn-label {

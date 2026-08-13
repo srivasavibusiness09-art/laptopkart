@@ -126,7 +126,7 @@ export default function StudentHubPage({ setPage, user, initialSection }: Studen
     );
   }
 
-  const gwTitle = giveaway.prizeTitle || "Next Giveaway Coming Soon";
+  const gwTitle = giveaway.prizeTitle || "Next contest will be coming soon.";
   const gwImage = giveaway.prizeImage || "";
   const myEmail = user?.email?.toLowerCase() || "";
   const myRank = leaderboard.findIndex((e) => e.email === myEmail);

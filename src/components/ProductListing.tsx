@@ -61,6 +61,8 @@ export default function ProductListing({
     setVisibleCount(20);
   }, [filters, search, sort, initialCategory]);
 
+
+
   const setFilter = (k: FilterKey, v: string) =>
     setFilters((f) => ({ ...f, [k]: f[k] === v ? "" : v }));
 
@@ -376,54 +378,58 @@ export default function ProductListing({
         </div>
       </div>
 
-      {/* Mobile filter drawer */}
+      {/* Mobile filter Full-Screen Overlay */}
       {isMobile && drawerOpen && (
-        <>
-          <div
-            onClick={() => setDrawerOpen(false)}
-            style={{
-              position: "fixed", inset: 0, background: "var(--bg-overlay)",
-              backdropFilter: "blur(6px)", zIndex: 99,
-            }}
-          />
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0,
+          height: "100dvh",
+          background: "var(--bg)", zIndex: 99999,
+          display: "flex", flexDirection: "column",
+          animation: "fadeUp 0.3s ease forwards"
+        }}>
+          {/* Header */}
           <div style={{
-            position: "fixed", bottom: 0, left: 0, right: 0,
-            background: "var(--bg-2)", borderTopLeftRadius: 24, borderTopRightRadius: 24,
-            border: "1px solid var(--border)", zIndex: 100,
-            padding: "24px 18px 40px",
-            maxHeight: "85vh", overflowY: "auto",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: "calc(16px + env(safe-area-inset-top, 0px)) 20px 16px",
+            borderBottom: "1px solid var(--border)",
+            background: "var(--bg)",
           }}>
-            <div style={{
-              display: "flex", justifyContent: "space-between",
-              alignItems: "center", marginBottom: 24,
+            <button onClick={() => setDrawerOpen(false)} style={{
+              background: "transparent", border: "none", color: "var(--text-2)", padding: 4, cursor: "pointer", display: "flex", alignItems: "center"
             }}>
-              <div style={{ color: "var(--text)", fontWeight: 800, fontSize: 18, fontFamily: "'Sora', sans-serif" }}>
-                Filters
-              </div>
-              <button onClick={() => setDrawerOpen(false)} style={{
-                background: "var(--bg-1)", border: "1px solid var(--border)",
-                borderRadius: 10, width: 36, height: 36,
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                color: "var(--text-2)",
-              }}>
-                <X size={16} />
-              </button>
+              <X size={24} />
+            </button>
+            <div style={{ color: "var(--text)", fontWeight: 800, fontSize: 18, fontFamily: "'Sora', sans-serif" }}>
+              Filters
             </div>
+            <button onClick={clearAll} style={{
+              background: "transparent", border: "none", color: "var(--error)", padding: 4, cursor: "pointer", fontSize: 14, fontWeight: 700
+            }}>
+              Clear
+            </button>
+          </div>
+
+          {/* Scrollable Body */}
+          <div style={{
+            flex: 1, overflowY: "auto", padding: "24px 20px 40px", WebkitOverflowScrolling: "touch",
+          }}>
             <FilterPanel />
+            
             <button
               onClick={() => setDrawerOpen(false)}
               style={{
-                width: "100%", marginTop: 28,
+                width: "100%", marginTop: 32,
                 background: "#0062FF", color: "var(--text-inverse)",
                 border: "none", borderRadius: 14,
                 padding: "16px", fontWeight: 800, fontSize: 16,
                 cursor: "pointer", fontFamily: "'Sora', sans-serif",
+                boxShadow: "0 8px 20px rgba(0,98,255,0.25)"
               }}
             >
               Show {filtered.length} Results
             </button>
           </div>
-        </>
+        </div>
       )}
     </main>
   );

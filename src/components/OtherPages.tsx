@@ -72,7 +72,7 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
             <thead>
               <tr>
-                <th style={{ padding: "16px 20px", background: COLORS.cardBg, color: COLORS.muted, textAlign: "left", fontSize: 14, border: `1px solid ${COLORS.cardBorder}` }}>Feature</th>
+                <th style={{ padding: "16px 20px", background: COLORS.cardBg, color: COLORS.muted, textAlign: "left", fontSize: 14, border: `1px solid ${COLORS.cardBorder}`, verticalAlign: "bottom" }}>Feature</th>
                 {selected.map((p, index) => (
                   <th key={index} style={{ padding: "20px", background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, minWidth: 200, verticalAlign: "top" }}>
                     <div style={{ width: 120, height: 120, margin: "0 auto 12px", background: COLORS.background, borderRadius: 12, overflow: "hidden" }}>
@@ -86,7 +86,7 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
                       onChange={val => {
                         setSelectedIds(s => s.map((id, idx) => idx === index ? val : id));
                       }}
-                      style={{ marginTop: 8, width: "100%" }}
+                      style={{ marginTop: 8, width: "100%", textAlign: "left", fontWeight: "normal" }}
                     />
 
                     {/* No Live comparison widget */}
@@ -97,13 +97,13 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
             <tbody>
               {specs.map((spec, i) => (
                 <tr key={spec} style={{ background: i % 2 === 0 ? "transparent" : "var(--bg-1)" }}>
-                  <td style={{ padding: "14px 20px", color: COLORS.muted, fontSize: 14, fontWeight: 600, border: `1px solid ${COLORS.cardBorder}` }}>{labels[spec]}</td>
+                  <td style={{ padding: "14px 20px", color: COLORS.muted, fontSize: 14, fontWeight: 600, border: `1px solid ${COLORS.cardBorder}`, verticalAlign: "middle" }}>{labels[spec]}</td>
                   {selected.map((p, index) => {
                     const rawVal = p[spec as keyof typeof p] as string | number;
                     const val = spec === "price" || spec === "mrp" ? `₹${(rawVal as number).toLocaleString('en-IN')}` : spec === "discount" ? `${rawVal}%` : spec === "rating" ? `★ ${rawVal}` : rawVal;
                     const best = spec === "price" ? Math.min(...selected.map(s => s.price)) === p.price : spec === "rating" ? Math.max(...selected.map(s => s.rating)) === p.rating : spec === "discount" ? Math.max(...selected.map(s => s.discount)) === p.discount : false;
                     return (
-                      <td key={index} style={{ padding: "14px 20px", textAlign: "center", color: best ? COLORS.green : COLORS.text, fontWeight: best ? 800 : 500, fontSize: 14, border: `1px solid ${COLORS.cardBorder}`, background: best ? "rgba(59,130,246,0.12)" : "transparent" }}>
+                      <td key={index} style={{ padding: "14px 20px", textAlign: "center", verticalAlign: "middle", color: best ? COLORS.green : COLORS.text, fontWeight: best ? 800 : 500, fontSize: 14, border: `1px solid ${COLORS.cardBorder}`, background: best ? "rgba(59,130,246,0.12)" : "transparent" }}>
                         {val}{best && <span style={{ display: "block", fontSize: 10, color: COLORS.green }}>Best Value</span>}
                       </td>
                     );
@@ -204,7 +204,8 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
                         color: best ? COLORS.green : COLORS.text,
                         fontWeight: best ? 700 : 500,
                         fontSize: 13,
-                        boxSizing: "border-box"
+                        boxSizing: "border-box",
+                        display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"
                       }}>
                         <div>{val}</div>
                         {best && <span style={{ fontSize: 9, color: COLORS.green, fontWeight: 700, display: "block", marginTop: 2 }}>Best Option</span>}

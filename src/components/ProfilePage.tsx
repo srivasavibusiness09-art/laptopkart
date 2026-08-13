@@ -26,6 +26,7 @@ interface Props {
   setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>;
   setPage: (p: string) => void;
   triggerAlert: (type: "success" | "warning" | "error", msg: string) => void;
+  initialTab?: Tab;
 }
 
 interface AddressDetails {
@@ -85,9 +86,9 @@ type Tab = "overview" | "address" | "orders" | "hub";
 const CLOUDINARY_CLOUD = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "gdinjtg4";
 const CLOUDINARY_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "cqy73qnu";
 
-export default function ProfilePage({ user, setUser, setPage, triggerAlert }: Props) {
+export default function ProfilePage({ user, setUser, setPage, triggerAlert, initialTab = "overview" }: Props) {
   const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
   // Address state
   const [addressDetails, setAddressDetails] = useState<AddressDetails>({
