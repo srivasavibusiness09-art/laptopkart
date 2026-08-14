@@ -3,6 +3,19 @@ import "@/styles/globals.css";
 import { MotionConfig } from "framer-motion";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Script from "next/script";
+import { Sora, Inter } from "next/font/google";
+
+const sora = Sora({ 
+  subsets: ["latin"],
+  variable: "--font-sora",
+  display: "swap",
+});
+
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Laptopkart — Refurbished Laptops at Best Prices | 1 Year Warranty",
@@ -40,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${sora.variable} ${inter.variable}`}>
       <body>
         <Script 
           src="https://sdk.cashfree.com/js/v3/cashfree.js"
