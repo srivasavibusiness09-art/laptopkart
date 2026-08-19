@@ -127,6 +127,11 @@ export default function StudentHubBanner({ setPage }: StudentHubBannerProps) {
                   <h3 style={{ fontFamily: "'Sora', sans-serif", color: "#111827", fontSize: isMobile ? 28 : 34, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.1, textTransform: "uppercase" }}>
                     {gwTitle}
                   </h3>
+                  {giveaway.topic && (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(79, 70, 229, 0.1)', border: '1px solid rgba(79, 70, 229, 0.2)', padding: '6px 12px', borderRadius: 20, color: '#4F46E5', fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
+                      Topic: {giveaway.topic}
+                    </div>
+                  )}
                   <p style={{ color: "#4B5563", fontSize: 14, fontWeight: 600, margin: "0 0 24px" }}>Write. Submit. Win.</p>
                   
                   {/* Timer */}
@@ -198,13 +203,17 @@ export default function StudentHubBanner({ setPage }: StudentHubBannerProps) {
                   <p style={{ color: "#6B7280", fontSize: 12, margin: "0 0 24px", fontWeight: 600 }}>{lastWinner.city}</p>
 
                   <div style={{ flex: 1 }}>
-                    <p style={{ color: "#111827", fontSize: 16, fontWeight: 700, margin: "0 0 24px", fontStyle: "italic", lineHeight: 1.5 }}>
+                    <p 
+                      onClick={() => lastWinner.blogId ? setPage(`blog-detail-${lastWinner.blogId}`) : setPage("blog")}
+                      title="Read Winning Blog"
+                      style={{ color: "#111827", fontSize: 16, fontWeight: 700, margin: "0 0 24px", fontStyle: "italic", lineHeight: 1.5, cursor: "pointer", textDecoration: "underline", textDecorationColor: "rgba(79, 70, 229, 0.4)" }}
+                    >
                       "{lastWinner.blogTitle}"
                     </p>
                   </div>
 
                   <button
-                    onClick={() => setPage("blog")}
+                    onClick={() => lastWinner.blogId ? setPage(`blog-detail-${lastWinner.blogId}`) : setPage("blog")}
                     style={{ background: "transparent", color: "#4F46E5", border: "none", fontSize: 13, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, padding: "10px 0" }}
                   >
                     Read winning article <ArrowRight size={14} />

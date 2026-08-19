@@ -15,6 +15,7 @@ interface StudentHubPageProps {
   setPage: (p: string) => void;
   user: any;
   initialSection?: string | null;
+  autoSelectTopic?: string | null;
 }
 
 interface LeaderboardEntry {
@@ -25,7 +26,7 @@ interface LeaderboardEntry {
   photo?: string;
 }
 
-export default function StudentHubPage({ setPage, user, initialSection }: StudentHubPageProps) {
+export default function StudentHubPage({ setPage, user, initialSection, autoSelectTopic }: StudentHubPageProps) {
   const isMobile = useIsMobile();
   const [giveaway, setGiveaway] = useState<any>({});
   const [lastWinner, setLastWinner] = useState<any>({});
@@ -33,6 +34,7 @@ export default function StudentHubPage({ setPage, user, initialSection }: Studen
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
   /* ── Live countdown ── */
   useEffect(() => {
@@ -117,6 +119,12 @@ export default function StudentHubPage({ setPage, user, initialSection }: Studen
     }, 450);
     return () => clearTimeout(t);
   }, [initialSection, loading]);
+
+  useEffect(() => {
+    if (autoSelectTopic === "giveaway" && giveaway.topic) {
+      setSelectedTopic(giveaway.topic);
+    }
+  }, [autoSelectTopic, giveaway.topic]);
 
   if (loading) {
     return (
@@ -206,6 +214,11 @@ export default function StudentHubPage({ setPage, user, initialSection }: Studen
                 <h3 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: isMobile ? 26 : 34, fontWeight: 800, margin: "0 0 10px", lineHeight: 1.15 }}>
                   {gwTitle}
                 </h3>
+                {giveaway.topic && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', padding: '6px 12px', borderRadius: 20, color: '#38BDF8', fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
+                    Topic: {giveaway.topic}
+                  </div>
+                )}
                 <p style={{ color: COLORS.muted, fontSize: 14, fontWeight: 500, margin: "0 0 24px" }}>
                   Publish one quality tech article, earn reads, and the top contributor takes it home.
                 </p>
@@ -317,55 +330,88 @@ export default function StudentHubPage({ setPage, user, initialSection }: Studen
         {/* ── Past Winners ── */}
         <Reveal delay={0.05}>
           <div style={{ marginTop: isMobile ? 56 : 72 }}>
-            {sectionTitle("past-winners", <Crown size={22} color="#0062FF" />, "Past Winners", "Celebrating our recent contest champions")}
+            {sectionTitle("past-winners", <Crown size={22} color="#F59E0B" />, "Hall of Fame", "Celebrating our recent contest champions")}
             <div style={{
               display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "1fr 1.4fr",
-              gap: 24,
-              background: COLORS.cardBg,
-              border: "1px solid var(--border)",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1.8fr",
+              background: "linear-gradient(135deg, rgba(0, 98, 255, 0.05) 0%, rgba(56, 189, 248, 0.05) 100%)",
+              border: "1px solid rgba(0, 98, 255, 0.15)",
               borderRadius: 24,
-              padding: isMobile ? 24 : 32,
+              padding: isMobile ? "32px 24px" : "40px",
               alignItems: "center",
+              gap: isMobile ? 32 : 48,
+              position: "relative",
+              overflow: "hidden",
+              boxShadow: "0 12px 32px rgba(0, 0, 0, 0.05)",
             }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-                <div style={{ position: "relative", marginBottom: 16 }}>
-                  <div style={{ width: 110, height: 110, borderRadius: "50%", background: "linear-gradient(135deg, #0062FF, #38BDF8)", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {/* Decorative Background Elements */}
+              <div style={{ position: "absolute", top: -50, right: -50, width: 200, height: 200, background: "rgba(56, 189, 248, 0.1)", filter: "blur(50px)", borderRadius: "50%" }} />
+              <div style={{ position: "absolute", bottom: -50, left: -50, width: 200, height: 200, background: "rgba(0, 98, 255, 0.1)", filter: "blur(50px)", borderRadius: "50%" }} />
+
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", position: "relative", zIndex: 1 }}>
+                <div style={{ position: "relative", marginBottom: 20 }}>
+                  <div style={{ width: 130, height: 130, borderRadius: "50%", background: "linear-gradient(135deg, #0062FF, #38BDF8)", padding: 4, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 24px rgba(0,98,255,0.4)" }}>
                     {lastWinner.photo ? (
                       <img src={lastWinner.photo} alt="Winner" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", border: "4px solid var(--bg-1)" }} />
                     ) : (
                       <div style={{ width: "100%", height: "100%", borderRadius: "50%", border: "4px solid var(--bg-1)", background: "var(--bg-1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ fontSize: 36, fontWeight: 800, color: "#38BDF8" }}>{(lastWinner.name || "U").substring(0, 1)}</span>
+                        <span style={{ fontSize: 42, fontWeight: 800, color: "#38BDF8" }}>{(lastWinner.name ? lastWinner.name.substring(0, 1).toUpperCase() : "?")}</span>
                       </div>
                     )}
                   </div>
-                  <div style={{ position: "absolute", bottom: -6, right: -6, background: "#F59E0B", color: "#fff", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid var(--bg-1)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                    <Trophy size={17} />
+                  <div style={{ position: "absolute", bottom: -8, right: -8, background: "linear-gradient(135deg, #F59E0B, #D97706)", color: "#fff", width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "4px solid var(--bg-1)", boxShadow: "0 4px 12px rgba(245, 158, 11, 0.4)" }}>
+                    <Crown size={22} color="#fff" />
                   </div>
                 </div>
-                <h4 style={{ fontFamily: "'Sora', sans-serif", fontSize: 20, fontWeight: 800, color: COLORS.text, margin: "0 0 4px" }}>
-                  {lastWinner.name || "Rahul Verma"}
+                <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#F59E0B", fontSize: 10, fontWeight: 800, padding: "4px 12px", borderRadius: 100, textTransform: "uppercase", marginBottom: 12, letterSpacing: "1px" }}>
+                  Latest Winner
+                </span>
+                <h4 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 800, color: COLORS.text, margin: "0 0 6px" }}>
+                  {lastWinner.name || "To be announced"}
                 </h4>
-                <p style={{ color: COLORS.muted, fontSize: 12, margin: 0, fontWeight: 600 }}>
-                  {lastWinner.city || "VIT, Chennai"} · Last Week&apos;s Winner
+                <p style={{ color: COLORS.muted, fontSize: 13, margin: 0, fontWeight: 600 }}>
+                  {lastWinner.city || "Stay tuned"}
                 </p>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <p style={{ color: COLORS.text, fontSize: 18, fontWeight: 700, margin: 0, fontStyle: "italic", lineHeight: 1.5 }}>
-                  &ldquo;{lastWinner.blogTitle || "10 AI Tools That Changed My College Life"}&rdquo;
-                </p>
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <button
-                    onClick={() => setPage("blog")}
-                    style={{ background: "#0062FF", color: "#fff", border: "none", borderRadius: 10, padding: "11px 22px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "'Sora', sans-serif" }}
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 24, position: "relative", zIndex: 1 }}>
+                <div style={{
+                  background: "var(--bg-1)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 20,
+                  padding: "24px 32px",
+                  position: "relative",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.02)"
+                }}>
+                  <div style={{ position: "absolute", top: -16, left: 24, background: "var(--bg-1)", padding: "0 8px", color: "rgba(0,98,255,0.4)" }}>
+                    <span style={{ fontSize: 48, fontFamily: "serif", lineHeight: 0.5 }}>&ldquo;</span>
+                  </div>
+                  <p
+                    onClick={() => lastWinner.blogId ? setPage(`blog-detail-${lastWinner.blogId}`) : setPage("blog")}
+                    title="Read Winning Blog"
+                    style={{ color: COLORS.text, fontSize: 20, fontWeight: 700, margin: 0, fontStyle: "italic", lineHeight: 1.5, cursor: "pointer", transition: "color 0.2s" }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = "#0062FF"}
+                    onMouseLeave={(e) => e.currentTarget.style.color = COLORS.text}
                   >
-                    READ WINNING ARTICLE <ArrowRight size={14} />
+                    {lastWinner.blogTitle || "Publish your blog to be featured here!"}
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                  <button
+                    onClick={() => lastWinner.blogId ? setPage(`blog-detail-${lastWinner.blogId}`) : setPage("blog")}
+                    style={{ background: "#0062FF", color: "#fff", border: "none", borderRadius: 12, padding: "14px 28px", fontSize: 13, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "'Sora', sans-serif", transition: "all 0.2s", boxShadow: "0 8px 20px rgba(0,98,255,0.3)" }}
+                    onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+                    onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+                  >
+                    READ ARTICLE <ArrowRight size={16} />
                   </button>
                   <button
                     onClick={() => setPage("write-blog")}
-                    style={{ background: "transparent", color: "#38BDF8", border: "1px solid rgba(0,98,255,0.3)", borderRadius: 10, padding: "11px 22px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "'Sora', sans-serif" }}
+                    style={{ background: "rgba(0,98,255,0.1)", color: "#0062FF", border: "1px solid rgba(0,98,255,0.2)", borderRadius: 12, padding: "14px 28px", fontSize: 13, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "'Sora', sans-serif", transition: "all 0.2s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,98,255,0.15)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,98,255,0.1)"; e.currentTarget.style.transform = "translateY(0)"; }}
                   >
-                    <PenLine size={14} /> BE THE NEXT
+                    <PenLine size={16} /> ENTER CONTEST
                   </button>
                 </div>
               </div>
@@ -406,7 +452,8 @@ export default function StudentHubPage({ setPage, user, initialSection }: Studen
             <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 10, background: "rgba(0,98,255,0.08)", border: "1px solid rgba(0,98,255,0.25)", borderRadius: 16, padding: "16px 20px" }}>
               <CheckCircle2 size={18} color="#38BDF8" style={{ flexShrink: 0 }} />
               <p style={{ color: COLORS.muted, fontSize: 13, margin: 0 }}>
-                Guidelines: Original content only · Min. 400 words · No AI-generated filler · Keep it helpful & plagiarism-free.
+                Guidelines: Original content only · Min. 400 words · No AI-generated filler · Keep it helpful & plagiarism-free. <br />
+                <strong>Judging Criteria:</strong> The winner blog is chosen by both read views and an admin review for creativity.
               </p>
             </div>
           </div>
@@ -418,25 +465,34 @@ export default function StudentHubPage({ setPage, user, initialSection }: Studen
             {sectionTitle("entries", <BookOpen size={22} color="#0062FF" />, "Recent Contest Entries", "Fresh articles from our student community")}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(320px, 1fr))", gap: 20 }}>
               {entries.length > 0 ? (
-                entries.slice(0, 6).map((post, idx) => (
-                  <div key={post.id || idx} style={{ background: COLORS.cardBg, border: "1px solid var(--border)", borderRadius: 18, overflow: "hidden", cursor: "pointer", transition: "all 0.25s" }}
-                    onClick={() => setPage(`blog-${post.id || idx}`)}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,98,255,0.5)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "none"; }}
-                  >
-                    <div style={{ backgroundImage: `url(${post.coverUrl || "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80"})`, backgroundSize: "cover", backgroundPosition: "center", height: 140, width: "100%" }} />
-                    <div style={{ padding: 18 }}>
-                      <span style={{ background: "rgba(0,98,255,0.12)", color: "#38BDF8", border: "1px solid rgba(0,98,255,0.25)", fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 100, textTransform: "uppercase" }}>{post.cat || post.category || "Tech"}</span>
-                      <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 15, lineHeight: 1.45, margin: "10px 0 10px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.title || "Untitled"}</h3>
-                      <div style={{ color: COLORS.muted, fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          <TrendingUp size={11} /> {(post.reads || 0).toLocaleString("en-IN")} reads
-                        </span>
-                        <span style={{ color: "#38BDF8", fontWeight: 700 }}>By {post.authorName || post.author || "Student"}</span>
+                <>
+                  {entries.slice(0, 3).map((post, idx) => (
+                    <div key={post.id || idx} style={{ background: COLORS.cardBg, border: "1px solid var(--border)", borderRadius: 18, overflow: "hidden", cursor: "pointer", transition: "all 0.25s" }}
+                      onClick={() => setPage(`blog-${post.id || idx}`)}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,98,255,0.5)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "none"; }}
+                    >
+                      <div style={{ backgroundImage: `url(${post.coverUrl || "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80"})`, backgroundSize: "cover", backgroundPosition: "center", height: 140, width: "100%" }} />
+                      <div style={{ padding: 18 }}>
+                        <span style={{ background: "rgba(0,98,255,0.12)", color: "#38BDF8", border: "1px solid rgba(0,98,255,0.25)", fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 100, textTransform: "uppercase" }}>{post.cat || post.category || "Tech"}</span>
+                        <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 15, lineHeight: 1.45, margin: "10px 0 10px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.title || "Untitled"}</h3>
+                        <div style={{ color: COLORS.muted, fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                          <span style={{ display: "flex", alignItems: "center", gap: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            <TrendingUp size={11} /> {(post.reads || 0).toLocaleString("en-IN")} reads
+                          </span>
+                          <span style={{ color: "#38BDF8", fontWeight: 700 }}>By {post.authorName || post.author || "Student"}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                  {entries.length > 3 && (
+                    <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "center", marginTop: 12 }}>
+                      <button onClick={() => setPage("blog")} style={{ background: "rgba(0,98,255,0.1)", color: "#0062FF", border: "1px solid rgba(0,98,255,0.2)", borderRadius: 12, padding: "14px 32px", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Sora', sans-serif", display: "flex", alignItems: "center", gap: 8, transition: "all 0.2s" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,98,255,0.15)"; e.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,98,255,0.1)"; e.currentTarget.style.transform = "translateY(0)"; }}>
+                        READ MORE BLOGS <ArrowRight size={16} />
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 0", color: COLORS.muted, background: COLORS.cardBg, borderRadius: 20, border: "1px solid var(--border)" }}>
                   <BookOpen size={36} color={COLORS.muted} style={{ marginBottom: 12, opacity: 0.4 }} />
@@ -465,7 +521,7 @@ export default function StudentHubPage({ setPage, user, initialSection }: Studen
               <GraduationCap size={220} color="#fff" />
             </div>
             <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 24 : 32, fontWeight: 800, color: "#fff", margin: "0 0 10px", letterSpacing: "-0.01em" }}>
-              Ready to win {gwTitle}?
+              Ready to {gwTitle}?
             </h2>
             <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 14, margin: "0 auto 28px", maxWidth: 460 }}>
               Your next article could make you this week&apos;s champion. Write once, win weekly.

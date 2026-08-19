@@ -5,6 +5,7 @@ import { db, auth } from "./lib/firebase";
 import { uploadProductImage, uploadVideoToCloudinary } from "./lib/storage";
 import { deleteCloudinaryAssets } from "./lib/cloudinaryDelete";
 import AdminLogin from "./components/AdminLogin";
+import CollegesTab from "./components/CollegesTab";
 import {
   LayoutDashboard,
   Laptop,
@@ -46,7 +47,8 @@ import {
   Layers,
   Award,
   ChevronRight,
-  Calendar
+  Calendar,
+  Target
 } from 'lucide-react';
 
 // compressImage removed (using storage.ts module)
@@ -230,7 +232,7 @@ export const DEFAULT_BANNERS: Banner[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'hero_posters' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests' | 'coupons' | 'product_requests' | 'student_hub' | 'users'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'hero_posters' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests' | 'coupons' | 'product_requests' | 'student_hub' | 'users' | 'colleges'>('overview');
   const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed' | 'unpaid'>('active');
   const [ordersPage, setOrdersPage] = useState(0);
 
@@ -254,6 +256,14 @@ export default function App() {
       if (!user) {
         setAdmin(null);
         setAuthChecked(true);
+        return;
+      }
+
+      // Automatically expire session after 24 hours
+      const lastSignInTime = new Date(user.metadata.lastSignInTime || '').getTime();
+      const currentTime = new Date().getTime();
+      if (currentTime - lastSignInTime > 24 * 60 * 60 * 1000) {
+        await signOut(auth);
         return;
       }
       try {
@@ -283,8 +293,7 @@ export default function App() {
   const [subscribers, setSubscribers] = useState<any[]>([]);
 
   // Student Hub state
-  const [giveawayConfig, setGiveawayConfig] = useState<{ prizeTitle: string, prizeImage: string, deadline: string, prizeImagePublicId?: string }>({ prizeTitle: '', prizeImage: '', deadline: '' });
-  const [winnerForm, setWinnerForm] = useState({ name: '', city: '', blogTitle: '', photo: '' });
+  const [giveawayConfig, setGiveawayConfig] = useState<{ prizeTitle: string, prizeImage: string, startTime: string, deadline: string, topic: string, prizeImagePublicId?: string }>({ prizeTitle: '', prizeImage: '', startTime: '', deadline: '', topic: '' });
   const [lastWinnerData, setLastWinnerData] = useState<any>(null);
   const [hubSaving, setHubSaving] = useState(false);
   const [hubImageUploading, setHubImageUploading] = useState(false);
@@ -303,6 +312,7 @@ export default function App() {
   const [stockFilter, setStockFilter] = useState<'all' | 'in' | 'low' | 'out'>('all');
   const [accessorySearch, setAccessorySearch] = useState('');
   const [blogSearch, setBlogSearch] = useState('');
+  const [blogContestFilter, setBlogContestFilter] = useState(false);
 
   // Alerts
   const [alertMsg, setAlertMsg] = useState<{ type: 'success' | 'danger', text: string } | null>(null);
@@ -1523,6 +1533,36 @@ export default function App() {
     }
   };
 
+  const handleDeleteWinner = async () => {
+    if (!window.confirm("Are you sure you want to remove the currently announced winner?")) return;
+    try {
+      await deleteDoc(doc(db, 'giveaway', 'lastWinner'));
+      setLastWinnerData(null);
+      triggerAlert('success', 'Winner removed successfully.');
+    } catch (err) {
+      console.error("Error removing winner:", err);
+      triggerAlert('danger', 'Failed to remove winner.');
+    }
+  };
+
+  const handleMakeWinner = async (blog: any) => {
+    if (!window.confirm(`Make ${blog.author || blog.authorName || 'User'} the winner for this week's contest?`)) return;
+    try {
+      await setDoc(doc(db, 'giveaway', 'lastWinner'), {
+        blogId: blog.id,
+        name: blog.authorName || blog.author || (blog.authorEmail ? blog.authorEmail.split('@')[0] : 'Unknown'),
+        city: blog.collegeId || 'Student',
+        blogTitle: blog.title,
+        photo: blog.authorPhoto || '',
+        announcedAt: new Date().toISOString()
+      });
+      triggerAlert('success', 'Winner announced and saved to Firestore!');
+    } catch (err) {
+      console.error("Error setting winner:", err);
+      triggerAlert('danger', 'Failed to announce winner.');
+    }
+  };
+
   // Filter lists
   const filteredProducts = products.filter(p =>
     (p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
@@ -1535,12 +1575,18 @@ export default function App() {
     a.brand.toLowerCase().includes(accessorySearch.toLowerCase())
   );
 
-  const filteredBlogs = blogs.filter(b =>
-    (b.title || '').toLowerCase().includes(blogSearch.toLowerCase()) ||
-    (b.author || '').toLowerCase().includes(blogSearch.toLowerCase()) ||
-    (b.authorEmail || '').toLowerCase().includes(blogSearch.toLowerCase()) ||
-    (b.category || '').toLowerCase().includes(blogSearch.toLowerCase())
-  );
+  const filteredBlogs = blogs.filter(b => {
+    if (blogContestFilter) {
+      const isContest = b.isContestEntry === true || (b.category && b.category.includes("Weekly Contest")) || !!b.contestTopic;
+      if (!isContest) return false;
+    }
+    return (
+      (b.title || '').toLowerCase().includes(blogSearch.toLowerCase()) ||
+      (b.author || '').toLowerCase().includes(blogSearch.toLowerCase()) ||
+      (b.authorEmail || '').toLowerCase().includes(blogSearch.toLowerCase()) ||
+      (b.category || '').toLowerCase().includes(blogSearch.toLowerCase())
+    );
+  });
 
   // Newsletter Actions
   const handleSubscriberDelete = async (id: string) => {
@@ -1781,40 +1827,77 @@ export default function App() {
         {/* Navigation Tabs */}
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {[
-            { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> },
-            { id: 'products', label: 'Laptops & PCs', icon: <Laptop size={18} /> },
-            { id: 'accessories', label: 'Accessories', icon: <Keyboard size={18} /> },
-            { id: 'orders', label: 'Customer Orders', icon: <FileText size={18} /> },
-            { id: 'banners', label: 'Banners', icon: <ImageIcon size={18} /> },
-            { id: 'hero_posters', label: 'Hero Posters', icon: <ImageIcon size={18} /> },
-            { id: 'blogs', label: 'Tech Blogs', icon: <BookOpen size={18} /> },
-            { id: 'video', label: 'Promo Video', icon: <Video size={18} /> },
-            { id: 'subscribers', label: 'Newsletter', icon: <Mail size={18} /> },
-            { id: 'sell_requests', label: 'Sell Requests', icon: <RefreshCw size={18} /> },
-            { id: 'coupons', label: 'Coupons', icon: <Tag size={18} /> },
-            { id: 'product_requests', label: 'Product Requests', icon: <ClipboardList size={18} /> },
-            { id: 'student_hub', label: 'Student Hub', icon: <Sparkles size={18} /> },
-            { id: 'users', label: 'Users', icon: <User size={18} /> },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id as any);
-                if (isMobile) setIsSidebarOpen(false);
-              }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                background: activeTab === tab.id ? 'rgba(56, 189, 248, 0.08)' : 'transparent',
-                color: activeTab === tab.id ? '#38BDF8' : '#8B9BBE',
-                border: activeTab === tab.id ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid transparent',
-                borderRadius: 12, padding: '12px 16px', fontSize: 14, fontWeight: 600,
-                cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
-                fontFamily: 'Outfit'
-              }}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
+            { group: 'Main Dashboard', items: [
+              { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> }
+            ]},
+            { group: 'Sales & Requests', items: [
+              { id: 'orders', label: 'Customer Orders', icon: <FileText size={18} />, count: orders.filter(ord => !['Completed', 'Cancelled', 'Pending Payment', 'Failed'].includes(ord.status || 'Pending')).length },
+              { id: 'sell_requests', label: 'Sell Requests', icon: <RefreshCw size={18} />, count: sellRequests.filter(r => (r.status || 'Pending Review') === 'Pending Review').length },
+              { id: 'product_requests', label: 'Product Requests', icon: <ClipboardList size={18} />, count: productRequests.filter(req => req.status === 'Pending').length },
+            ]},
+            { group: 'Catalog Management', items: [
+              { id: 'products', label: 'Laptops & PCs', icon: <Laptop size={18} /> },
+              { id: 'accessories', label: 'Accessories', icon: <Keyboard size={18} /> },
+            ]},
+            { group: 'Marketing & Storefront', items: [
+              { id: 'banners', label: 'Banners', icon: <ImageIcon size={18} /> },
+              { id: 'hero_posters', label: 'Hero Posters', icon: <ImageIcon size={18} /> },
+              { id: 'video', label: 'Promo Video', icon: <Video size={18} /> },
+              { id: 'coupons', label: 'Coupons', icon: <Tag size={18} /> },
+            ]},
+            { group: 'Content & Community', items: [
+              { id: 'student_hub', label: 'Student Hub', icon: <Sparkles size={18} /> },
+              { id: 'blogs', label: 'Tech Blogs', icon: <BookOpen size={18} /> },
+              { id: 'subscribers', label: 'Newsletter', icon: <Mail size={18} /> },
+              { id: 'colleges', label: 'College QRs', icon: <Target size={18} /> },
+            ]},
+            { group: 'Administration', items: [
+              { id: 'users', label: 'Users', icon: <User size={18} /> },
+            ]}
+          ].map(section => (
+            <div key={section.group} style={{ marginBottom: 12 }}>
+              <div style={{ color: '#8B9BBE', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, padding: '0 16px', marginBottom: 8, opacity: 0.6 }}>
+                {section.group}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {section.items.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id as any);
+                      if (isMobile) setIsSidebarOpen(false);
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between',
+                      background: activeTab === tab.id ? 'rgba(56, 189, 248, 0.08)' : 'transparent',
+                      color: activeTab === tab.id ? '#38BDF8' : '#8B9BBE',
+                      border: activeTab === tab.id ? '1px solid rgba(56, 189, 248, 0.2)' : '1px solid transparent',
+                      borderRadius: 12, padding: '10px 16px', fontSize: 14, fontWeight: 600,
+                      cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+                      fontFamily: 'Outfit'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {tab.icon}
+                      {tab.label}
+                    </div>
+                    {(tab as any).count > 0 && (
+                      <span style={{
+                        background: '#EF4444',
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 800,
+                        padding: '2px 6px',
+                        borderRadius: 100,
+                        boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)'
+                      }}>
+                        {(tab as any).count}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
@@ -3190,14 +3273,25 @@ export default function App() {
               </div>
             </div>
 
-            {/* Search Input */}
-            <div style={{ position: 'relative', marginBottom: 24, maxWidth: 400 }}>
-              <Search size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#8B9BBE' }} />
-              <input
-                type="text" placeholder="Search by title, category, or author..."
-                value={blogSearch} onChange={e => setBlogSearch(e.target.value)}
-                className="form-input" style={{ paddingLeft: 44 }}
-              />
+            {/* Search Input & Filter */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, maxWidth: 600 }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <Search size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#8B9BBE' }} />
+                <input
+                  type="text" placeholder="Search by title, category, or author..."
+                  value={blogSearch} onChange={e => setBlogSearch(e.target.value)}
+                  className="form-input" style={{ paddingLeft: 44 }}
+                />
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#8B9BBE', fontSize: 14, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={blogContestFilter}
+                  onChange={e => setBlogContestFilter(e.target.checked)}
+                  style={{ width: 16, height: 16, cursor: 'pointer' }}
+                />
+                Show Contest Entries Only
+              </label>
             </div>
 
             {/* Blogs List Grid Table */}
@@ -3208,6 +3302,7 @@ export default function App() {
                     <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Article</th>
                     <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Category</th>
                     <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Author</th>
+                    <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Views</th>
                     <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Review Status</th>
                     <th style={{ padding: '18px 24px', color: '#8B9BBE', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
                   </tr>
@@ -3222,7 +3317,7 @@ export default function App() {
                             <img src={b.coverUrl || 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80'} alt={b.title} style={{ width: 50, height: 35, borderRadius: 6, objectFit: 'cover' }} />
                             <div>
                               <div style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{b.title}</div>
-                              <div style={{ color: '#8B9BBE', fontSize: 11, marginTop: 2 }}>{b.readTime || '3 min read'} • {b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-IN') : 'N/A'}</div>
+                              <div style={{ color: '#8B9BBE', fontSize: 11, marginTop: 2 }}>{b.reads || 0} views • {b.readTime || '3 min read'} • {b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-IN') : 'N/A'}</div>
                             </div>
                           </div>
                         </td>
@@ -3234,6 +3329,11 @@ export default function App() {
                           {b.authorEmail && (
                             <div style={{ color: '#8B9BBE', fontSize: 11, fontWeight: 400, marginTop: 2 }}>{b.authorEmail}</div>
                           )}
+                        </td>
+                        <td style={{ padding: '18px 24px', color: '#fff', fontSize: 14, fontWeight: 700 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Eye size={14} color="#8B5CF6" /> {b.reads || 0}
+                          </div>
                         </td>
                         <td style={{ padding: '18px 24px' }}>
                           <button
@@ -3250,7 +3350,20 @@ export default function App() {
                           </button>
                         </td>
                         <td style={{ padding: '18px 24px', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
+                            {(b.isContestEntry === true || (b.category && b.category.includes("Weekly Contest")) || !!b.contestTopic) && (
+                              <button
+                                onClick={() => handleMakeWinner(b)}
+                                style={{
+                                  background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(56,189,248,0.1))', border: '1px solid rgba(139,92,246,0.3)',
+                                  color: '#38BDF8', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700,
+                                  cursor: 'pointer', fontFamily: 'Sora', display: 'flex', alignItems: 'center', gap: 4
+                                }}
+                                title="Set as Winner"
+                              >
+                                <Award size={8} /> Make Winner
+                              </button>
+                            )}
                             <button
                               onClick={() => setBlogReviewModal({ open: true, item: b })}
                               style={{
@@ -3261,7 +3374,7 @@ export default function App() {
                             >
                               Review
                             </button>
-                            <button onClick={() => handleBlogDelete(b.id)} style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer' }} title="Delete"><Trash2 size={16} /></button>
+                            <button onClick={() => handleBlogDelete(b.id)} style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', marginLeft: 4 }} title="Delete"><Trash2 size={16} /></button>
                           </div>
                         </td>
                       </tr>
@@ -4982,7 +5095,7 @@ export default function App() {
                 await deleteCloudinaryAssets([giveawayConfig.prizeImagePublicId]);
               }
               await deleteDoc(doc(db, 'giveaway', 'current'));
-              setGiveawayConfig({ prizeTitle: '', prizeImage: '', deadline: '' });
+              setGiveawayConfig({ prizeTitle: '', prizeImage: '', startTime: '', deadline: '', topic: '' });
               triggerAlert('success', 'Giveaway contest cleared!');
             } catch (err) {
               triggerAlert('danger', 'Failed to clear contest.');
@@ -5009,22 +5122,7 @@ export default function App() {
             }
           };
 
-          const handleAnnounceWinner = async () => {
-            if (!winnerForm.name.trim() || !winnerForm.blogTitle.trim()) return triggerAlert('danger', 'Winner name and blog title are required.');
-            setHubSaving(true);
-            try {
-              await setDoc(doc(db, 'giveaway', 'lastWinner'), {
-                ...winnerForm,
-                announcedAt: new Date().toISOString()
-              });
-              triggerAlert('success', 'Winner announced and saved to Firestore!');
-              setWinnerForm({ name: '', city: '', blogTitle: '', photo: '' });
-            } catch (err) {
-              triggerAlert('danger', 'Failed to announce winner.');
-            } finally {
-              setHubSaving(false);
-            }
-          };
+
 
           const contestBlogs = blogs.filter((b: any) => b.approved !== false);
 
@@ -5053,6 +5151,15 @@ export default function App() {
                         placeholder="e.g. Win a Bluetooth Neckband"
                         value={giveawayConfig.prizeTitle}
                         onChange={e => setGiveawayConfig(p => ({ ...p, prizeTitle: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Contest Topic</label>
+                      <input
+                        className="form-input"
+                        placeholder="e.g. AI in College"
+                        value={giveawayConfig.topic || ''}
+                        onChange={e => setGiveawayConfig(p => ({ ...p, topic: e.target.value }))}
                       />
                     </div>
                     <div>
@@ -5136,6 +5243,51 @@ export default function App() {
                       />
                     </div>
                     <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Contest Start Time</label>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        <div style={{ position: "relative" }}>
+                          <div style={{ position: "absolute", left: 14, top: 0, bottom: 0, display: "flex", alignItems: "center", pointerEvents: "none" }}>
+                            <Calendar size={16} color="#8B9BBE" />
+                          </div>
+                          <input
+                            type="date"
+                            value={giveawayConfig.startTime ? giveawayConfig.startTime.split("T")[0] : ""}
+                            onChange={(e) => {
+                              const date = e.target.value;
+                              const time = giveawayConfig.startTime && giveawayConfig.startTime.includes("T")
+                                ? giveawayConfig.startTime.split("T")[1]
+                                : "00:00";
+                              setGiveawayConfig(p => ({ ...p, startTime: `${date}T${time}` }));
+                            }}
+                            style={{
+                              width: "100%", background: "#0d1117", border: "1px solid #30363d", borderRadius: 8, padding: "12px 14px 12px 40px", color: "#e6edf3", outline: "none", fontSize: 13, colorScheme: "dark", boxSizing: "border-box", transition: "border-color 0.2s"
+                            }}
+                            onFocus={e => e.target.style.borderColor = "#38BDF8"}
+                            onBlur={e => e.target.style.borderColor = "#30363d"}
+                          />
+                        </div>
+                        <div style={{ position: "relative" }}>
+                          <div style={{ position: "absolute", left: 14, top: 0, bottom: 0, display: "flex", alignItems: "center", pointerEvents: "none" }}>
+                            <Clock size={16} color="#8B9BBE" />
+                          </div>
+                          <input
+                            type="time"
+                            value={giveawayConfig.startTime && giveawayConfig.startTime.includes("T") ? giveawayConfig.startTime.split("T")[1] : ""}
+                            onChange={(e) => {
+                              const time = e.target.value;
+                              const date = giveawayConfig.startTime ? giveawayConfig.startTime.split("T")[0] : new Date().toISOString().split("T")[0];
+                              setGiveawayConfig(p => ({ ...p, startTime: `${date}T${time}` }));
+                            }}
+                            style={{
+                              width: "100%", background: "#0d1117", border: "1px solid #30363d", borderRadius: 8, padding: "12px 14px 12px 40px", color: "#e6edf3", outline: "none", fontSize: 13, colorScheme: "dark", boxSizing: "border-box", transition: "border-color 0.2s"
+                            }}
+                            onFocus={e => e.target.style.borderColor = "#38BDF8"}
+                            onBlur={e => e.target.style.borderColor = "#30363d"}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div>
                       <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Contest Deadline</label>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                         <div style={{ position: "relative" }}>
@@ -5199,44 +5351,21 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Announce Winner Card */}
-                <div style={{ background: '#1a2235', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 24, padding: 28 }}>
-                  <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Award size={18} color="#8B5CF6" /> Announce Last Week's Winner
-                  </h2>
-                  <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>Saved to Firestore <code style={{ color: '#38BDF8' }}>giveaway/lastWinner</code></p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <div>
-                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winner's Name</label>
-                      <input className="form-input" placeholder="e.g. Rahul Verma" value={winnerForm.name} onChange={e => setWinnerForm(p => ({ ...p, name: e.target.value }))} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>City / College</label>
-                      <input className="form-input" placeholder="e.g. VIT, Chennai" value={winnerForm.city} onChange={e => setWinnerForm(p => ({ ...p, city: e.target.value }))} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winning Blog Title</label>
-                      <input className="form-input" placeholder="e.g. 10 AI Tools That Changed My College Life" value={winnerForm.blogTitle} onChange={e => setWinnerForm(p => ({ ...p, blogTitle: e.target.value }))} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Winner Photo URL (optional)</label>
-                      <input className="form-input" placeholder="https://..." value={winnerForm.photo} onChange={e => setWinnerForm(p => ({ ...p, photo: e.target.value }))} />
-                    </div>
-                    <button
-                      onClick={handleAnnounceWinner}
-                      disabled={hubSaving}
-                      style={{ background: 'linear-gradient(135deg, #8B5CF6, #38BDF8)', color: '#000', border: 'none', borderRadius: 12, padding: '12px 0', fontWeight: 800, fontFamily: 'Sora', cursor: 'pointer', fontSize: 14 }}
-                    >
-                      {hubSaving ? 'Announcing...' : '🏆 Announce Winner'}
-                    </button>
-                  </div>
-                </div>
-
-                {lastWinnerData && (
+                {lastWinnerData ? (
                   <div style={{ background: '#1a2235', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 24, padding: 28, marginTop: 24 }}>
-                    <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Award size={18} color="#10B981" /> Currently Announced Winner
-                    </h2>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                      <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Award size={18} color="#10B981" /> Currently Announced Winner
+                      </h2>
+                      <button
+                        onClick={handleDeleteWinner}
+                        style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)' }}
+                      >
+                        Remove
+                      </button>
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                       {lastWinnerData.photo ? (
                         <img src={lastWinnerData.photo} alt={lastWinnerData.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
@@ -5251,6 +5380,12 @@ export default function App() {
                         <div style={{ color: '#38BDF8', fontSize: 13, fontWeight: 600 }}>{lastWinnerData.blogTitle}</div>
                       </div>
                     </div>
+                  </div>
+                ) : (
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 16, padding: '20px', marginTop: 24, textAlign: 'center' }}>
+                    <Award size={24} color="#8B9BBE" style={{ opacity: 0.5, marginBottom: 8 }} />
+                    <h3 style={{ color: '#8B9BBE', fontSize: 14, fontWeight: 600, margin: 0 }}>No Winner Announced</h3>
+                    <p style={{ color: 'rgba(139, 155, 190, 0.6)', fontSize: 12, margin: '4px 0 0' }}>Select a winner from the leaderboard.</p>
                   </div>
                 )}
 
@@ -5326,6 +5461,7 @@ export default function App() {
         })()}
 
         {/* ── Tab: USERS ── */}
+        {activeTab === 'colleges' && <CollegesTab />}
         {activeTab === 'users' && (() => {
           if (!usersLoaded) {
             // Load users on first tab open

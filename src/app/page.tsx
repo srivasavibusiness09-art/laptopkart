@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { COLORS, products, accessoriesList, initialBanners } from "@/data/products";
 import type { Product } from "@/data/products";
 import { auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 import LandingIntro from "@/components/LandingIntro";
 import PageTransition from "@/components/PageTransition";
@@ -493,6 +493,8 @@ export default function App() {
     };
   }, []);
 
+  const [autoTopic, setAutoTopic] = useState<string | null>(null);
+
   const handleNavigate = (pageStr: string) => {
     let targetPage = pageStr;
     if (pageStr.startsWith("listing:")) {
@@ -500,8 +502,11 @@ export default function App() {
       setListingCategory(cat);
       targetPage = "listing";
     } else if (pageStr.startsWith("student-hub:")) {
-      const section = pageStr.split(":")[1];
+      const parts = pageStr.split(":");
+      const section = parts[1];
+      const topic = parts[2] || null;
       setHubSection(section);
+      setAutoTopic(topic);
       targetPage = "student-hub";
     } else {
       if (pageStr === "listing") {
@@ -509,6 +514,7 @@ export default function App() {
       } else {
         setSearchQuery("");
       }
+      setAutoTopic(null);
     }
 
     setPage(targetPage);
@@ -544,6 +550,15 @@ export default function App() {
   // Sync and persist Firebase Auth session state on mount
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        // Automatically expire session after 24 hours
+        const lastSignInTime = new Date(firebaseUser.metadata.lastSignInTime || '').getTime();
+        const currentTime = new Date().getTime();
+        if (currentTime - lastSignInTime > 24 * 60 * 60 * 1000) {
+          signOut(auth);
+          return;
+        }
+      }
       setUser(firebaseUser || null);
     });
     return () => unsubscribe();
@@ -607,10 +622,18 @@ export default function App() {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       const isCallback = urlParams.has("payment_status");
+      const collegeParam = urlParams.get("college");
+
+      if (collegeParam) {
+        localStorage.setItem("laptopkart_college_source", collegeParam);
+      }
 
       if (isCallback) {
         setShowLanding(false);
         setPage("checkout");
+      } else if (urlParams.has("page")) {
+        setShowLanding(false);
+        setPage(urlParams.get("page")!);
       } else {
         const hasVisited = sessionStorage.getItem("laptopkart_has_visited");
         if (hasVisited === "true") {
@@ -637,9 +660,6 @@ export default function App() {
         handleNavigate("login");
       } else if (page === "profile") {
         setPendingAction({ type: "profile" });
-        handleNavigate("login");
-      } else if (page === "student-hub") {
-        setPendingAction({ type: "student-hub", section: hubSection });
         handleNavigate("login");
       }
     }
@@ -703,12 +723,16 @@ export default function App() {
   const handleLogin = (loggedInUser: any) => {
     setUser(loggedInUser);
     if (loggedInUser?.uid) {
-      setDoc(doc(db, "users", loggedInUser.uid), {
+      const collegeSource = typeof window !== "undefined" ? localStorage.getItem("laptopkart_college_source") : null;
+      const userUpdate: any = {
         name: loggedInUser.name || loggedInUser.email?.split("@")[0] || "",
         email: loggedInUser.email || "",
         photoURL: loggedInUser.img || "",
         updatedAt: new Date().toISOString(),
-      }, { merge: true })
+      };
+      if (collegeSource) userUpdate.collegeId = collegeSource;
+
+      setDoc(doc(db, "users", loggedInUser.uid), userUpdate, { merge: true })
         .catch((err) => console.error("Error saving user profile to Firestore:", err));
     }
     if (pendingAction) {
@@ -867,8 +891,8 @@ export default function App() {
             {displayPage.startsWith("profile") && user && (
               <ProfilePage user={user} setUser={setUser} setPage={handleNavigate} triggerAlert={triggerStoreAlert} initialTab={displayPage === "profile" ? "overview" : displayPage.replace("profile-", "") as any} />
             )}
-            {displayPage === "student-hub" && user && (
-              <StudentHubPage setPage={handleNavigate} user={user} initialSection={hubSection} />
+            {displayPage === "student-hub" && (
+              <StudentHubPage setPage={handleNavigate} user={user} initialSection={hubSection} autoSelectTopic={autoTopic} />
             )}
             {displayPage === "why-refurbished" && <WhyRefurbishedPage />}
             {displayPage.startsWith("write-blog") && user && (

@@ -9,7 +9,7 @@ import {
   sendPasswordResetEmail
 } from "firebase/auth";
 import { auth, googleProvider, appleProvider } from "@/lib/firebase";
-import { collection, doc, setDoc, onSnapshot, query, addDoc } from "firebase/firestore";
+import { collection, doc, setDoc, onSnapshot, query, addDoc, updateDoc, increment, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLORS, products, accessoriesList } from "@/data/products";
 import { useIsMobile } from "@/lib/hooks";
@@ -69,12 +69,12 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
       {!isMobile ? (
         /* ── Desktop Comparison Table ── */
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700, tableLayout: "fixed" }}>
             <thead>
               <tr>
-                <th style={{ padding: "16px 20px", background: COLORS.cardBg, color: COLORS.muted, textAlign: "left", fontSize: 14, border: `1px solid ${COLORS.cardBorder}`, verticalAlign: "bottom" }}>Feature</th>
+                <th style={{ width: "20%", padding: "16px 20px", background: COLORS.cardBg, color: COLORS.muted, textAlign: "left", fontSize: 14, border: `1px solid ${COLORS.cardBorder}`, verticalAlign: "bottom" }}>Feature</th>
                 {selected.map((p, index) => (
-                  <th key={index} style={{ padding: "20px", background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, minWidth: 200, verticalAlign: "top" }}>
+                  <th key={index} style={{ width: `${80 / Math.max(1, selected.length)}%`, padding: "20px", background: COLORS.cardBg, border: `1px solid ${COLORS.cardBorder}`, minWidth: 200, verticalAlign: "top" }}>
                     <div style={{ width: 120, height: 120, margin: "0 auto 12px", background: COLORS.background, borderRadius: 12, overflow: "hidden" }}>
                       <img src={p.img} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     </div>
@@ -103,7 +103,7 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
                     const val = spec === "price" || spec === "mrp" ? `₹${(rawVal as number).toLocaleString('en-IN')}` : spec === "discount" ? `${rawVal}%` : spec === "rating" ? `★ ${rawVal}` : rawVal;
                     const best = spec === "price" ? Math.min(...selected.map(s => s.price)) === p.price : spec === "rating" ? Math.max(...selected.map(s => s.rating)) === p.rating : spec === "discount" ? Math.max(...selected.map(s => s.discount)) === p.discount : false;
                     return (
-                      <td key={index} style={{ padding: "14px 20px", textAlign: "center", verticalAlign: "middle", color: best ? COLORS.green : COLORS.text, fontWeight: best ? 800 : 500, fontSize: 14, border: `1px solid ${COLORS.cardBorder}`, background: best ? "rgba(59,130,246,0.12)" : "transparent" }}>
+                      <td key={index} style={{ wordBreak: "break-word", padding: "14px 20px", textAlign: "center", verticalAlign: "middle", color: best ? COLORS.green : COLORS.text, fontWeight: best ? 800 : 500, fontSize: 14, border: `1px solid ${COLORS.cardBorder}`, background: best ? "rgba(59,130,246,0.12)" : "transparent" }}>
                         {val}{best && <span style={{ display: "block", fontSize: 10, color: COLORS.green }}>Best Value</span>}
                       </td>
                     );
@@ -205,7 +205,8 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
                         fontWeight: best ? 700 : 500,
                         fontSize: 13,
                         boxSizing: "border-box",
-                        display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"
+                        display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
+                        wordBreak: "break-word"
                       }}>
                         <div>{val}</div>
                         {best && <span style={{ fontSize: 9, color: COLORS.green, fontWeight: 700, display: "block", marginTop: 2 }}>Best Option</span>}
@@ -320,7 +321,10 @@ export function BlogPage({ user, setPage }: { user: any; setPage: (p: string) =>
               <div style={{ color: COLORS.muted, fontSize: 12, display: "flex", flexDirection: "column", gap: 4 }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span>{post.date || (post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Today')}</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}><BookOpen size={11} /> {post.read || post.readTime}</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}><BookOpen size={11} /> {post.readTime || '3 min read'}</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Eye size={11} /> {post.reads || 0}</span>
+                  </span>
                 </div>
                 <div style={{ color: COLORS.green, fontWeight: 600 }}>By {post.author || "Contest Writer"}</div>
               </div>
@@ -344,6 +348,21 @@ export function BlogDetail({ postId, setPage }: { postId: string; setPage: (p: s
         setPost({ id: docData.id, ...docData.data() });
       }
     });
+
+    const recordRead = async () => {
+      try {
+        const sessionKey = `viewed_blog_${postId}`;
+        if (typeof sessionStorage !== "undefined" && !sessionStorage.getItem(sessionKey)) {
+          sessionStorage.setItem(sessionKey, "true");
+          const docRef = doc(db, "blogs", postId);
+          await updateDoc(docRef, { reads: increment(1) });
+        }
+      } catch (err) {
+        console.error("Error recording read:", err);
+      }
+    };
+    recordRead();
+
     return () => unsub();
   }, [postId]);
 
@@ -355,6 +374,8 @@ export function BlogDetail({ postId, setPage }: { postId: string; setPage: (p: s
     );
   }
 
+  const isContest = post.isContestEntry === true || (post.category && post.category.includes("Weekly Contest")) || !!post.contestTopic;
+
   return (
     <div style={{ width: "100vw", minHeight: "100vh", padding: isMobile ? "24px 14px" : "40px 20px", background: "var(--bg)", color: "var(--text)" }}>
       <div style={{ maxWidth: 840, margin: "0 auto" }}>
@@ -362,7 +383,10 @@ export function BlogDetail({ postId, setPage }: { postId: string; setPage: (p: s
           <button onClick={() => setPage("blog")} style={{ color: COLORS.muted, background: "transparent", border: "none", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
             ← Back to Blogs
           </button>
-          {auth.currentUser && (auth.currentUser.displayName === post.author || post.authorEmail === auth.currentUser.email || auth.currentUser.email === "srivasavibusiness09@gmail.com") && (
+          {auth.currentUser && (
+            ((auth.currentUser.displayName === post.author || post.authorEmail === auth.currentUser.email) && !isContest) ||
+            auth.currentUser.email === "srivasavibusiness09@gmail.com"
+          ) && (
             <button onClick={() => setPage(`write-blog-${post.id}`)} style={{ color: "var(--accent-2)", background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.25)", padding: "8px 16px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
               Edit Blog
             </button>
@@ -379,6 +403,9 @@ export function BlogDetail({ postId, setPage }: { postId: string; setPage: (p: s
           </span>
           <span style={{ color: COLORS.green, fontWeight: 700, fontSize: 13 }}>
             By {post.author || "Contest Writer"}
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 6, color: COLORS.muted, fontSize: 13 }}>
+            <Eye size={14} /> {post.reads || 0} views
           </span>
         </div>
         <div style={{ lineHeight: 1.8, color: "var(--text-2)" }} dangerouslySetInnerHTML={{
@@ -1192,6 +1219,31 @@ export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) =>
   const [customCoverUrl, setCustomCoverUrl] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [originalBlog, setOriginalBlog] = useState<any>(null);
+  const [contestConfig, setContestConfig] = useState<any>(null);
+  const [submitForContest, setSubmitForContest] = useState(false);
+
+  useEffect(() => {
+    const fetchContest = async () => {
+      try {
+        const docSnap = await getDoc(doc(db, "giveaway", "current"));
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.topic) {
+            setContestConfig(data);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching contest:", err);
+      }
+    };
+    fetchContest();
+  }, []);
+
+  useEffect(() => {
+    if (contestConfig?.topic && !editPostId) {
+      setForm(f => ({ ...f, category: `Weekly Contest (${contestConfig.topic})`, customCategory: "" }));
+    }
+  }, [contestConfig, editPostId]);
 
   useEffect(() => {
     if (editPostId) {
@@ -1203,8 +1255,8 @@ export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) =>
           setOriginalBlog({ id: docData.id, ...data });
           setForm({
             title: data.title || "",
-            category: ["Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News"].includes(data.category) ? data.category : "Other",
-            customCategory: ["Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News"].includes(data.category) ? "" : data.category,
+            category: data.isContestEntry ? `Weekly Contest (${data.contestTopic})` : (["Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News"].includes(data.category) ? data.category : "Other"),
+            customCategory: data.isContestEntry || ["Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News"].includes(data.category) ? "" : data.category,
             content: data.content || "",
           });
           if (data.coverUrl) {
@@ -1233,6 +1285,30 @@ export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) =>
       const docId = originalBlog ? originalBlog.id : doc(collection(db, "blogs")).id;
       const authorName = originalBlog ? originalBlog.author : (auth.currentUser?.displayName || auth.currentUser?.email?.split("@")[0] || "Contest Writer");
       const authorEmail = originalBlog ? originalBlog.authorEmail : (auth.currentUser?.email || "N/A");
+      
+      const collegeSource = typeof window !== "undefined" ? localStorage.getItem("laptopkart_college_source") : null;
+
+      const isWeeklyContestCategory = form.category.startsWith("Weekly Contest (");
+      const matchedTopic = isWeeklyContestCategory ? form.category.replace("Weekly Contest (", "").replace(")", "") : null;
+
+      const blogData: any = {
+        title: form.title,
+        category: form.category === "Other" ? (form.customCategory || "Other") : form.category,
+        content: form.content,
+        coverUrl: activeCoverUrl,
+        createdAt: originalBlog ? originalBlog.createdAt : new Date().toISOString(),
+        readTime: `${Math.max(1, Math.ceil(form.content.split(/\s+/).length / 200))} min read`,
+        author: authorName,
+        authorEmail: authorEmail,
+        isContestEntry: isWeeklyContestCategory,
+        contestTopic: matchedTopic,
+      };
+
+      if (!originalBlog && collegeSource) {
+        blogData.collegeId = collegeSource;
+      } else if (originalBlog && originalBlog.collegeId) {
+        blogData.collegeId = originalBlog.collegeId;
+      }
 
       await setDoc(doc(db, "blogs", docId), {
         title: form.title,
@@ -1243,6 +1319,8 @@ export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) =>
         readTime: `${Math.max(1, Math.ceil(form.content.split(/\s+/).length / 200))} min read`,
         author: authorName,
         authorEmail: authorEmail,
+        isContestEntry: submitForContest,
+        contestTopic: submitForContest && contestConfig ? contestConfig.topic : null,
       }, { merge: true });
     } catch (err) {
       console.error("Firestore blog write error: ", err);
@@ -1315,23 +1393,38 @@ export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) =>
           {/* Step 2: Category */}
           <div style={{ marginBottom: 40 }}>
             <div style={{ fontSize: 13, color: "#60A5FA", fontWeight: 700, marginBottom: 10 }}>STEP 2 • CATEGORY</div>
-            <Dropdown
-              options={["Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News", "Other"].map(c => ({ value: c, label: c }))}
-              value={form.category}
-              onChange={val => setForm(f => ({ ...f, category: val }))}
-              style={{ width: "100%", marginBottom: form.category === "Other" ? 16 : 0 }}
-            />
-            {form.category === "Other" && (
-              <input
-                value={form.customCategory}
-                onChange={e => setForm(f => ({ ...f, customCategory: e.target.value }))}
-                placeholder="Enter custom category..."
-                style={{
-                  width: "100%", background: "var(--bg-1)", border: "1px solid var(--border)", 
-                  outline: "none", color: "var(--text)", padding: "14px 16px", borderRadius: 12, fontSize: 15,
-                  fontFamily: "'Inter', sans-serif"
-                }}
-              />
+            {contestConfig?.topic && !editPostId ? (
+              <div style={{
+                width: "100%", background: "var(--bg-1)", border: "1px solid var(--border)", 
+                color: "var(--text)", padding: "14px 16px", borderRadius: 12, fontSize: 15,
+                fontFamily: "'Inter', sans-serif", opacity: 0.8
+              }}>
+                Weekly Contest ({contestConfig.topic})
+              </div>
+            ) : (
+              <>
+                <Dropdown
+                  options={[
+                    ...(originalBlog?.isContestEntry && originalBlog.contestTopic && originalBlog.contestTopic !== contestConfig?.topic ? [`Weekly Contest (${originalBlog.contestTopic})`] : []),
+                    "Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News", "Other"
+                  ].map(c => ({ value: c, label: c }))}
+                  value={form.category}
+                  onChange={val => setForm(f => ({ ...f, category: val }))}
+                  style={{ width: "100%", marginBottom: form.category === "Other" ? 16 : 0 }}
+                />
+                {form.category === "Other" && (
+                  <input
+                    value={form.customCategory}
+                    onChange={e => setForm(f => ({ ...f, customCategory: e.target.value }))}
+                    placeholder="Enter custom category..."
+                    style={{
+                      width: "100%", background: "var(--bg-1)", border: "1px solid var(--border)", 
+                      outline: "none", color: "var(--text)", padding: "14px 16px", borderRadius: 12, fontSize: 15,
+                      fontFamily: "'Inter', sans-serif"
+                    }}
+                  />
+                )}
+              </>
             )}
           </div>
 

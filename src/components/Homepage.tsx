@@ -211,24 +211,28 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
 
   // Load Featurable widget script after mount to ensure the DOM div is rendered
   useEffect(() => {
-    // 1. Remove the outer embed script
-    const scriptId = "featurable-widget-script";
-    const existingScript = document.getElementById(scriptId);
-    if (existingScript) {
-      existingScript.remove();
-    }
+    const timer = setTimeout(() => {
+      // 1. Remove the outer embed script
+      const scriptId = "featurable-widget-script";
+      const existingScript = document.getElementById(scriptId);
+      if (existingScript) {
+        existingScript.remove();
+      }
 
-    // 2. CRITICAL SPA FIX: Remove the inner loader script that embed.js dynamically creates.
-    // embed.js checks for this script and aborts if it exists. Removing it forces re-initialization.
-    document.querySelectorAll('script[data-featurable-loader]').forEach(node => node.remove());
+      // 2. CRITICAL SPA FIX: Remove the inner loader script that embed.js dynamically creates.
+      // embed.js checks for this script and aborts if it exists. Removing it forces re-initialization.
+      document.querySelectorAll('script[data-featurable-loader]').forEach(node => node.remove());
 
-    const script = document.createElement("script");
-    script.id = scriptId;
-    script.src = "https://cdn.featurable.com/widget/v2/embed.js";
-    script.defer = true;
-    script.charset = "UTF-8";
+      const script = document.createElement("script");
+      script.id = scriptId;
+      script.src = "https://cdn.featurable.com/widget/v2/embed.js";
+      script.defer = true;
+      script.charset = "UTF-8";
 
-    document.body.appendChild(script);
+      document.body.appendChild(script);
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const [videoSettings, setVideoSettings] = useState<{
@@ -1099,12 +1103,13 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
                     <div key={p.id} style={{
                       background: COLORS.background, borderRadius: 16, overflow: "hidden",
                       border: `1px solid ${COLORS.cardBorder}`,
+                      display: "flex", flexDirection: "column"
                     }}>
-                      <div style={{ height: 120, overflow: "hidden" }}>
-                        <img src={p.img} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <div style={{ height: 140, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.05)", padding: "12px" }}>
+                        <img src={p.img} alt={p.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                       </div>
-                      <div style={{ padding: "14px 16px" }}>
-                        <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{p.name}</div>
+                      <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", textAlign: "left" }}>
+                        <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 14, marginBottom: 8, lineHeight: 1.4 }}>{p.name}</div>
                         <div style={{ color: COLORS.primary, fontWeight: 800, fontSize: 18, fontFamily: "'Sora', sans-serif" }}>
                           ₹{p.price.toLocaleString("en-IN")}
                         </div>
