@@ -63,7 +63,8 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
     async function fetchData() {
       try {
         const gwSnap = await getDoc(doc(db, "giveaway", "current"));
-        if (gwSnap.exists()) setGiveaway(gwSnap.data());
+        const gwData = gwSnap.exists() ? gwSnap.data() : {};
+        if (gwSnap.exists()) setGiveaway(gwData);
 
         const winnerSnap = await getDoc(doc(db, "giveaway", "lastWinner"));
         if (winnerSnap.exists()) setLastWinner(winnerSnap.data());
@@ -72,13 +73,20 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
         const allBlogs: any[] = [];
         blogsSnap.forEach((d) => allBlogs.push({ id: d.id, ...d.data() }));
 
-        const approved = allBlogs.filter((b) => b.approved !== false);
+        const approved = allBlogs.filter((b) => {
+          if (b.approved === false) return false;
+          if (gwData.topic) {
+            return b.isContestEntry && b.contestTopic === gwData.topic;
+          }
+          return b.isContestEntry;
+        });
+
         setEntries(approved.sort((a, b) =>
           new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
         ));
 
         const byEmail: Record<string, LeaderboardEntry> = {};
-        allBlogs.forEach((b) => {
+        approved.forEach((b) => {
           const email = (b.authorEmail || "").toLowerCase();
           if (!email) return;
           if (!byEmail[email]) {
