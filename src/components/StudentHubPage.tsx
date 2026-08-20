@@ -395,7 +395,7 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
                     <span style={{ fontSize: 48, fontFamily: "serif", lineHeight: 0.5 }}>&ldquo;</span>
                   </div>
                   <p
-                    onClick={() => lastWinner.blogId ? setPage(`blog-detail-${lastWinner.blogId}`) : setPage("blog")}
+                    onClick={() => lastWinner.blogId ? setPage(`blog-${lastWinner.blogId}`) : setPage("blog")}
                     title="Read Winning Blog"
                     style={{ color: COLORS.text, fontSize: 20, fontWeight: 700, margin: 0, fontStyle: "italic", lineHeight: 1.5, cursor: "pointer", transition: "color 0.2s" }}
                     onMouseEnter={(e) => e.currentTarget.style.color = "#0062FF"}
@@ -406,7 +406,7 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
                 </div>
                 <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
                   <button
-                    onClick={() => lastWinner.blogId ? setPage(`blog-detail-${lastWinner.blogId}`) : setPage("blog")}
+                    onClick={() => lastWinner.blogId ? setPage(`blog-${lastWinner.blogId}`) : setPage("blog")}
                     style={{ background: "#0062FF", color: "#fff", border: "none", borderRadius: 12, padding: "14px 28px", fontSize: 13, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "'Sora', sans-serif", transition: "all 0.2s", boxShadow: "0 8px 20px rgba(0,98,255,0.3)" }}
                     onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
                     onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}

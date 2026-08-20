@@ -204,20 +204,23 @@ export default function StudentHubBanner({ setPage }: StudentHubBannerProps) {
 
                   <div style={{ flex: 1 }}>
                     <p 
-                      onClick={() => lastWinner.blogId ? setPage(`blog-detail-${lastWinner.blogId}`) : setPage("blog")}
+                      onClick={() => lastWinner.blogId ? setPage(`blog-${lastWinner.blogId}`) : setPage("blog")}
                       title="Read Winning Blog"
-                      style={{ color: "#111827", fontSize: 16, fontWeight: 700, margin: "0 0 24px", fontStyle: "italic", lineHeight: 1.5, cursor: "pointer", textDecoration: "underline", textDecorationColor: "rgba(79, 70, 229, 0.4)" }}
+                      style={{ color: "var(--text)", fontSize: 18, fontWeight: 700, margin: 0, fontStyle: "italic", lineHeight: 1.5, cursor: "pointer", transition: "color 0.2s" }}
+                      onMouseEnter={(e: any) => e.currentTarget.style.color = "#0062FF"}
+                      onMouseLeave={(e: any) => e.currentTarget.style.color = "var(--text)"}
                     >
-                      "{lastWinner.blogTitle}"
+                      {lastWinner.blogTitle || "Publish your blog to be featured here!"}
                     </p>
                   </div>
-
-                  <button
-                    onClick={() => lastWinner.blogId ? setPage(`blog-detail-${lastWinner.blogId}`) : setPage("blog")}
-                    style={{ background: "transparent", color: "#4F46E5", border: "none", fontSize: 13, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, padding: "10px 0" }}
-                  >
-                    Read winning article <ArrowRight size={14} />
-                  </button>
+                  <div style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center" }}>
+                    <button
+                      onClick={() => lastWinner.blogId ? setPage(`blog-${lastWinner.blogId}`) : setPage("blog")}
+                      style={{ background: "transparent", color: "#4F46E5", border: "none", fontSize: 13, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, padding: "10px 0" }}
+                    >
+                      Read winning article <ArrowRight size={14} />
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>

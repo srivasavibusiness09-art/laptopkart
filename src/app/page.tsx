@@ -1012,7 +1012,8 @@ export default function App() {
         </div>
       )}
 
-      <WhatsAppWidget />
+      {/* Message icon visibility logic */}
+      {(page === "home" || page === "product" || page === "listing") && <WhatsAppWidget />}
 
       {/* Global Animation Styles */}
       <style>{`

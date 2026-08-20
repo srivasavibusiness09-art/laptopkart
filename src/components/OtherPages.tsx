@@ -20,9 +20,9 @@ import {
   BookOpen, Scale, GraduationCap, Gamepad2, Battery,
   Phone, Mail, MessageSquare, MapPin, CheckCircle2,
   Lock, User, Laptop, ShieldCheck, Leaf, Coins, ChevronRight, Star, ShoppingCart, Heart, Keyboard,
-  Eye, EyeOff, BadgeCheck, Shield
+  Eye, EyeOff, BadgeCheck, Shield, Share2
 } from "lucide-react";
-import { FaApple, FaGoogle } from "react-icons/fa6";
+import { FaApple, FaGoogle, FaWhatsapp, FaLinkedin, FaXTwitter, FaFacebook, FaEnvelope, FaLink } from "react-icons/fa6";
 
 export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
   const isMobile = useIsMobile();
@@ -286,7 +286,7 @@ export function BlogPage({ user, setPage }: { user: any; setPage: (p: string) =>
           onClick={() => setPage("write-blog")}
           style={{
             background: "linear-gradient(135deg, var(--accent-2) 0%, #1D4ED8 100%)",
-            color: "var(--text)",
+            color: "#fff",
             border: "none",
             borderRadius: 12,
             padding: "12px 24px",
@@ -339,6 +339,7 @@ export function BlogPage({ user, setPage }: { user: any; setPage: (p: string) =>
 export function BlogDetail({ postId, setPage }: { postId: string; setPage: (p: string) => void }) {
   const isMobile = useIsMobile();
   const [post, setPost] = useState<any>(null);
+  const [showShareMenu, setShowShareMenu] = useState(false);
 
   useEffect(() => {
     const q = query(collection(db, "blogs"));
@@ -383,32 +384,104 @@ export function BlogDetail({ postId, setPage }: { postId: string; setPage: (p: s
           <button onClick={() => setPage("blog")} style={{ color: COLORS.muted, background: "transparent", border: "none", fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
             ← Back to Blogs
           </button>
-          {auth.currentUser && (
-            ((auth.currentUser.displayName === post.author || post.authorEmail === auth.currentUser.email) && !isContest) ||
-            auth.currentUser.email === "srivasavibusiness09@gmail.com"
-          ) && (
-            <button onClick={() => setPage(`write-blog-${post.id}`)} style={{ color: "var(--accent-2)", background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.25)", padding: "8px 16px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-              Edit Blog
+          
+          <div style={{ display: "flex", gap: 12 }}>
+            <button onClick={() => setShowShareMenu(true)} style={{ color: "var(--accent-2)", background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.2)", padding: "8px 16px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+              {isMobile ? <Share2 size={16} /> : <><Share2 size={16} /> Share</>}
             </button>
-          )}
+
+            {showShareMenu && (
+              <div style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(0,0,0,0.6)",
+                zIndex: 999999,
+                display: "flex",
+                alignItems: isMobile ? "flex-end" : "center",
+                justifyContent: "center",
+                animation: "shareFadeIn 0.2s ease-out"
+              }} onClick={() => setShowShareMenu(false)}>
+                <style>{`
+                  @keyframes shareFadeIn { from { opacity: 0; } to { opacity: 1; } }
+                  @keyframes shareSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+                  @keyframes shareScaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                `}</style>
+                <div style={{
+                  background: "var(--bg)",
+                  width: "100%",
+                  maxWidth: isMobile ? "100%" : 420,
+                  borderRadius: isMobile ? "24px 24px 0 0" : 24,
+                  padding: "24px",
+                  paddingBottom: isMobile ? "40px" : "24px",
+                  boxSizing: "border-box",
+                  animation: isMobile ? "shareSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)" : "shareScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+                }} onClick={e => e.stopPropagation()}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--text)" }}>Share</h3>
+                    <button onClick={() => setShowShareMenu(false)} style={{ background: "var(--bg-2)", border: "none", width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text)" }}>✕</button>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px 12px" }}>
+                    {[
+                      { name: "WhatsApp", icon: <FaWhatsapp size={26} color="#fff" />, bg: "#25D366", action: () => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(post.title + " " + (window.location.origin + "/?page=blog-" + post.id))}`, '_blank') },
+                      { name: "LinkedIn", icon: <FaLinkedin size={26} color="#fff" />, bg: "#0077b5", action: () => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin + "/?page=blog-" + post.id)}`, '_blank') },
+                      { name: "X", icon: <FaXTwitter size={24} color="#fff" />, bg: "#000000", action: () => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.origin + "/?page=blog-" + post.id)}&text=${encodeURIComponent(post.title)}`, '_blank') },
+                      { name: "Facebook", icon: <FaFacebook size={26} color="#fff" />, bg: "#1877F2", action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + "/?page=blog-" + post.id)}`, '_blank') },
+                      { name: "Email", icon: <FaEnvelope size={24} color="#fff" />, bg: "#EA4335", action: () => window.open(`mailto:?subject=${encodeURIComponent(post.title)}&body=${encodeURIComponent("Check out this blog: " + (window.location.origin + "/?page=blog-" + post.id))}`, '_blank') },
+                      {
+                        name: "Copy Link", icon: <FaLink size={24} color="#fff" />, bg: "var(--text-2)", action: () => {
+                          const url = window.location.origin + "/?page=blog-" + post.id;
+                          if (navigator.clipboard && window.isSecureContext) {
+                            navigator.clipboard.writeText(url).then(() => alert("Link copied!")).catch(() => alert("Failed to copy link."));
+                          } else {
+                            const textArea = document.createElement("textarea"); textArea.value = url;
+                            textArea.style.position = "fixed"; textArea.style.left = "-999999px"; textArea.style.top = "-999999px";
+                            document.body.appendChild(textArea); textArea.focus(); textArea.select();
+                            try { document.execCommand('copy'); alert("Link copied!"); } catch (e) { alert("Could not copy automatically."); }
+                            textArea.remove();
+                          }
+                        }
+                      }
+                    ].map(platform => (
+                      <div key={platform.name} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+                        <button onClick={() => { platform.action(); setShowShareMenu(false); }} style={{ width: 64, height: 64, borderRadius: "50%", background: platform.bg, border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", transition: "transform 0.1s" }} onPointerDown={e => e.currentTarget.style.transform = "scale(0.92)"} onPointerUp={e => e.currentTarget.style.transform = "scale(1)"} onPointerLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+                          {platform.icon}
+                        </button>
+                        <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-2)", textAlign: "center" }}>{platform.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {auth.currentUser && (
+              ((auth.currentUser.displayName === post.author || post.authorEmail === auth.currentUser.email) && !isContest) ||
+              auth.currentUser.email === "srivasavibusiness09@gmail.com"
+            ) && (
+              <button onClick={() => setPage(`write-blog-${post.id}`)} style={{ color: "var(--accent-2)", background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.25)", padding: "8px 16px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                Edit
+              </button>
+            )}
+          </div>
         </div>
-        <div style={{ height: 300, backgroundImage: `url(${post.coverUrl})`, backgroundSize: "cover", backgroundPosition: "center", borderRadius: 12, marginBottom: 24 }} />
-        <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 28 : 36, fontWeight: 800, color: "var(--text)", marginBottom: 12 }}>{post.title}</h2>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 24, flexWrap: "wrap" }}>
-          <span style={{ background: "rgba(59, 130, 246, 0.15)", color: "var(--accent-2)", border: "1px solid rgba(59, 130, 246, 0.25)", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, textTransform: "uppercase" }}>
-            {post.category || post.cat}
-          </span>
-          <span style={{ color: COLORS.muted, fontSize: 13 }}>
-            {post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Today'}
-          </span>
-          <span style={{ color: COLORS.green, fontWeight: 700, fontSize: 13 }}>
-            By {post.author || "Contest Writer"}
-          </span>
-          <span style={{ display: "flex", alignItems: "center", gap: 6, color: COLORS.muted, fontSize: 13 }}>
-            <Eye size={14} /> {post.reads || 0} views
-          </span>
-        </div>
-        <div style={{ lineHeight: 1.8, color: "var(--text-2)" }} dangerouslySetInnerHTML={{
+        <img src={post.coverUrl} alt={post.title} style={{ width: "100%", height: "auto", maxHeight: isMobile ? "none" : 400, objectFit: "cover", borderRadius: 12, marginBottom: 24 }} />
+      <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 28 : 36, fontWeight: 800, color: "var(--text)", marginBottom: 12 }}>{post.title}</h2>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 24, flexWrap: "wrap" }}>
+        <span style={{ background: "rgba(59, 130, 246, 0.15)", color: "var(--accent-2)", border: "1px solid rgba(59, 130, 246, 0.25)", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, textTransform: "uppercase" }}>
+          {post.category || post.cat}
+        </span>
+        <span style={{ color: COLORS.muted, fontSize: 13 }}>
+          {post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Today'}
+        </span>
+        <span style={{ color: COLORS.green, fontWeight: 700, fontSize: 13 }}>
+          By {post.author || "Contest Writer"}
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 6, color: COLORS.muted, fontSize: 13 }}>
+          <Eye size={14} /> {post.reads || 0} views
+        </span>
+      </div>
+        <div style={{ lineHeight: 1.8, color: "var(--text)" }} dangerouslySetInnerHTML={{
           __html: post.content
             .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")           // Bold
             .replace(/### (.*)/g, "<h3>$1</h3>")                       // H3
@@ -432,49 +505,49 @@ export function ContactPage() {
   const cardPadding = isMobile ? "20px 16px" : "32px 32px";
 
   return (
-    <div style={{ 
-      width: "100%", 
-      maxWidth: 960, 
-      margin: "0 auto", 
-      padding: containerPadding, 
-      boxSizing: "border-box" 
+    <div style={{
+      width: "100%",
+      maxWidth: 960,
+      margin: "0 auto",
+      padding: containerPadding,
+      boxSizing: "border-box"
     }}>
-      <h2 style={{ 
-        fontFamily: "'Sora', sans-serif", 
-        fontSize: isMobile ? 24 : 32, 
-        fontWeight: 800, 
-        color: COLORS.text, 
-        margin: "0 0 8px 0" 
+      <h2 style={{
+        fontFamily: "'Sora', sans-serif",
+        fontSize: isMobile ? 24 : 32,
+        fontWeight: 800,
+        color: COLORS.text,
+        margin: "0 0 8px 0"
       }}>
         Contact Us
       </h2>
-      <p style={{ 
-        color: COLORS.muted, 
-        fontSize: 14, 
+      <p style={{
+        color: COLORS.muted,
+        fontSize: 14,
         margin: "0 0 32px 0",
-        lineHeight: 1.5 
+        lineHeight: 1.5
       }}>
         We&apos;re here to help. Reach out anytime!
       </p>
 
       {/* Flex container layout: stacks on mobile, columns on desktop */}
-      <div style={{ 
-        display: "flex", 
-        flexDirection: isMobile ? "column" : "row", 
+      <div style={{
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row",
         gap: isMobile ? 24 : 40,
         width: "100%",
         boxSizing: "border-box"
       }}>
-        
+
         {/* Form Card (Left Column) */}
-        <div style={{ 
-          flex: 1.2, 
+        <div style={{
+          flex: 1.2,
           width: "100%",
-          background: COLORS.cardBg, 
-          border: `1px solid ${COLORS.cardBorder}`, 
-          borderRadius: 20, 
-          padding: cardPadding, 
-          boxSizing: "border-box" 
+          background: COLORS.cardBg,
+          border: `1px solid ${COLORS.cardBorder}`,
+          borderRadius: 20,
+          padding: cardPadding,
+          boxSizing: "border-box"
         }}>
           {sent ? (
             <div style={{ textAlign: "center", padding: "32px 0" }}>
@@ -483,8 +556,8 @@ export function ContactPage() {
               </div>
               <h3 style={{ color: COLORS.green, fontFamily: "'Sora', sans-serif", fontWeight: 800, margin: "0 0 8px 0" }}>Message Sent!</h3>
               <p style={{ color: COLORS.muted, margin: "0 0 16px 0", fontSize: 14 }}>We&apos;ll get back to you within 24 hours.</p>
-              <button 
-                onClick={() => { setSent(false); setForm({ name: "", email: "", phone: "", message: "" }); }} 
+              <button
+                onClick={() => { setSent(false); setForm({ name: "", email: "", phone: "", message: "" }); }}
                 style={{ background: "#0062FF", color: "var(--text-inverse)", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, cursor: "pointer" }}
               >
                 Send Another
@@ -493,7 +566,7 @@ export function ContactPage() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%", boxSizing: "border-box" }}>
               <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, margin: "0 0 6px 0", fontSize: 18 }}>Send a Message</h3>
-              
+
               {/* Form Input Fields */}
               {[
                 { label: "Full Name", key: "name", type: "text", placeholder: "Enter your name" },
@@ -502,66 +575,66 @@ export function ContactPage() {
               ].map((field) => (
                 <div key={field.key} style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%", boxSizing: "border-box" }}>
                   <label style={{ color: COLORS.muted, fontSize: 13, fontWeight: 500 }}>{field.label}</label>
-                  <input 
+                  <input
                     type={field.type}
                     placeholder={field.placeholder}
-                    value={form[field.key as keyof typeof form]} 
+                    value={form[field.key as keyof typeof form]}
                     onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
-                    style={{ 
-                      width: "100%", 
-                      background: COLORS.background, 
-                      border: `1px solid ${COLORS.cardBorder}`, 
-                      borderRadius: 10, 
-                      padding: "12px 14px", 
-                      color: COLORS.text, 
-                      fontSize: 14, 
-                      outline: "none", 
+                    style={{
+                      width: "100%",
+                      background: COLORS.background,
+                      border: `1px solid ${COLORS.cardBorder}`,
+                      borderRadius: 10,
+                      padding: "12px 14px",
+                      color: COLORS.text,
+                      fontSize: 14,
+                      outline: "none",
                       boxSizing: "border-box",
                       margin: 0
-                    }} 
+                    }}
                   />
                 </div>
               ))}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%", boxSizing: "border-box" }}>
                 <label style={{ color: COLORS.muted, fontSize: 13, fontWeight: 500 }}>Message</label>
-                <textarea 
-                  value={form.message} 
+                <textarea
+                  value={form.message}
                   placeholder="How can we help you?"
-                  onChange={e => setForm(f => ({ ...f, message: e.target.value }))} 
+                  onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
                   rows={4}
-                  style={{ 
-                    width: "100%", 
-                    background: COLORS.background, 
-                    border: `1px solid ${COLORS.cardBorder}`, 
-                    borderRadius: 10, 
-                    padding: "12px 14px", 
-                    color: COLORS.text, 
-                    fontSize: 14, 
-                    outline: "none", 
-                    resize: "vertical", 
+                  style={{
+                    width: "100%",
+                    background: COLORS.background,
+                    border: `1px solid ${COLORS.cardBorder}`,
+                    borderRadius: 10,
+                    padding: "12px 14px",
+                    color: COLORS.text,
+                    fontSize: 14,
+                    outline: "none",
+                    resize: "vertical",
                     boxSizing: "border-box",
                     margin: 0
-                  }} 
+                  }}
                 />
               </div>
 
-              <button 
+              <button
                 onClick={() => {
                   if (!form.name || !form.message) return alert("Please fill in your name and message.");
                   const text = `*New Inquiry from Laptopkart*%0A%0A*Name:* ${encodeURIComponent(form.name)}%0A*Email:* ${encodeURIComponent(form.email)}%0A*Phone:* ${encodeURIComponent(form.phone)}%0A*Message:* ${encodeURIComponent(form.message)}`;
                   window.open(`https://wa.me/919750331313?text=${text}`, "_blank");
                   setSent(true);
-                }} 
-                style={{ 
-                  width: "100%", 
-                  background: "#0062FF", 
-                  color: "var(--text-inverse)", 
-                  border: "none", 
-                  borderRadius: 12, 
-                  padding: "14px 0", 
-                  fontWeight: 700, 
-                  fontSize: 15, 
+                }}
+                style={{
+                  width: "100%",
+                  background: "#0062FF",
+                  color: "var(--text-inverse)",
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "14px 0",
+                  fontWeight: 700,
+                  fontSize: 15,
                   cursor: "pointer",
                   marginTop: 6
                 }}
@@ -571,12 +644,12 @@ export function ContactPage() {
             </div>
           )}
         </div>
-        
+
         {/* Contact Info Details (Right Column) */}
-        <div style={{ 
-          flex: 0.8, 
-          display: "flex", 
-          flexDirection: "column", 
+        <div style={{
+          flex: 0.8,
+          display: "flex",
+          flexDirection: "column",
           gap: 12,
           width: "100%",
           boxSizing: "border-box"
@@ -587,30 +660,30 @@ export function ContactPage() {
             { icon: <MessageSquare size={18} color={COLORS.green} />, label: "WhatsApp", val: "+91 97503 31313", sub: "Quick replies on chat" },
             { icon: <MapPin size={18} color={COLORS.green} />, label: "Address", val: "Salem, Tamil Nadu", sub: "Visit our showroom" }
           ].map(({ icon, label, val, sub }) => (
-            <div 
-              key={label} 
-              style={{ 
-                background: COLORS.cardBg, 
-                border: `1px solid ${COLORS.cardBorder}`, 
-                borderRadius: 14, 
-                padding: "14px 18px", 
-                display: "flex", 
-                gap: 14, 
-                alignItems: "center", 
+            <div
+              key={label}
+              style={{
+                background: COLORS.cardBg,
+                border: `1px solid ${COLORS.cardBorder}`,
+                borderRadius: 14,
+                padding: "14px 18px",
+                display: "flex",
+                gap: 14,
+                alignItems: "center",
                 boxSizing: "border-box",
                 width: "100%"
               }}
             >
-              <div style={{ 
-                background: "var(--bg-hover)", 
-                border: "1px solid var(--border)", 
-                borderRadius: 10, 
-                width: 36, 
-                height: 36, 
-                display: "flex", 
-                alignItems: "center", 
-                justifyContent: "center", 
-                flexShrink: 0 
+              <div style={{
+                background: "var(--bg-hover)",
+                border: "1px solid var(--border)",
+                borderRadius: 10,
+                width: 36,
+                height: 36,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0
               }}>
                 {icon}
               </div>
@@ -840,10 +913,10 @@ export function LoginPage({ setPage, onLogin, triggerAlert }: { setPage: (p: str
             margin: "0 auto 16px",
             boxShadow: "0 0 20px var(--bg-active)",
           }}>
-            <img 
-              src="/Laptopkart logo.png" 
-              alt="Laptopkart" 
-              style={{ width: "70%", height: "70%", objectFit: "contain" }} 
+            <img
+              src="/Laptopkart logo.png"
+              alt="Laptopkart"
+              style={{ width: "70%", height: "70%", objectFit: "contain" }}
             />
           </div>
           <h2 style={{
@@ -1285,7 +1358,7 @@ export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) =>
       const docId = originalBlog ? originalBlog.id : doc(collection(db, "blogs")).id;
       const authorName = originalBlog ? originalBlog.author : (auth.currentUser?.displayName || auth.currentUser?.email?.split("@")[0] || "Contest Writer");
       const authorEmail = originalBlog ? originalBlog.authorEmail : (auth.currentUser?.email || "N/A");
-      
+
       const collegeSource = typeof window !== "undefined" ? localStorage.getItem("laptopkart_college_source") : null;
 
       const isWeeklyContestCategory = form.category.startsWith("Weekly Contest (");
@@ -1319,8 +1392,8 @@ export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) =>
         readTime: `${Math.max(1, Math.ceil(form.content.split(/\s+/).length / 200))} min read`,
         author: authorName,
         authorEmail: authorEmail,
-        isContestEntry: submitForContest,
-        contestTopic: submitForContest && contestConfig ? contestConfig.topic : null,
+        isContestEntry: isWeeklyContestCategory,
+        contestTopic: matchedTopic,
       }, { merge: true });
     } catch (err) {
       console.error("Firestore blog write error: ", err);
@@ -1375,63 +1448,48 @@ export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) =>
             </button>
           </div>
 
-          {/* Step 1: Title */}
-          <div style={{ marginBottom: 40 }}>
-            <div style={{ fontSize: 13, color: "#60A5FA", fontWeight: 700, marginBottom: 8 }}>STEP 1</div>
+          {/* Title */}
+          <div style={{ marginBottom: 24 }}>
             <input
               value={form.title}
               onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-              placeholder="Write a compelling title..."
+              placeholder="Title"
               style={{
                 width: "100%", background: "transparent", border: "none", outline: "none",
-                fontSize: isMobile ? 32 : 42, fontWeight: 800, color: "var(--text)",
-                fontFamily: "'Sora', sans-serif", lineHeight: 1.1
+                fontSize: isMobile ? 28 : 42, fontWeight: 800, color: "var(--text)",
+                fontFamily: "'Sora', sans-serif", lineHeight: 1.2
               }}
             />
           </div>
 
-          {/* Step 2: Category */}
-          <div style={{ marginBottom: 40 }}>
-            <div style={{ fontSize: 13, color: "#60A5FA", fontWeight: 700, marginBottom: 10 }}>STEP 2 • CATEGORY</div>
-            {contestConfig?.topic && !editPostId ? (
-              <div style={{
-                width: "100%", background: "var(--bg-1)", border: "1px solid var(--border)", 
-                color: "var(--text)", padding: "14px 16px", borderRadius: 12, fontSize: 15,
-                fontFamily: "'Inter', sans-serif", opacity: 0.8
-              }}>
-                Weekly Contest ({contestConfig.topic})
-              </div>
-            ) : (
-              <>
-                <Dropdown
-                  options={[
-                    ...(originalBlog?.isContestEntry && originalBlog.contestTopic && originalBlog.contestTopic !== contestConfig?.topic ? [`Weekly Contest (${originalBlog.contestTopic})`] : []),
-                    "Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News", "Other"
-                  ].map(c => ({ value: c, label: c }))}
-                  value={form.category}
-                  onChange={val => setForm(f => ({ ...f, category: val }))}
-                  style={{ width: "100%", marginBottom: form.category === "Other" ? 16 : 0 }}
-                />
-                {form.category === "Other" && (
-                  <input
-                    value={form.customCategory}
-                    onChange={e => setForm(f => ({ ...f, customCategory: e.target.value }))}
-                    placeholder="Enter custom category..."
-                    style={{
-                      width: "100%", background: "var(--bg-1)", border: "1px solid var(--border)", 
-                      outline: "none", color: "var(--text)", padding: "14px 16px", borderRadius: 12, fontSize: 15,
-                      fontFamily: "'Inter', sans-serif"
-                    }}
-                  />
-                )}
-              </>
+          {/* Category */}
+          <div style={{ marginBottom: 24 }}>
+            <Dropdown
+              options={[
+                ...(contestConfig?.topic ? [`Weekly Contest (${contestConfig.topic})`] : []),
+                ...(originalBlog?.isContestEntry && originalBlog.contestTopic && originalBlog.contestTopic !== contestConfig?.topic ? [`Weekly Contest (${originalBlog.contestTopic})`] : []),
+                "Buying Guide", "Comparison", "Opinion", "Tips", "Gaming", "News", "Other"
+              ].map(c => ({ value: c, label: c }))}
+              value={form.category}
+              onChange={val => setForm(f => ({ ...f, category: val }))}
+              style={{ width: "100%", marginBottom: form.category === "Other" ? 16 : 0 }}
+            />
+            {form.category === "Other" && (
+              <input
+                value={form.customCategory}
+                onChange={e => setForm(f => ({ ...f, customCategory: e.target.value }))}
+                placeholder="Enter custom category..."
+                style={{
+                  width: "100%", background: "var(--bg-1)", border: "1px solid var(--border)",
+                  outline: "none", color: "var(--text)", padding: "14px 16px", borderRadius: 12, fontSize: 15,
+                  fontFamily: "'Inter', sans-serif"
+                }}
+              />
             )}
           </div>
 
-          {/* Step 3: Cover Image */}
-          <div style={{ marginBottom: 48 }}>
-            <div style={{ fontSize: 13, color: "#60A5FA", fontWeight: 700, marginBottom: 12 }}>STEP 3 • COVER IMAGE</div>
-
+          {/* Cover Image */}
+          <div style={{ marginBottom: 32 }}>
             <div style={{
               height: isMobile ? 240 : 320,
               borderRadius: 20,
@@ -1442,8 +1500,8 @@ export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) =>
               marginBottom: 20,
               boxShadow: "0 20px 40px rgba(0,0,0,0.4)"
             }}>
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(transparent, var(--bg-overlay))", borderRadius: 20 }} />
-              <div style={{ position: "absolute", bottom: 24, left: 24, right: 24, color: "var(--text)" }}>
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.8))", borderRadius: 20 }} />
+              <div style={{ position: "absolute", bottom: 24, left: 24, right: 24, color: "#ffffff" }}>
                 <div style={{ fontSize: 13, opacity: 0.9 }}>{form.category === "Other" ? (form.customCategory || "Other") : form.category}</div>
                 <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>{form.title || "Your Blog Title"}</div>
               </div>
@@ -1480,11 +1538,9 @@ export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) =>
             )}
           </div>
 
-          {/* Step 4: Content */}
+          {/* Content */}
           <div>
-            <div style={{ fontSize: 13, color: "#60A5FA", fontWeight: 700, marginBottom: 12 }}>STEP 4 • WRITE CONTENT</div>
-
-            <div style={{ background: "var(--bg-1)", borderRadius: 16, padding: 12, marginBottom: 16 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
               {[
                 { label: "Bold", before: "**", after: "**" },
                 { label: "H2", before: "## ", after: "" },
@@ -1503,11 +1559,11 @@ export function WriteBlogPage({ setPage, editPostId }: { setPage: (p: string) =>
               id="blog-textarea"
               value={form.content}
               onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-              placeholder="Start writing your story here..."
+              placeholder="Tell your story..."
               style={{
-                width: "100%", minHeight: 480, background: "var(--bg)", border: "1px solid var(--border)",
-                borderRadius: 16, padding: 24, fontSize: 17, lineHeight: 1.8, color: "var(--text)",
-                resize: "vertical", outline: "none", fontWeight: 500
+                width: "100%", minHeight: 480, background: "transparent", border: "none",
+                padding: 0, fontSize: isMobile ? 16 : 18, lineHeight: 1.8, color: "var(--text)",
+                resize: "vertical", outline: "none", fontWeight: 400, fontFamily: "'Inter', serif"
               }}
             />
           </div>
