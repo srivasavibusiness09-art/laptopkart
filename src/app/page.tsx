@@ -33,6 +33,7 @@ import {
   PrivacyPolicyPage,
   RefundPolicyPage,
   TermsOfUsePage,
+  WarrantyPage,
 } from "@/components/OtherPages";
 
 import { BadgeCheck, Heart, Shield, Star } from "lucide-react";
@@ -901,6 +902,7 @@ export default function App() {
             {displayPage === "privacy-policy" && <PrivacyPolicyPage setPage={handleNavigate} />}
             {displayPage === "refund-policy" && <RefundPolicyPage setPage={handleNavigate} />}
             {displayPage === "terms-of-use" && <TermsOfUsePage setPage={handleNavigate} />}
+            {displayPage === "warranty" && <WarrantyPage setPage={handleNavigate} />}
             {displayPage === "accessories" && (
               <AccessoriesPage
                 accessories={accessories}

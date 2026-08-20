@@ -2324,3 +2324,57 @@ export function TermsOfUsePage({ setPage }: { setPage: (p: string) => void }) {
     </div>
   );
 }
+
+// ─── Warranty Page ─────────────────────────────────────────────────────────────
+
+export function WarrantyPage({ setPage }: { setPage: (p: string) => void }) {
+  return (
+    <div style={policyWrap}>
+      <div style={policyInner}>
+        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", fontSize: 13, marginBottom: 28, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
+          ← Back to Home
+        </button>
+        <span style={policyBadge}>Coverage</span>
+        <h1 style={policyH1}>Warranty Policy</h1>
+        <p style={policySubtitle}>Peace of mind with every purchase.</p>
+
+        <h2 style={policyH2}>1-Year Warranty Guarantee</h2>
+        <div style={policyCard}>
+          <p style={{ ...policyP, marginBottom: 0 }}>All refurbished laptops and desktops sold on Laptopkart come with a <strong style={{ color: "var(--success)" }}>minimum 1-year warranty</strong> unless stated otherwise in the product listing. Our warranty ensures your device runs smoothly and covers hardware defects under normal usage.</p>
+        </div>
+
+        <h2 style={policyH2}>What is Covered?</h2>
+        <ul style={policyUl}>
+          <li>Internal hardware component failures (e.g., Motherboard, RAM, Storage)</li>
+          <li>Screen defects not caused by physical damage</li>
+          <li>Keyboard and trackpad malfunctions</li>
+          <li>Power issues and battery defects (Note: Batteries have a 6-month limited warranty)</li>
+        </ul>
+
+        <h2 style={policyH2}>What is NOT Covered?</h2>
+        <ul style={policyUl}>
+          <li>Physical damage (drops, cracks, spills, liquid damage)</li>
+          <li>Software issues (OS corruption, viruses, malware, third-party software)</li>
+          <li>Damage caused by unauthorized repairs or modifications</li>
+          <li>Normal wear and tear (scratches, dents, cosmetic blemishes)</li>
+        </ul>
+
+        <h2 style={policyH2}>How to Claim Warranty</h2>
+        <p style={policyP}>If you face any issues with your device during the warranty period, simply follow these steps:</p>
+        <ol style={policyUl}>
+          <li>Contact our support team with your Order ID and a description of the issue.</li>
+          <li>Our technicians will attempt to troubleshoot the issue remotely.</li>
+          <li>If hardware repair is needed, we will guide you on how to ship the device back to us or arrange a pickup.</li>
+          <li>We will repair or replace the defective part at no cost to you and ship it back.</li>
+        </ol>
+
+        <h2 style={policyH2}>Contact Us for Support</h2>
+        <div style={policyCard}>
+          <p style={{ ...policyP, marginBottom: 4 }}><strong style={{ color: "var(--text)" }}>Laptopkart Support Team</strong></p>
+          <p style={{ ...policyP, marginBottom: 4 }}>📧 srivasavibusiness09@gmail.com</p>
+          <p style={{ ...policyP, marginBottom: 0 }}>📞 +91 97503 31313 &nbsp;(10 AM – 7 PM, Mon–Sat)</p>
+        </div>
+      </div>
+    </div>
+  );
+}
