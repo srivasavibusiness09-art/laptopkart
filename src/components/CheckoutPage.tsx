@@ -189,47 +189,40 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
     if (step === 1) {
       setIsProcessing(true);
 
-      // Verify stock in database before proceeding to payment/checkout
       try {
-        for (const item of cart) {
-          const productRef = doc(db, "products", String(item.id));
-          const productSnap = await getDoc(productRef);
-          if (productSnap.exists()) {
-            const pData = productSnap.data();
-            if (pData.stock !== undefined && pData.stock < (item.qty || 1)) {
-              alert(`Sorry, "${item.name}" is now out of stock. Please adjust your cart.`);
-              setIsProcessing(false);
-              return;
+        const validations: Promise<any>[] = [];
+        
+        // Only check stock on client for COD. Cashfree API checks it on the server.
+        if (payment === "cod") {
+          validations.push(...cart.map(async (item) => {
+            const productRef = doc(db, "products", String(item.id));
+            const productSnap = await getDoc(productRef);
+            if (productSnap.exists()) {
+              const pData = productSnap.data();
+              if (pData.stock !== undefined && pData.stock < (item.qty || 1)) {
+                throw new Error(`Sorry, "${item.name}" is now out of stock. Please adjust your cart.`);
+              }
             }
-          }
+          }));
         }
-      } catch (stockErr) {
-        console.error("Stock validation failed:", stockErr);
-      }
 
-      // Re-validate coupon right before paying
-      if (appliedCoupon) {
-        if (!address.phone) {
-          alert("Please enter your phone number to use this coupon.");
-          setIsProcessing(false);
-          return;
+        if (appliedCoupon) {
+          validations.push((async () => {
+            if (!address.phone) throw new Error("Please enter your phone number to use this coupon.");
+            const cSnap = await getDoc(doc(db, "coupons", appliedCoupon.code));
+            if (!cSnap.exists()) throw new Error("Coupon is no longer valid.");
+            const cData = cSnap.data();
+            if (cData.usedBy && cData.usedBy.includes(address.phone)) throw new Error("You have already used this coupon code.");
+          })());
         }
-        try {
-          const cSnap = await getDoc(doc(db, "coupons", appliedCoupon.code));
-          if (!cSnap.exists()) {
-            alert("Coupon is no longer valid.");
-            setIsProcessing(false);
-            return;
-          }
-          const cData = cSnap.data();
-          if (cData.usedBy && cData.usedBy.includes(address.phone)) {
-            alert("You have already used this coupon code.");
-            setIsProcessing(false);
-            return;
-          }
-        } catch (e) {
-          console.error("Coupon validation error", e);
+
+        if (validations.length > 0) {
+          await Promise.all(validations);
         }
+      } catch (err: any) {
+        alert(err.message || "Validation failed.");
+        setIsProcessing(false);
+        return;
       }
 
       let finalOrderId = orderId;
@@ -266,8 +259,8 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
           const orderRef = doc(db, "orders", finalOrderId);
           await setDoc(orderRef, newOrder);
 
-          // Decrease stock for items in the order
-          for (const item of cart) {
+          // Decrease stock for items in the order (Parallelized)
+          await Promise.all(cart.map(async (item) => {
             const productRef = doc(db, "products", String(item.id));
             const productSnap = await getDoc(productRef);
             if (productSnap.exists()) {
@@ -278,16 +271,16 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
                 });
               }
             }
-          }
+          }));
 
-          // Update default address details inside users doc for subsequent orders
-          await setDoc(doc(db, "users", user.uid), {
+          // Update default address details inside users doc for subsequent orders (Fire and forget)
+          setDoc(doc(db, "users", user.uid), {
             phone: address.phone,
             street: address.street,
             city: address.city,
             state: address.state,
             pincode: address.pincode
-          }, { merge: true });
+          }, { merge: true }).catch(e => console.error("Failed to update user address:", e));
 
           setCart([]);
           setStep(2);
@@ -326,14 +319,14 @@ export default function CheckoutPage({ cart, setPage, setCart, user, appliedCoup
 
         const data = await res.json();
         if (data.paymentSessionId) {
-          // Update default address details inside users doc for subsequent orders prior to checkout
-          await setDoc(doc(db, "users", user.uid), {
+          // Update default address details inside users doc for subsequent orders (Fire and forget)
+          setDoc(doc(db, "users", user.uid), {
             phone: address.phone,
             street: address.street,
             city: address.city,
             state: address.state,
             pincode: address.pincode
-          }, { merge: true });
+          }, { merge: true }).catch(e => console.error("Failed to update user address:", e));
 
           // Initialize client SDK and checkout using the session ID
           const cashfree = (window as any).Cashfree({

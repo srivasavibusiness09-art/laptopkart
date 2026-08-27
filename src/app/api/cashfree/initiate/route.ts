@@ -7,16 +7,22 @@ export async function POST(req: Request) {
   try {
     const { amount, orderId, email, phone, userId, address, cart, couponCode, discountAmount } = await req.json();
 
-    // Server-side stock verification
-    for (const item of cart) {
+    // Server-side stock verification (Parallelized)
+    const stockChecks = await Promise.all(cart.map(async (item: any) => {
       const productRef = doc(db, "products", String(item.id));
       const productSnap = await getDoc(productRef);
       if (productSnap.exists()) {
         const pData = productSnap.data();
         if (pData.stock !== undefined && pData.stock < (item.qty || 1)) {
-          return NextResponse.json({ error: `Sorry, "${item.name}" is now out of stock.` }, { status: 400 });
+          return `Sorry, "${item.name}" is now out of stock.`;
         }
       }
+      return null;
+    }));
+    
+    const stockError = stockChecks.find(err => err !== null);
+    if (stockError) {
+      return NextResponse.json({ error: stockError }, { status: 400 });
     }
 
     // Initialize Cashfree PG SDK
@@ -28,7 +34,12 @@ export async function POST(req: Request) {
     // SDK configuration
     const cashfree = new Cashfree(env, appId, secretKey);
 
-    // Pre-create the pending order in Firestore
+    // Setup return callback domain dynamically based on incoming request headers
+    const requestHost = req.headers.get("host") || "localhost:3000";
+    // Cashfree Production PG strictly requires https schema URLs for callback returns
+    const protocol = isProd ? "https" : (req.headers.get("x-forwarded-proto") || "http");
+    const baseUrl = `${protocol}://${requestHost}`;
+
     const newOrder = {
       orderId,
       createdAt: new Date().toISOString(),
@@ -48,13 +59,6 @@ export async function POST(req: Request) {
       couponCode: couponCode || null,
       discountAmount: discountAmount || 0
     };
-    await setDoc(doc(db, "orders", orderId), newOrder);
-
-    // Setup return callback domain dynamically based on incoming request headers
-    const requestHost = req.headers.get("host") || "localhost:3000";
-    // Cashfree Production PG strictly requires https schema URLs for callback returns
-    const protocol = isProd ? "https" : (req.headers.get("x-forwarded-proto") || "http");
-    const baseUrl = `${protocol}://${requestHost}`;
 
     const requestPayload = {
       order_amount: Number(amount),
@@ -71,7 +75,11 @@ export async function POST(req: Request) {
       }
     };
 
-    const response = await cashfree.PGCreateOrder(requestPayload);
+    // Parallelize Firestore pending order creation and Cashfree session creation
+    const [_, response] = await Promise.all([
+      setDoc(doc(db, "orders", orderId), newOrder),
+      cashfree.PGCreateOrder(requestPayload)
+    ]);
 
     return NextResponse.json({
       paymentSessionId: response.data.payment_session_id,

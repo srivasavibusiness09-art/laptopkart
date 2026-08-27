@@ -962,12 +962,12 @@ export default function App() {
         const newStatus = ord.status || 'Pending';
 
         if (!isInitial) {
-          const isRealOrder = newStatus !== "Pending Payment" && newStatus !== "Failed";
-          const wasRealOrder = prevStatus && prevStatus !== "Pending Payment" && prevStatus !== "Failed";
+          const isRealOrder = newStatus !== "Pending Payment" && newStatus !== "Failed" && newStatus !== "Cancelled";
+          const wasRealOrder = prevStatus && prevStatus !== "Pending Payment" && prevStatus !== "Failed" && prevStatus !== "Cancelled";
 
           // Trigger alert if:
-          // 1. It is a new order (added) and is already paid or COD (i.e. not Pending Payment or Failed)
-          // 2. Or it was modified, and its status transitioned from 'Pending Payment' to 'Paid' (or any non-pending/non-failed state)
+          // 1. It is a new order (added) and is already paid or COD (i.e. not Pending Payment or Failed or Cancelled)
+          // 2. Or it was modified, and its status transitioned from 'Pending Payment' to 'Paid' (or any non-pending/non-failed/non-cancelled state)
           if (isRealOrder && !wasRealOrder) {
             newOrder = ord;
           }
@@ -2974,7 +2974,7 @@ export default function App() {
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          {((ord.status || 'Pending') === 'Completed' || (ord.status || 'Pending') === 'Cancelled') && (
+                          {((ord.status || 'Pending') === 'Completed' || (ord.status || 'Pending') === 'Cancelled' || (ord.status || 'Pending') === 'Failed' || (ord.status || 'Pending') === 'Pending Payment') && (
                             <button
                               onClick={() => handleOrderDelete(ord.orderId)}
                               style={{
@@ -3031,11 +3031,13 @@ export default function App() {
                                   }}
                                 >
                                   <option value="Paid" style={{ background: '#131a24', color: '#fff' }}>Paid</option>
+                                  <option value="Pending Payment" style={{ background: '#131a24', color: '#fff' }}>Pending Payment</option>
                                   <option value="Pending (COD)" style={{ background: '#131a24', color: '#fff' }}>Pending (COD)</option>
                                   <option value="Paid (Simulated)" style={{ background: '#131a24', color: '#fff' }}>Paid (Simulated)</option>
                                   <option value="Shipped" style={{ background: '#131a24', color: '#fff' }}>Shipped</option>
                                   <option value="Completed" style={{ background: '#131a24', color: '#fff' }}>Completed</option>
                                   <option value="Cancelled" style={{ background: '#131a24', color: '#fff' }}>Cancelled</option>
+                                  <option value="Failed" style={{ background: '#131a24', color: '#fff' }}>Failed</option>
                                 </select>
                                 <span style={{
                                   position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
