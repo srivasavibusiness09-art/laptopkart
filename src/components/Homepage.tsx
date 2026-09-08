@@ -21,6 +21,7 @@ import Button from "./common/Button";
 import RatingStars from "./common/RatingStars";
 import Dropdown from "./common/Dropdown";
 import Script from "next/script";
+import Link from "next/link";
 
 /* ── Trust Strip ──────────────────────────────────────── */
 const trustItems = [
@@ -199,13 +200,17 @@ interface HomepageProps {
   wishlist: (number | string)[];
   accessories: any[];
   customerReviews: any[];
+  clients?: any[];
   user: any;
   triggerAlert: (type: "success" | "warning" | "error", msg: string) => void;
 }
 
-export default function Homepage({ products, banners, heroPosters, firestoreReady, setPage, onViewProduct, onAddToCart, onWishlist, wishlist, accessories, customerReviews, user, triggerAlert }: HomepageProps) {
+export default function Homepage({ products, banners, heroPosters, firestoreReady, setPage, onViewProduct, onAddToCart, onWishlist, wishlist, accessories, customerReviews, clients = [], user, triggerAlert }: HomepageProps) {
   const isMobile = useIsMobile();
   const [step, setStep] = useState(0);
+
+  // Filter out products with 0 stock so they don't appear anywhere on the homepage
+  const activeProducts = products.filter(p => p.stock !== 0);
 
 
 
@@ -605,7 +610,7 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
       const r = na[2];
       const br = na[3];
 
-      let filtered = products.filter(p => {
+      let filtered = activeProducts.filter(p => {
         let budgetMatch = true;
         if (b === "Under ₹20,000") budgetMatch = p.price < 20000;
         else if (b === "₹20K–₹40K") budgetMatch = p.price >= 20000 && p.price <= 40000;
@@ -627,7 +632,7 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
       });
 
       if (filtered.length < 3) {
-        const lessStrict = products.filter(p => {
+        const lessStrict = activeProducts.filter(p => {
           let budgetMatch = true;
           if (b === "Under ₹20,000") budgetMatch = p.price <= 30000;
           else if (b === "₹20K–₹40K") budgetMatch = p.price >= 15000 && p.price <= 50000;
@@ -642,7 +647,7 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
       }
 
       if (filtered.length < 3) {
-        const merged = [...filtered, ...products].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+        const merged = [...filtered, ...activeProducts].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
         filtered = merged;
       }
 
@@ -667,7 +672,7 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
   };
 
   const renderTopPicks = () => {
-    const latestEightLaptops = [...products]
+    const latestEightLaptops = [...activeProducts]
       .sort((a, b) => {
         const idA = Number(a.id);
         const idB = Number(b.id);
@@ -828,6 +833,77 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
     );
   };
 
+  const renderTrustedCollaborators = () => (
+    clients && clients.length > 0 ? (
+      <div style={{ padding: isMobile ? "0 18px" : "0 24px", textAlign: "center", marginBottom: 64 }}>
+        <Reveal delay={0.16} y={20}>
+          <div style={{ color: "#8B9BBE", fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>
+            TRUSTED BY
+          </div>
+          <h2 style={{ color: "var(--text)", fontSize: "clamp(24px,4vw,32px)", fontWeight: 800, marginBottom: 8, letterSpacing: "-0.02em" }}>
+            Organizations That Trust Laptopkart
+          </h2>
+          <p style={{ color: "var(--text-muted)", fontSize: 15, marginBottom: 32 }}>
+            Empowering educational institutions, businesses and organizations with reliable technology solutions.
+          </p>
+
+          <div style={{
+            position: "relative",
+            overflowX: "auto",
+            paddingBottom: 20,
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none"
+          }} className="hide-scrollbar">
+            <div style={{
+              display: "flex",
+              gap: 20,
+              width: "max-content",
+              padding: "0 10px",
+              margin: "0 auto",
+              justifyContent: "center"
+            }}>
+              {clients.map((c, i) => (
+                <div onClick={() => setPage(`client:${c.id}`)} key={i} style={{ textDecoration: 'none' }}>
+                  <Card
+                    hoverable
+                    style={{
+                      width: 180,
+                      height: 100,
+                      padding: 16,
+                      flexShrink: 0,
+                      background: "var(--card-bg)",
+                      border: `1px solid var(--border)`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease"
+                    }}
+                  >
+                    {c.logoUrl ? (
+                      <img src={c.logoUrl} alt={c.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                    ) : (
+                      <div style={{ color: "var(--text)", fontWeight: 700, fontSize: 16, textAlign: "center" }}>
+                        {c.name}
+                      </div>
+                    )}
+                  </Card>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <button onClick={() => setPage("clients")} style={{ background: "none", border: "none", cursor: "pointer", color: "#38BDF8", fontSize: 14, fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+              View All Partners <ArrowRight size={14} />
+            </button>
+          </div>
+        </Reveal>
+      </div>
+    ) : null
+  );
+
   return (
     <main>
       {!isMobile ? (
@@ -836,6 +912,7 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
           <Reveal y={0}><HeroBanner setPage={setPage} banners={heroPosters || []} isLoading={!firestoreReady} /></Reveal>
           <Reveal delay={0.08} y={20}><TrustStrip /></Reveal>
           <Reveal delay={0.12} y={20}><HeroStats /></Reveal>
+          {renderTrustedCollaborators()}
         </>
       ) : (
         // Mobile Layout
@@ -843,6 +920,7 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
           <Reveal y={0}><HeroBanner setPage={setPage} banners={heroPosters || []} isLoading={!firestoreReady} /></Reveal>
           <Reveal delay={0.08} y={20}><TrustStrip /></Reveal>
           <Reveal delay={0.12} y={20}><HeroStats /></Reveal>
+          {renderTrustedCollaborators()}
           {renderTopPicks()}
         </>
       )}
@@ -854,10 +932,10 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
             ref={videoSectionRef}
             id="promo-video-section"
             className={videoSettings.orientation === "portrait" ? "full-window-video" : ""}
-            style={{ 
-              position: "relative", 
-              overflow: "hidden", 
-              background: "linear-gradient(135deg, #082F49 0%, #0C4A6E 45%, #0369A1 100%)", 
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              background: "linear-gradient(135deg, #082F49 0%, #0C4A6E 45%, #0369A1 100%)",
               marginLeft: "calc(50% - 50vw)",
               width: "100vw",
               aspectRatio: videoSettings.orientation === "portrait" ? "auto" : "16/9"
@@ -1001,7 +1079,7 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
                 realCount = accessories.length;
               } else {
                 let mappedCat = cat.name.replace(" Laptops", "").replace(/s$/, "");
-                realCount = products.filter(p =>
+                realCount = activeProducts.filter(p =>
                   p.category.toLowerCase().includes(mappedCat.toLowerCase()) ||
                   (mappedCat === 'MacBook' && p.brand.toLowerCase() === 'apple')
                 ).length;
@@ -1012,7 +1090,7 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
                   key={cat.name}
                   onClick={() => {
                     if (cat.name === "Accessories") setPage("accessories");
-                    else if (cat.name === "Business Laptops") setPage("listing:Business");
+                    else if (cat.name === "Business Laptops") setPage("listing:Business Laptops");
                     else if (cat.name === "Gaming Laptops") setPage("listing:Gaming");
                     else setPage(`listing:${cat.name}`);
                   }}
@@ -1396,53 +1474,6 @@ export default function Homepage({ products, banners, heroPosters, firestoreRead
               <div id="featurable-57997301-33a3-4de6-b3e4-2507f21be404" data-featurable-async></div>
             </div>
 
-            {/* Direct Website Customer Reviews */}
-            {directReviews.length > 0 && (
-              <div style={{ marginTop: 48 }}>
-                <h3 style={{
-                  fontFamily: "Sora", color: "var(--text)", fontSize: 20,
-                  fontWeight: 800, marginBottom: 24, textAlign: "center"
-                }}>
-                  Direct Website Customer Reviews
-                </h3>
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit,minmax(280px,1fr))",
-                  gap: 20,
-                }}>
-                  {directReviews.map((r, i) => (
-                    <Card
-                      key={`${r.name}-${i}`}
-                      style={{
-                        padding: 24,
-                        animation: `fadeUp 0.5s ease ${i * 0.1}s both`,
-                      }}
-                    >
-                      <RatingStars rating={r.rating} size={13} style={{ marginBottom: 12 }} />
-                      <p style={{ color: COLORS.text, fontSize: 14, lineHeight: 1.7, margin: "0 0 16px" }}>
-                        &ldquo;{r.text}&rdquo;
-                      </p>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{
-                          width: 38, height: 38, borderRadius: "50%",
-                          background: "linear-gradient(135deg, rgba(56,189,248,0.15), rgba(99,102,241,0.15))",
-                          border: "1px solid rgba(56,189,248,0.22)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          color: COLORS.green, fontWeight: 800, fontSize: 12,
-                          fontFamily: "'Sora', sans-serif",
-                        }}>
-                          {r.avatar}
-                        </div>
-                        <div>
-                          <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 13 }}>{r.name}</div>
-                          <div style={{ color: COLORS.muted, fontSize: 12 }}>{r.city}</div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
           </>, "var(--bg-1)"
         );
       })()}

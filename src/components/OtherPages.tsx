@@ -227,6 +227,22 @@ export function ComparePage({ productsList = [] }: { productsList?: any[] }) {
 
 export function AboutPage() {
   const isMobile = useIsMobile();
+  const [missionText, setMissionText] = useState("We started in 2019 with a simple goal — make high-quality refurbished laptops accessible to every Indian, whether a student, professional, or small business owner.\n\nToday, we've sold over 50,000 devices across India, with every single device undergoing our rigorous multi-point quality check.");
+
+  useEffect(() => {
+    const fetchMission = async () => {
+      try {
+        const snap = await getDoc(doc(db, 'settings', 'global'));
+        if (snap.exists() && snap.data().mission) {
+          setMissionText(snap.data().mission);
+        }
+      } catch (err) {
+        console.error("Failed to fetch mission:", err);
+      }
+    };
+    fetchMission();
+  }, []);
+
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "28px 14px" : "60px 20px" }}>
       <div style={{ textAlign: "center", marginBottom: isMobile ? 36 : 60 }}>
@@ -236,8 +252,9 @@ export function AboutPage() {
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 24 : 48, marginBottom: 60, alignItems: "center" }}>
         <div>
           <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: isMobile ? 26 : 32, fontWeight: 800, color: COLORS.text, marginBottom: 16 }}>Our Mission</h2>
-          <p style={{ color: COLORS.muted, fontSize: 16, lineHeight: 1.8, marginBottom: 16 }}>We started in 2019 with a simple goal — make high-quality refurbished laptops accessible to every Indian, whether a student, professional, or small business owner.</p>
-          <p style={{ color: COLORS.muted, fontSize: 16, lineHeight: 1.8 }}>Today, we&apos;ve sold over 50,000 devices across India, with every single device undergoing our rigorous multi-point quality check.</p>
+          {missionText.split('\n').map((paragraph, idx) => (
+            <p key={idx} style={{ color: COLORS.muted, fontSize: 16, lineHeight: 1.8, marginBottom: 16 }}>{paragraph}</p>
+          ))}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           {[["5K+", "Devices Sold"], ["4.9★", "Avg Rating"], ["1 Year", "Warranty"], ["99.2%", "Satisfaction"]].map(([v, l]) => (

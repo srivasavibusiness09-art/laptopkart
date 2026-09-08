@@ -6,6 +6,8 @@ import { uploadProductImage, uploadVideoToCloudinary } from "./lib/storage";
 import { deleteCloudinaryAssets } from "./lib/cloudinaryDelete";
 import AdminLogin from "./components/AdminLogin";
 import CollegesTab from "./components/CollegesTab";
+import ClientsTab from "./components/ClientsTab";
+import SettingsTab from "./components/SettingsTab";
 import {
   LayoutDashboard,
   Laptop,
@@ -48,7 +50,10 @@ import {
   Award,
   ChevronRight,
   Calendar,
-  Target
+  Target,
+  Settings as SettingsIcon,
+  MessageSquare,
+  Briefcase
 } from 'lucide-react';
 
 // compressImage removed (using storage.ts module)
@@ -232,7 +237,7 @@ export const DEFAULT_BANNERS: Banner[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'hero_posters' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests' | 'coupons' | 'product_requests' | 'student_hub' | 'users' | 'colleges'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'accessories' | 'banners' | 'hero_posters' | 'orders' | 'blogs' | 'video' | 'subscribers' | 'sell_requests' | 'coupons' | 'product_requests' | 'student_hub' | 'users' | 'colleges' | 'clients' | 'settings'>('overview');
   const [ordersFilter, setOrdersFilter] = useState<'active' | 'completed' | 'unpaid'>('active');
   const [ordersPage, setOrdersPage] = useState(0);
 
@@ -293,8 +298,9 @@ export default function App() {
   const [subscribers, setSubscribers] = useState<any[]>([]);
 
   // Student Hub state
-  const [giveawayConfig, setGiveawayConfig] = useState<{ prizeTitle: string, prizeImage: string, startTime: string, deadline: string, topic: string, prizeImagePublicId?: string }>({ prizeTitle: '', prizeImage: '', startTime: '', deadline: '', topic: '' });
+  const [giveawayConfig, setGiveawayConfig] = useState<{ prizeTitle: string, prizeImage: string, secondPrizeTitle?: string, secondPrizeImage?: string, startTime: string, deadline: string, topic: string, nextWeekTopic?: string, prizeImagePublicId?: string, secondPrizeImagePublicId?: string }>({ prizeTitle: '', prizeImage: '', secondPrizeTitle: '', secondPrizeImage: '', startTime: '', deadline: '', topic: '', nextWeekTopic: '' });
   const [lastWinnerData, setLastWinnerData] = useState<any>(null);
+  const [secondWinnerData, setSecondWinnerData] = useState<any>(null);
   const [hubSaving, setHubSaving] = useState(false);
   const [hubImageUploading, setHubImageUploading] = useState(false);
   const [hubLeaderboard, setHubLeaderboard] = useState<{ email: string; name: string; articles: number; reads: number }[]>([]);
@@ -937,6 +943,11 @@ export default function App() {
         if (lastWinnerDoc.exists()) {
           setLastWinnerData(lastWinnerDoc.data());
         }
+
+        const secondWinnerDoc = await getDoc(doc(db, "giveaway", "secondWinner"));
+        if (secondWinnerDoc.exists()) {
+          setSecondWinnerData(secondWinnerDoc.data());
+        }
       } catch (err) {
         console.error("Error fetching giveaway data:", err);
       }
@@ -1533,22 +1544,28 @@ export default function App() {
     }
   };
 
-  const handleDeleteWinner = async () => {
-    if (!window.confirm("Are you sure you want to remove the currently announced winner?")) return;
+  const handleDeleteWinner = async (rank: 1 | 2 = 1) => {
+    if (!window.confirm(`Are you sure you want to remove the currently announced ${rank === 1 ? '1st' : '2nd'} prize winner?`)) return;
     try {
-      await deleteDoc(doc(db, 'giveaway', 'lastWinner'));
-      setLastWinnerData(null);
-      triggerAlert('success', 'Winner removed successfully.');
+      if (rank === 1) {
+        await deleteDoc(doc(db, 'giveaway', 'lastWinner'));
+        setLastWinnerData(null);
+      } else {
+        await deleteDoc(doc(db, 'giveaway', 'secondWinner'));
+        setSecondWinnerData(null);
+      }
+      triggerAlert('success', `${rank === 1 ? '1st' : '2nd'} Prize Winner removed successfully.`);
     } catch (err) {
       console.error("Error removing winner:", err);
       triggerAlert('danger', 'Failed to remove winner.');
     }
   };
 
-  const handleMakeWinner = async (blog: any) => {
-    if (!window.confirm(`Make ${blog.author || blog.authorName || 'User'} the winner for this week's contest?`)) return;
+  const handleMakeWinner = async (blog: any, rank: 1 | 2 = 1) => {
+    if (!window.confirm(`Make ${blog.author || blog.authorName || 'User'} the ${rank === 1 ? '1st' : '2nd'} prize winner for this week's contest?`)) return;
     try {
-      await setDoc(doc(db, 'giveaway', 'lastWinner'), {
+      const docName = rank === 1 ? 'lastWinner' : 'secondWinner';
+      await setDoc(doc(db, 'giveaway', docName), {
         blogId: blog.id,
         name: blog.authorName || blog.author || (blog.authorEmail ? blog.authorEmail.split('@')[0] : 'Unknown'),
         city: blog.collegeId || 'Student',
@@ -1556,7 +1573,7 @@ export default function App() {
         photo: blog.authorPhoto || '',
         announcedAt: new Date().toISOString()
       });
-      triggerAlert('success', 'Winner announced and saved to Firestore!');
+      triggerAlert('success', `${rank === 1 ? '1st' : '2nd'} Prize Winner announced and saved to Firestore!`);
     } catch (err) {
       console.error("Error setting winner:", err);
       triggerAlert('danger', 'Failed to announce winner.');
@@ -1827,33 +1844,47 @@ export default function App() {
         {/* Navigation Tabs */}
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {[
-            { group: 'Main Dashboard', items: [
-              { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> }
-            ]},
-            { group: 'Sales & Requests', items: [
-              { id: 'orders', label: 'Customer Orders', icon: <FileText size={18} />, count: orders.filter(ord => !['Completed', 'Cancelled', 'Pending Payment', 'Failed'].includes(ord.status || 'Pending')).length },
-              { id: 'sell_requests', label: 'Sell Requests', icon: <RefreshCw size={18} />, count: sellRequests.filter(r => (r.status || 'Pending Review') === 'Pending Review').length },
-              { id: 'product_requests', label: 'Product Requests', icon: <ClipboardList size={18} />, count: productRequests.filter(req => req.status === 'Pending').length },
-            ]},
-            { group: 'Catalog Management', items: [
-              { id: 'products', label: 'Laptops & PCs', icon: <Laptop size={18} /> },
-              { id: 'accessories', label: 'Accessories', icon: <Keyboard size={18} /> },
-            ]},
-            { group: 'Marketing & Storefront', items: [
-              { id: 'banners', label: 'Banners', icon: <ImageIcon size={18} /> },
-              { id: 'hero_posters', label: 'Hero Posters', icon: <ImageIcon size={18} /> },
-              { id: 'video', label: 'Promo Video', icon: <Video size={18} /> },
-              { id: 'coupons', label: 'Coupons', icon: <Tag size={18} /> },
-            ]},
-            { group: 'Content & Community', items: [
-              { id: 'student_hub', label: 'Student Hub', icon: <Sparkles size={18} /> },
-              { id: 'blogs', label: 'Tech Blogs', icon: <BookOpen size={18} /> },
-              { id: 'subscribers', label: 'Newsletter', icon: <Mail size={18} /> },
-              { id: 'colleges', label: 'College QRs', icon: <Target size={18} /> },
-            ]},
-            { group: 'Administration', items: [
-              { id: 'users', label: 'Users', icon: <User size={18} /> },
-            ]}
+            {
+              group: 'Main Dashboard', items: [
+                { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> }
+              ]
+            },
+            {
+              group: 'Sales & Requests', items: [
+                { id: 'orders', label: 'Customer Orders', icon: <FileText size={18} />, count: orders.filter(ord => !['Completed', 'Cancelled', 'Pending Payment', 'Failed'].includes(ord.status || 'Pending')).length },
+                { id: 'sell_requests', label: 'Sell Requests', icon: <RefreshCw size={18} />, count: sellRequests.filter(r => (r.status || 'Pending Review') === 'Pending Review').length },
+                { id: 'product_requests', label: 'Product Requests', icon: <ClipboardList size={18} />, count: productRequests.filter(req => req.status === 'Pending').length },
+              ]
+            },
+            {
+              group: 'Catalog Management', items: [
+                { id: 'products', label: 'Laptops & PCs', icon: <Laptop size={18} /> },
+                { id: 'accessories', label: 'Accessories', icon: <Keyboard size={18} /> },
+              ]
+            },
+            {
+              group: 'Marketing & Storefront', items: [
+                { id: 'banners', label: 'Banners', icon: <ImageIcon size={18} /> },
+                { id: 'hero_posters', label: 'Hero Posters', icon: <ImageIcon size={18} /> },
+                { id: 'video', label: 'Promo Video', icon: <Video size={18} /> },
+                { id: 'coupons', label: 'Coupons', icon: <Tag size={18} /> },
+              ]
+            },
+            {
+              group: 'Content & Community', items: [
+                { id: 'student_hub', label: 'Student Hub', icon: <Sparkles size={18} /> },
+                { id: 'blogs', label: 'Tech Blogs', icon: <BookOpen size={18} /> },
+                { id: 'subscribers', label: 'Newsletter', icon: <Mail size={18} /> },
+                { id: 'colleges', label: 'College QRs', icon: <Target size={18} /> },
+                { id: 'clients', label: 'Clients & Collaborators', icon: <Briefcase size={18} /> },
+              ]
+            },
+            {
+              group: 'Administration', items: [
+                { id: 'users', label: 'Users', icon: <User size={18} /> },
+                { id: 'settings', label: 'Settings', icon: <SettingsIcon size={18} /> },
+              ]
+            }
           ].map(section => (
             <div key={section.group} style={{ marginBottom: 12 }}>
               <div style={{ color: '#8B9BBE', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, padding: '0 16px', marginBottom: 8, opacity: 0.6 }}>
@@ -3354,17 +3385,30 @@ export default function App() {
                         <td style={{ padding: '18px 24px', textAlign: 'right' }}>
                           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
                             {(b.isContestEntry === true || (b.category && b.category.includes("Weekly Contest")) || !!b.contestTopic) && (
-                              <button
-                                onClick={() => handleMakeWinner(b)}
-                                style={{
-                                  background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(56,189,248,0.1))', border: '1px solid rgba(139,92,246,0.3)',
-                                  color: '#38BDF8', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700,
-                                  cursor: 'pointer', fontFamily: 'Sora', display: 'flex', alignItems: 'center', gap: 4
-                                }}
-                                title="Set as Winner"
-                              >
-                                <Award size={8} /> Make Winner
-                              </button>
+                              <div style={{ display: 'flex', gap: 4 }}>
+                                <button
+                                  onClick={() => handleMakeWinner(b, 1)}
+                                  style={{
+                                    background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.1))', border: '1px solid rgba(245,158,11,0.3)',
+                                    color: '#F59E0B', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700,
+                                    cursor: 'pointer', fontFamily: 'Sora', display: 'flex', alignItems: 'center', gap: 4
+                                  }}
+                                  title="Set as 1st Prize Winner"
+                                >
+                                  <Award size={8} /> 1st Prize
+                                </button>
+                                <button
+                                  onClick={() => handleMakeWinner(b, 2)}
+                                  style={{
+                                    background: 'linear-gradient(135deg, rgba(148,163,184,0.1), rgba(100,116,139,0.1))', border: '1px solid rgba(148,163,184,0.3)',
+                                    color: '#94A3B8', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700,
+                                    cursor: 'pointer', fontFamily: 'Sora', display: 'flex', alignItems: 'center', gap: 4
+                                  }}
+                                  title="Set as 2nd Prize Winner"
+                                >
+                                  <Award size={8} /> 2nd Prize
+                                </button>
+                              </div>
                             )}
                             <button
                               onClick={() => setBlogReviewModal({ open: true, item: b })}
@@ -5096,8 +5140,11 @@ export default function App() {
               if (giveawayConfig.prizeImagePublicId) {
                 await deleteCloudinaryAssets([giveawayConfig.prizeImagePublicId]);
               }
+              if (giveawayConfig.secondPrizeImagePublicId) {
+                await deleteCloudinaryAssets([giveawayConfig.secondPrizeImagePublicId]);
+              }
               await deleteDoc(doc(db, 'giveaway', 'current'));
-              setGiveawayConfig({ prizeTitle: '', prizeImage: '', startTime: '', deadline: '', topic: '' });
+              setGiveawayConfig({ prizeTitle: '', prizeImage: '', secondPrizeTitle: '', secondPrizeImage: '', startTime: '', deadline: '', topic: '' });
               triggerAlert('success', 'Giveaway contest cleared!');
             } catch (err) {
               triggerAlert('danger', 'Failed to clear contest.');
@@ -5124,7 +5171,22 @@ export default function App() {
             }
           };
 
-
+          const handleSecondPrizeImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+            setHubImageUploading(true);
+            try {
+              const { url, publicId } = await uploadProductImage(files[0]);
+              setGiveawayConfig(p => ({ ...p, secondPrizeImage: url, secondPrizeImagePublicId: publicId }));
+              triggerAlert('success', 'Second prize image uploaded successfully.');
+            } catch (err) {
+              console.error(err);
+              triggerAlert('danger', 'Error uploading second prize image.');
+            } finally {
+              setHubImageUploading(false);
+              if (e.target) e.target.value = '';
+            }
+          };
 
           const contestBlogs = blogs.filter((b: any) => b.approved !== false);
 
@@ -5147,12 +5209,21 @@ export default function App() {
                   <p style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 20 }}>Saved to Firestore <code style={{ color: '#38BDF8' }}>giveaway/current</code></p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div>
-                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Prize Title</label>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>1st Prize Title</label>
                       <input
                         className="form-input"
                         placeholder="e.g. Win a Bluetooth Neckband"
                         value={giveawayConfig.prizeTitle}
                         onChange={e => setGiveawayConfig(p => ({ ...p, prizeTitle: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>2nd Prize Title (Optional)</label>
+                      <input
+                        className="form-input"
+                        placeholder="e.g. Smart Watch"
+                        value={giveawayConfig.secondPrizeTitle || ''}
+                        onChange={e => setGiveawayConfig(p => ({ ...p, secondPrizeTitle: e.target.value }))}
                       />
                     </div>
                     <div>
@@ -5162,6 +5233,15 @@ export default function App() {
                         placeholder="e.g. AI in College"
                         value={giveawayConfig.topic || ''}
                         onChange={e => setGiveawayConfig(p => ({ ...p, topic: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Next Week's Topic (Teaser)</label>
+                      <input
+                        className="form-input"
+                        placeholder="e.g. Future of Wearables"
+                        value={giveawayConfig.nextWeekTopic || ''}
+                        onChange={e => setGiveawayConfig(p => ({ ...p, nextWeekTopic: e.target.value }))}
                       />
                     </div>
                     <div>
@@ -5241,6 +5321,80 @@ export default function App() {
                         placeholder="https://..."
                         value={giveawayConfig.prizeImage}
                         onChange={e => setGiveawayConfig(p => ({ ...p, prizeImage: e.target.value }))}
+                        style={{ marginTop: 10 }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#8B9BBE', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>2nd Prize Image (Optional)</label>
+                      {giveawayConfig.secondPrizeImage && (
+                        <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(56,189,248,0.2)', marginBottom: 12 }}>
+                          <img src={giveawayConfig.secondPrizeImage} alt="Second prize preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <button
+                            onClick={async () => {
+                              setHubImageUploading(true);
+                              try {
+                                if (giveawayConfig.secondPrizeImagePublicId) {
+                                  await deleteCloudinaryAssets([giveawayConfig.secondPrizeImagePublicId]);
+                                }
+                                await setDoc(doc(db, 'giveaway', 'current'), { secondPrizeImage: '', secondPrizeImagePublicId: '' }, { merge: true });
+                                triggerAlert('success', 'Second prize image removed.');
+                              } catch (err) {
+                                console.error(err);
+                                triggerAlert('danger', 'Failed to remove second prize image.');
+                              } finally {
+                                setHubImageUploading(false);
+                              }
+                              setGiveawayConfig(p => ({ ...p, secondPrizeImage: '', secondPrizeImagePublicId: '' }));
+                            }}
+                            title="Remove image"
+                            style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      )}
+                      <div
+                        onClick={() => { if (!hubImageUploading) document.getElementById('second-prize-file-input')?.click(); }}
+                        style={{
+                          background: 'rgba(26, 34, 53, 0.4)',
+                          border: '2px dashed rgba(56,189,248,0.25)',
+                          borderRadius: 16,
+                          padding: '20px 16px',
+                          textAlign: 'center',
+                          cursor: hubImageUploading ? 'wait' : 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={e => {
+                          if (!hubImageUploading) {
+                            e.currentTarget.style.borderColor = '#38BDF8';
+                            e.currentTarget.style.background = 'rgba(56,189,248,0.04)';
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (!hubImageUploading) {
+                            e.currentTarget.style.borderColor = 'rgba(56,189,248,0.25)';
+                            e.currentTarget.style.background = 'rgba(26, 34, 53, 0.4)';
+                          }
+                        }}
+                      >
+                        <ImageIcon size={26} color="#38BDF8" style={{ marginBottom: 6 }} />
+                        <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
+                          {hubImageUploading ? 'Uploading image...' : 'Upload 2nd prize image'}
+                        </div>
+                        <input
+                          id="second-prize-file-input"
+                          type="file"
+                          accept="image/*"
+                          disabled={hubImageUploading}
+                          onChange={handleSecondPrizeImageUpload}
+                          style={{ display: 'none' }}
+                        />
+                      </div>
+                      <input
+                        className="form-input"
+                        placeholder="https://..."
+                        value={giveawayConfig.secondPrizeImage || ''}
+                        onChange={e => setGiveawayConfig(p => ({ ...p, secondPrizeImage: e.target.value }))}
                         style={{ marginTop: 10 }}
                       />
                     </div>
@@ -5353,43 +5507,83 @@ export default function App() {
                   </div>
                 </div>
 
-                {lastWinnerData ? (
-                  <div style={{ background: '#1a2235', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 24, padding: 28, marginTop: 24 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                      <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Award size={18} color="#10B981" /> Currently Announced Winner
-                      </h2>
-                      <button
-                        onClick={handleDeleteWinner}
-                        style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)' }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)' }}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                      {lastWinnerData.photo ? (
-                        <img src={lastWinnerData.photo} alt={lastWinnerData.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #10B981, #34D399)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 800, fontSize: 24 }}>
-                          {lastWinnerData.name?.substring(0, 2).toUpperCase() || "W"}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 24 }}>
+                  {lastWinnerData ? (
+                    <div style={{ background: '#1a2235', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 24, padding: 28 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                        <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Award size={18} color="#F59E0B" /> 1st Prize Winner
+                        </h2>
+                        <button
+                          onClick={() => handleDeleteWinner(1)}
+                          style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)' }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        {lastWinnerData.photo ? (
+                          <img src={lastWinnerData.photo} alt={lastWinnerData.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #F59E0B' }} />
+                        ) : (
+                          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #F59E0B, #D97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 24, border: '2px solid rgba(245,158,11,0.5)' }}>
+                            {lastWinnerData.name?.substring(0, 2).toUpperCase() || "W"}
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{lastWinnerData.name}</div>
+                          <div style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 4 }}>{lastWinnerData.city}</div>
+                          <div style={{ color: '#F59E0B', fontSize: 13, fontWeight: 600 }}>{lastWinnerData.blogTitle}</div>
                         </div>
-                      )}
-                      <div>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{lastWinnerData.name}</div>
-                        <div style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 4 }}>{lastWinnerData.city}</div>
-                        <div style={{ color: '#38BDF8', fontSize: 13, fontWeight: 600 }}>{lastWinnerData.blogTitle}</div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 16, padding: '20px', marginTop: 24, textAlign: 'center' }}>
-                    <Award size={24} color="#8B9BBE" style={{ opacity: 0.5, marginBottom: 8 }} />
-                    <h3 style={{ color: '#8B9BBE', fontSize: 14, fontWeight: 600, margin: 0 }}>No Winner Announced</h3>
-                    <p style={{ color: 'rgba(139, 155, 190, 0.6)', fontSize: 12, margin: '4px 0 0' }}>Select a winner from the leaderboard.</p>
-                  </div>
-                )}
+                  ) : (
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px', textAlign: 'center' }}>
+                      <Award size={24} color="#8B9BBE" style={{ opacity: 0.5, marginBottom: 8 }} />
+                      <h3 style={{ color: '#8B9BBE', fontSize: 14, fontWeight: 600, margin: 0 }}>No 1st Prize Winner</h3>
+                      <p style={{ color: 'rgba(139, 155, 190, 0.6)', fontSize: 12, margin: '4px 0 0' }}>Select from submissions.</p>
+                    </div>
+                  )}
+
+                  {secondWinnerData ? (
+                    <div style={{ background: '#1a2235', border: '1px solid rgba(148,163,184,0.3)', borderRadius: 24, padding: 28 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                        <h2 style={{ fontFamily: 'Sora', fontSize: 18, fontWeight: 800, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Award size={18} color="#94A3B8" /> 2nd Prize Winner
+                        </h2>
+                        <button
+                          onClick={() => handleDeleteWinner(2)}
+                          style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)' }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        {secondWinnerData.photo ? (
+                          <img src={secondWinnerData.photo} alt={secondWinnerData.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #94A3B8' }} />
+                        ) : (
+                          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #94A3B8, #64748B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 24, border: '2px solid rgba(148,163,184,0.5)' }}>
+                            {secondWinnerData.name?.substring(0, 2).toUpperCase() || "W"}
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{secondWinnerData.name}</div>
+                          <div style={{ color: '#8B9BBE', fontSize: 13, marginBottom: 4 }}>{secondWinnerData.city}</div>
+                          <div style={{ color: '#94A3B8', fontSize: 13, fontWeight: 600 }}>{secondWinnerData.blogTitle}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px', textAlign: 'center' }}>
+                      <Award size={24} color="#8B9BBE" style={{ opacity: 0.5, marginBottom: 8 }} />
+                      <h3 style={{ color: '#8B9BBE', fontSize: 14, fontWeight: 600, margin: 0 }}>No 2nd Prize Winner</h3>
+                      <p style={{ color: 'rgba(139, 155, 190, 0.6)', fontSize: 12, margin: '4px 0 0' }}>Select from submissions.</p>
+                    </div>
+                  )}
+                </div>
 
               </div>
 
@@ -5464,6 +5658,8 @@ export default function App() {
 
         {/* ── Tab: USERS ── */}
         {activeTab === 'colleges' && <CollegesTab />}
+        {activeTab === 'clients' && <ClientsTab triggerAlert={triggerAlert} />}
+        {activeTab === 'settings' && <SettingsTab triggerAlert={triggerAlert} />}
         {activeTab === 'users' && (() => {
           if (!usersLoaded) {
             // Load users on first tab open

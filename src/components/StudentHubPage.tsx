@@ -30,6 +30,7 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
   const isMobile = useIsMobile();
   const [giveaway, setGiveaway] = useState<any>({});
   const [lastWinner, setLastWinner] = useState<any>({});
+  const [secondWinner, setSecondWinner] = useState<any>({});
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,6 +69,9 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
 
         const winnerSnap = await getDoc(doc(db, "giveaway", "lastWinner"));
         if (winnerSnap.exists()) setLastWinner(winnerSnap.data());
+
+        const secondWinnerSnap = await getDoc(doc(db, "giveaway", "secondWinner"));
+        if (secondWinnerSnap.exists()) setSecondWinner(secondWinnerSnap.data());
 
         const blogsSnap = await getDocs(collection(db, "blogs"));
         const allBlogs: any[] = [];
@@ -144,6 +148,8 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
 
   const gwTitle = giveaway.prizeTitle || "Next contest will be coming soon.";
   const gwImage = giveaway.prizeImage || "";
+  const gwTitle2 = giveaway.secondPrizeTitle || "";
+  const gwImage2 = giveaway.secondPrizeImage || "";
   const myEmail = user?.email?.toLowerCase() || "";
   const myRank = leaderboard.findIndex((e) => e.email === myEmail);
 
@@ -222,11 +228,18 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
                 <h3 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: isMobile ? 26 : 34, fontWeight: 800, margin: "0 0 10px", lineHeight: 1.15 }}>
                   {gwTitle}
                 </h3>
-                {giveaway.topic && (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', padding: '6px 12px', borderRadius: 20, color: '#38BDF8', fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
-                    Topic: {giveaway.topic}
-                  </div>
-                )}
+                <div>
+                  {giveaway.topic && (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', padding: '6px 12px', borderRadius: 20, color: '#38BDF8', fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
+                      Topic: {giveaway.topic}
+                    </div>
+                  )}
+                  {giveaway.nextWeekTopic && (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.2)', padding: '6px 12px', borderRadius: 20, color: '#8B5CF6', fontSize: 12, fontWeight: 700, marginBottom: 16, marginLeft: giveaway.topic ? 8 : 0 }}>
+                      Next Week: {giveaway.nextWeekTopic}
+                    </div>
+                  )}
+                </div>
                 <p style={{ color: COLORS.muted, fontSize: 14, fontWeight: 500, margin: "0 0 24px" }}>
                   Publish one quality tech article, earn reads, and the top contributor takes it home.
                 </p>
@@ -254,11 +267,20 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
                 SUBMIT YOUR BLOG <ArrowRight size={16} />
               </button>
             </div>
-            <div style={{ position: "relative", background: "radial-gradient(ellipse at center, rgba(0,98,255,0.12) 0%, transparent 70%)", display: "flex", alignItems: "center", justifyContent: "center", minHeight: isMobile ? 200 : 320 }}>
+            <div style={{ position: "relative", background: "radial-gradient(ellipse at center, rgba(0,98,255,0.12) 0%, transparent 70%)", display: "flex", alignItems: "center", justifyContent: "center", minHeight: isMobile ? 200 : 320, gap: isMobile ? 12 : 24 }}>
               {gwImage ? (
-                <img src={gwImage} alt="Prize" style={{ width: "100%", height: "100%", maxHeight: 320, objectFit: "contain", mixBlendMode: "multiply", filter: "drop-shadow(-10px 20px 24px rgba(0,0,0,0.25))" }} />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: gwImage2 ? '45%' : '100%' }}>
+                  <img src={gwImage} alt="Prize" style={{ width: "100%", height: "100%", maxHeight: gwImage2 ? 200 : 320, objectFit: "contain", mixBlendMode: "multiply", filter: "drop-shadow(-10px 20px 24px rgba(0,0,0,0.25))" }} />
+                  {gwImage2 && <span style={{ color: '#8B9BBE', fontSize: 13, fontWeight: 700, marginTop: 12, textAlign: 'center' }}>1st: {gwTitle}</span>}
+                </div>
               ) : (
                 <Gift size={80} color="rgba(56,189,248,0.2)" />
+              )}
+              {gwImage2 && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '45%' }}>
+                  <img src={gwImage2} alt="Second Prize" style={{ width: "100%", height: "100%", maxHeight: 160, objectFit: "contain", mixBlendMode: "multiply", filter: "drop-shadow(-10px 20px 24px rgba(0,0,0,0.25))" }} />
+                  <span style={{ color: '#8B9BBE', fontSize: 13, fontWeight: 700, marginTop: 12, textAlign: 'center' }}>2nd: {gwTitle2}</span>
+                </div>
               )}
               <div style={{ position: "absolute", top: 20, right: 20, background: "rgba(0,98,255,0.12)", borderRadius: "50%", width: 48, height: 48, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Sparkles size={22} color="#38BDF8" />
@@ -356,30 +378,62 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
               <div style={{ position: "absolute", top: -50, right: -50, width: 200, height: 200, background: "rgba(56, 189, 248, 0.1)", filter: "blur(50px)", borderRadius: "50%" }} />
               <div style={{ position: "absolute", bottom: -50, left: -50, width: 200, height: 200, background: "rgba(0, 98, 255, 0.1)", filter: "blur(50px)", borderRadius: "50%" }} />
 
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", position: "relative", zIndex: 1 }}>
-                <div style={{ position: "relative", marginBottom: 20 }}>
-                  <div style={{ width: 130, height: 130, borderRadius: "50%", background: "linear-gradient(135deg, #0062FF, #38BDF8)", padding: 4, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 24px rgba(0,98,255,0.4)" }}>
-                    {lastWinner.photo ? (
-                      <img src={lastWinner.photo} alt="Winner" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", border: "4px solid var(--bg-1)" }} />
-                    ) : (
-                      <div style={{ width: "100%", height: "100%", borderRadius: "50%", border: "4px solid var(--bg-1)", background: "var(--bg-1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ fontSize: 42, fontWeight: 800, color: "#38BDF8" }}>{(lastWinner.name ? lastWinner.name.substring(0, 1).toUpperCase() : "?")}</span>
-                      </div>
-                    )}
+              <div style={{ display: 'flex', gap: isMobile ? 32 : 64, flexWrap: 'wrap', justifyContent: 'center', position: 'relative', zIndex: 1, width: '100%' }}>
+                {/* 1st Prize Winner */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", position: "relative" }}>
+                  <div style={{ position: "relative", marginBottom: 20 }}>
+                    <div style={{ width: 130, height: 130, borderRadius: "50%", background: "linear-gradient(135deg, #0062FF, #38BDF8)", padding: 4, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 24px rgba(0,98,255,0.4)" }}>
+                      {lastWinner.photo ? (
+                        <img src={lastWinner.photo} alt="Winner" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", border: "4px solid var(--bg-1)" }} />
+                      ) : (
+                        <div style={{ width: "100%", height: "100%", borderRadius: "50%", border: "4px solid var(--bg-1)", background: "var(--bg-1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <span style={{ fontSize: 42, fontWeight: 800, color: "#38BDF8" }}>{(lastWinner.name ? lastWinner.name.substring(0, 1).toUpperCase() : "?")}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ position: "absolute", bottom: -8, right: -8, background: "linear-gradient(135deg, #F59E0B, #D97706)", color: "#fff", width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "4px solid var(--bg-1)", boxShadow: "0 4px 12px rgba(245, 158, 11, 0.4)" }}>
+                      <Crown size={22} color="#fff" />
+                    </div>
                   </div>
-                  <div style={{ position: "absolute", bottom: -8, right: -8, background: "linear-gradient(135deg, #F59E0B, #D97706)", color: "#fff", width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "4px solid var(--bg-1)", boxShadow: "0 4px 12px rgba(245, 158, 11, 0.4)" }}>
-                    <Crown size={22} color="#fff" />
-                  </div>
+                  <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#F59E0B", fontSize: 10, fontWeight: 800, padding: "4px 12px", borderRadius: 100, textTransform: "uppercase", marginBottom: 12, letterSpacing: "1px" }}>
+                    1st Prize Winner
+                  </span>
+                  <h4 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 800, color: COLORS.text, margin: "0 0 6px" }}>
+                    {lastWinner.name || "To be announced"}
+                  </h4>
+                  <p style={{ color: COLORS.muted, fontSize: 13, margin: 0, fontWeight: 600 }}>
+                    {lastWinner.city || "Stay tuned"}
+                  </p>
                 </div>
-                <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#F59E0B", fontSize: 10, fontWeight: 800, padding: "4px 12px", borderRadius: 100, textTransform: "uppercase", marginBottom: 12, letterSpacing: "1px" }}>
-                  Latest Winner
-                </span>
-                <h4 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 800, color: COLORS.text, margin: "0 0 6px" }}>
-                  {lastWinner.name || "To be announced"}
-                </h4>
-                <p style={{ color: COLORS.muted, fontSize: 13, margin: 0, fontWeight: 600 }}>
-                  {lastWinner.city || "Stay tuned"}
-                </p>
+
+                {/* 2nd Prize Winner */}
+                {secondWinner && secondWinner.name && (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", position: "relative" }}>
+                    <div style={{ position: "relative", marginBottom: 20 }}>
+                      <div style={{ width: 130, height: 130, borderRadius: "50%", background: "linear-gradient(135deg, #64748B, #94A3B8)", padding: 4, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 24px rgba(100,116,139,0.3)" }}>
+                        {secondWinner.photo ? (
+                          <img src={secondWinner.photo} alt="Winner" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", border: "4px solid var(--bg-1)" }} />
+                        ) : (
+                          <div style={{ width: "100%", height: "100%", borderRadius: "50%", border: "4px solid var(--bg-1)", background: "var(--bg-1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <span style={{ fontSize: 42, fontWeight: 800, color: "#94A3B8" }}>{(secondWinner.name ? secondWinner.name.substring(0, 1).toUpperCase() : "?")}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ position: "absolute", bottom: -8, right: -8, background: "linear-gradient(135deg, #94A3B8, #64748B)", color: "#fff", width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "4px solid var(--bg-1)", boxShadow: "0 4px 12px rgba(148,163,184,0.4)" }}>
+                        <Medal size={22} color="#fff" />
+                      </div>
+                    </div>
+                    <span style={{ background: "rgba(148,163,184, 0.15)", color: "#94A3B8", fontSize: 10, fontWeight: 800, padding: "4px 12px", borderRadius: 100, textTransform: "uppercase", marginBottom: 12, letterSpacing: "1px" }}>
+                      2nd Prize Winner
+                    </span>
+                    <h4 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 800, color: COLORS.text, margin: "0 0 6px" }}>
+                      {secondWinner.name || "To be announced"}
+                    </h4>
+                    <p style={{ color: COLORS.muted, fontSize: 13, margin: 0, fontWeight: 600 }}>
+                      {secondWinner.city || "Stay tuned"}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 24, position: "relative", zIndex: 1 }}>

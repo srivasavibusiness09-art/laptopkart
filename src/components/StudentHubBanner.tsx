@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useIsMobile } from "@/lib/hooks";
-import { GraduationCap, ArrowRight, Gift, Trophy } from "lucide-react";
+import { GraduationCap, ArrowRight, Gift, Trophy, Medal } from "lucide-react";
 import Reveal from "./Reveal";
 
 interface StudentHubBannerProps {
@@ -15,6 +15,7 @@ export default function StudentHubBanner({ setPage }: StudentHubBannerProps) {
   const isMobile = useIsMobile();
   const [giveaway, setGiveaway] = useState<any>({});
   const [lastWinner, setLastWinner] = useState<any>({});
+  const [secondWinner, setSecondWinner] = useState<any>({});
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,6 +54,9 @@ export default function StudentHubBanner({ setPage }: StudentHubBannerProps) {
         const winnerSnap = await getDoc(doc(db, "giveaway", "lastWinner"));
         if (winnerSnap.exists()) setLastWinner(winnerSnap.data());
 
+        const secondWinnerSnap = await getDoc(doc(db, "giveaway", "secondWinner"));
+        if (secondWinnerSnap.exists()) setSecondWinner(secondWinnerSnap.data());
+
         const blogsSnap = await getDocs(collection(db, "blogs"));
         const byEmail: Record<string, { email: string; name: string; articles: number; reads: number; photo: string }> = {};
 
@@ -88,6 +92,8 @@ export default function StudentHubBanner({ setPage }: StudentHubBannerProps) {
   // Fallback defaults if no data
   const gwTitle = giveaway.prizeTitle || "Win a Bluetooth Neckband";
   const gwImage = giveaway.prizeImage || "https://m.media-amazon.com/images/I/51bAHez1bDL._AC_SL1500_.jpg";
+  const gwTitle2 = giveaway.secondPrizeTitle || "";
+  const gwImage2 = giveaway.secondPrizeImage || "";
 
   return (
     <section style={{ padding: isMobile ? "40px 18px" : "60px 24px", background: "var(--bg-2)" }}>
@@ -127,11 +133,18 @@ export default function StudentHubBanner({ setPage }: StudentHubBannerProps) {
                   <h3 style={{ fontFamily: "'Sora', sans-serif", color: "#111827", fontSize: isMobile ? 28 : 34, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.1, textTransform: "uppercase" }}>
                     {gwTitle}
                   </h3>
-                  {giveaway.topic && (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(79, 70, 229, 0.1)', border: '1px solid rgba(79, 70, 229, 0.2)', padding: '6px 12px', borderRadius: 20, color: '#4F46E5', fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
-                      Topic: {giveaway.topic}
-                    </div>
-                  )}
+                  <div>
+                    {giveaway.topic && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(79, 70, 229, 0.1)', border: '1px solid rgba(79, 70, 229, 0.2)', padding: '6px 12px', borderRadius: 20, color: '#4F46E5', fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
+                        Topic: {giveaway.topic}
+                      </div>
+                    )}
+                    {giveaway.nextWeekTopic && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.2)', padding: '6px 12px', borderRadius: 20, color: '#8B5CF6', fontSize: 12, fontWeight: 700, marginBottom: 16, marginLeft: giveaway.topic ? 8 : 0 }}>
+                        Next Week: {giveaway.nextWeekTopic}
+                      </div>
+                    )}
+                  </div>
                   <p style={{ color: "#4B5563", fontSize: 14, fontWeight: 600, margin: "0 0 24px" }}>Write. Submit. Win.</p>
                   
                   {/* Timer */}
@@ -166,8 +179,17 @@ export default function StudentHubBanner({ setPage }: StudentHubBannerProps) {
               </div>
 
               {/* Right content: Image */}
-              <div style={{ flex: isMobile ? "none" : 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1, minHeight: isMobile ? 180 : 0 }}>
-                <img src={gwImage} alt="Prize" style={{ width: "100%", height: "100%", maxHeight: 260, objectFit: "contain", mixBlendMode: "multiply", filter: "drop-shadow(-10px 20px 20px rgba(0,0,0,0.15))" }} />
+              <div style={{ flex: isMobile ? "none" : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, position: "relative", zIndex: 1, minHeight: isMobile ? 180 : 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: gwImage2 ? '45%' : '100%' }}>
+                  <img src={gwImage} alt="Prize" style={{ width: "100%", height: "100%", maxHeight: gwImage2 ? 180 : 260, objectFit: "contain", mixBlendMode: "multiply", filter: "drop-shadow(-10px 20px 20px rgba(0,0,0,0.15))" }} />
+                  {gwImage2 && <span style={{ color: '#4B5563', fontSize: 11, fontWeight: 700, marginTop: 8, textAlign: 'center' }}>1st: {gwTitle}</span>}
+                </div>
+                {gwImage2 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '45%' }}>
+                    <img src={gwImage2} alt="Second Prize" style={{ width: "100%", height: "100%", maxHeight: 140, objectFit: "contain", mixBlendMode: "multiply", filter: "drop-shadow(-10px 20px 20px rgba(0,0,0,0.15))" }} />
+                    <span style={{ color: '#4B5563', fontSize: 11, fontWeight: 700, marginTop: 8, textAlign: 'center' }}>2nd: {gwTitle2}</span>
+                  </div>
+                )}
               </div>
 
               {/* Gift Icon Top Right */}
@@ -178,50 +200,86 @@ export default function StudentHubBanner({ setPage }: StudentHubBannerProps) {
 
             {/* Section 2: Last Week's Winner */}
             <div style={{ background: "#ffffff", borderRadius: 20, padding: isMobile ? 24 : 32, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-              <span style={{ color: "#4F46E5", fontSize: 11, fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 24 }}>Last Week's Winner</span>
+              <span style={{ color: "#4F46E5", fontSize: 11, fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 24 }}>Last Week's Winner{secondWinner?.name ? 's' : ''}</span>
 
               {lastWinner?.name ? (
-                <>
-                  <div style={{ position: "relative", marginBottom: 16 }}>
-                    <div style={{ width: 100, height: 100, borderRadius: "50%", background: "linear-gradient(135deg, #4F46E5, #3B82F6)", padding: 4, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {lastWinner.photo ? (
-                        <img src={lastWinner.photo} alt="Winner" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", border: "4px solid #fff" }} />
-                      ) : (
-                        <div style={{ width: "100%", height: "100%", borderRadius: "50%", border: "4px solid #fff", background: "#E5E7EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: 32, fontWeight: 800, color: "#9CA3AF" }}>{lastWinner.name.substring(0, 1).toUpperCase()}</span>
-                        </div>
-                      )}
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 24, justifyContent: 'center', width: '100%' }}>
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <div style={{ position: "relative", marginBottom: 16 }}>
+                      <div style={{ width: 100, height: 100, borderRadius: "50%", background: "linear-gradient(135deg, #4F46E5, #3B82F6)", padding: 4, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {lastWinner.photo ? (
+                          <img src={lastWinner.photo} alt="Winner" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", border: "4px solid #fff" }} />
+                        ) : (
+                          <div style={{ width: "100%", height: "100%", borderRadius: "50%", border: "4px solid #fff", background: "#E5E7EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <span style={{ fontSize: 32, fontWeight: 800, color: "#9CA3AF" }}>{lastWinner.name.substring(0, 1).toUpperCase()}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ position: "absolute", bottom: -8, right: -8, background: "#F59E0B", color: "#fff", width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid #fff", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
+                        <Trophy size={16} />
+                      </div>
                     </div>
-                    <div style={{ position: "absolute", bottom: -8, right: -8, background: "#F59E0B", color: "#fff", width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid #fff", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
-                      <Trophy size={16} />
-                    </div>
-                  </div>
-
-                  <h4 style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, fontWeight: 800, color: "#111827", margin: "0 0 4px" }}>
-                    {lastWinner.name}
-                  </h4>
-                  <p style={{ color: "#6B7280", fontSize: 12, margin: "0 0 24px", fontWeight: 600 }}>{lastWinner.city}</p>
-
-                  <div style={{ flex: 1 }}>
+                    <span style={{ color: "#F59E0B", fontSize: 10, fontWeight: 800, textTransform: "uppercase", marginBottom: 4 }}>1st Prize</span>
+                    <h4 style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, fontWeight: 800, color: "#111827", margin: "0 0 4px" }}>
+                      {lastWinner.name}
+                    </h4>
+                    <p style={{ color: "#6B7280", fontSize: 12, margin: "0 0 12px", fontWeight: 600 }}>{lastWinner.city}</p>
                     <p 
                       onClick={() => lastWinner.blogId ? setPage(`blog-${lastWinner.blogId}`) : setPage("blog")}
                       title="Read Winning Blog"
-                      style={{ color: "var(--text)", fontSize: 18, fontWeight: 700, margin: 0, fontStyle: "italic", lineHeight: 1.5, cursor: "pointer", transition: "color 0.2s" }}
+                      style={{ color: "var(--text)", fontSize: 14, fontWeight: 700, margin: "0 0 12px 0", fontStyle: "italic", lineHeight: 1.4, cursor: "pointer", transition: "color 0.2s" }}
                       onMouseEnter={(e: any) => e.currentTarget.style.color = "#0062FF"}
                       onMouseLeave={(e: any) => e.currentTarget.style.color = "var(--text)"}
                     >
-                      {lastWinner.blogTitle || "Publish your blog to be featured here!"}
+                      "{lastWinner.blogTitle || "Winning Blog"}"
                     </p>
-                  </div>
-                  <div style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center" }}>
                     <button
                       onClick={() => lastWinner.blogId ? setPage(`blog-${lastWinner.blogId}`) : setPage("blog")}
-                      style={{ background: "transparent", color: "#4F46E5", border: "none", fontSize: 13, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, padding: "10px 0" }}
+                      style={{ background: "transparent", color: "#4F46E5", border: "none", fontSize: 13, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, padding: "4px 0", marginTop: 'auto' }}
                     >
-                      Read winning article <ArrowRight size={14} />
+                      Read <ArrowRight size={14} />
                     </button>
                   </div>
-                </>
+
+                  {secondWinner?.name && (
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <div style={{ position: "relative", marginBottom: 16 }}>
+                        <div style={{ width: 100, height: 100, borderRadius: "50%", background: "linear-gradient(135deg, #64748B, #94A3B8)", padding: 4, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {secondWinner.photo ? (
+                            <img src={secondWinner.photo} alt="Winner" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", border: "4px solid #fff" }} />
+                          ) : (
+                            <div style={{ width: "100%", height: "100%", borderRadius: "50%", border: "4px solid #fff", background: "#E5E7EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <span style={{ fontSize: 32, fontWeight: 800, color: "#9CA3AF" }}>{secondWinner.name.substring(0, 1).toUpperCase()}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ position: "absolute", bottom: -8, right: -8, background: "#94A3B8", color: "#fff", width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid #fff", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
+                          <Medal size={16} />
+                        </div>
+                      </div>
+                      <span style={{ color: "#94A3B8", fontSize: 10, fontWeight: 800, textTransform: "uppercase", marginBottom: 4 }}>2nd Prize</span>
+                      <h4 style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, fontWeight: 800, color: "#111827", margin: "0 0 4px" }}>
+                        {secondWinner.name}
+                      </h4>
+                      <p style={{ color: "#6B7280", fontSize: 12, margin: "0 0 12px", fontWeight: 600 }}>{secondWinner.city}</p>
+                      <p 
+                        onClick={() => secondWinner.blogId ? setPage(`blog-${secondWinner.blogId}`) : setPage("blog")}
+                        title="Read Winning Blog"
+                        style={{ color: "var(--text)", fontSize: 14, fontWeight: 700, margin: "0 0 12px 0", fontStyle: "italic", lineHeight: 1.4, cursor: "pointer", transition: "color 0.2s" }}
+                        onMouseEnter={(e: any) => e.currentTarget.style.color = "#0062FF"}
+                        onMouseLeave={(e: any) => e.currentTarget.style.color = "var(--text)"}
+                      >
+                        "{secondWinner.blogTitle || "Winning Blog"}"
+                      </p>
+                      <button
+                        onClick={() => secondWinner.blogId ? setPage(`blog-${secondWinner.blogId}`) : setPage("blog")}
+                        style={{ background: "transparent", color: "#64748B", border: "none", fontSize: 13, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, padding: "4px 0", marginTop: 'auto' }}
+                      >
+                        Read <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <>
                   <div style={{ position: "relative", marginBottom: 16 }}>

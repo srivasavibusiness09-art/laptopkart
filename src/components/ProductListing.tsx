@@ -67,11 +67,14 @@ export default function ProductListing({
     setFilters((f) => ({ ...f, [k]: f[k] === v ? "" : v }));
 
   const categoryFilteredProducts = products.filter((p) => {
-    const isDesktop = p.deviceType === "Desktop" || p.category.toLowerCase().trim() === "desktops";
+    const isDesktop = p.deviceType === "Desktop" || (p.category || "").toLowerCase().trim() === "desktops";
     if (!initialCategory || initialCategory === "All" || initialCategory === "Offers") return true;
     if (initialCategory === "Laptops") return !isDesktop;
     if (initialCategory === "Desktops") return isDesktop;
-    return p.category.toLowerCase().trim() === initialCategory.toLowerCase().trim();
+    
+    const mappedCat = initialCategory.replace(" Laptops", "").replace(/s$/, "").toLowerCase();
+    const pCat = (p.category || "").toLowerCase();
+    return pCat.includes(mappedCat) || (mappedCat === 'macbook' && (p.brand || "").toLowerCase() === 'apple') || pCat === initialCategory.toLowerCase().trim();
   });
 
   const filtered = categoryFilteredProducts
@@ -84,6 +87,13 @@ export default function ProductListing({
       (!search || p.name.toLowerCase().includes(search.toLowerCase()) || p.specs.toLowerCase().includes(search.toLowerCase()))
     )
     .sort((a, b) => {
+      const aStock = a.stock ?? 5;
+      const bStock = b.stock ?? 5;
+      
+      // Sort out of stock items to bottom
+      if (aStock === 0 && bStock !== 0) return 1;
+      if (bStock === 0 && aStock !== 0) return -1;
+      
       if (sort === "asc")      return a.price - b.price;
       if (sort === "desc")     return b.price - a.price;
       if (sort === "rating")   return b.rating - a.rating;

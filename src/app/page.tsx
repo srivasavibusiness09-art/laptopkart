@@ -20,6 +20,8 @@ import WishlistPage from "@/components/WishlistPage";
 import ProfilePage from "@/components/ProfilePage";
 import SellLaptopPage from "@/components/SellLaptopPage";
 import StudentHubPage from "@/components/StudentHubPage";
+import ClientsPage from "@/components/ClientsPage";
+import ClientProfilePage from "@/components/ClientProfilePage";
 import {
   ComparePage,
   AboutPage,
@@ -353,6 +355,7 @@ export default function App() {
   const [banners, setBanners] = useState<any[]>(initialBanners);
   const [heroPosters, setHeroPosters] = useState<any[]>([]);
   const [customerReviews, setCustomerReviews] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
 
   const [storeAlert, setStoreAlert] = useState<{ type: "success" | "warning" | "error"; message: string } | null>(null);
 
@@ -464,6 +467,23 @@ export default function App() {
       }
     );
 
+
+    // Subscribe to Clients
+    const clientsQuery = query(collection(db, "clients"));
+    const unsubscribeClients = onSnapshot(
+      clientsQuery,
+      (snapshot) => {
+        const list: any[] = [];
+        snapshot.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        setClients(list);
+      },
+      (error) => {
+        console.error("[Firestore] ❌ Clients read failed:", error);
+      }
+    );
+
     // Subscribe to Hero Posters
     const heroPostersQuery = query(collection(db, "heroPosters"));
     const unsubscribeHeroPosters = onSnapshot(
@@ -491,6 +511,7 @@ export default function App() {
       unsubscribeBanners();
       unsubscribeHeroPosters();
       unsubscribeReviews();
+      unsubscribeClients();
     };
   }, []);
 
@@ -822,6 +843,7 @@ export default function App() {
                 wishlist={wishlist}
                 accessories={accessories}
                 customerReviews={customerReviews}
+                clients={clients}
                 user={user}
                 triggerAlert={triggerStoreAlert}
               />
@@ -921,6 +943,12 @@ export default function App() {
                 onWishlist={handleWishlist}
                 wishlist={wishlist}
               />
+            )}
+            {displayPage === "clients" && (
+              <ClientsPage clients={clients} setPage={handleNavigate} />
+            )}
+            {displayPage.startsWith("client:") && (
+              <ClientProfilePage clientId={displayPage.split(":")[1]} setPage={handleNavigate} />
             )}
           </>
         )}

@@ -286,7 +286,12 @@ export default function Navbar({ setPage, currentPage, activeListingCategory = "
                         display: "none", flexDirection: "column", gap: 4
                       }}>
                         {categories.map((c) => (
-                          <div key={c.name} onClick={() => go("listing:Laptops")} style={{
+                          <div key={c.name} onClick={() => {
+                            if (c.name === "Accessories") go("accessories");
+                            else if (c.name === "Business Laptops") go("listing:Business Laptops");
+                            else if (c.name === "Gaming Laptops") go("listing:Gaming");
+                            else go(`listing:${c.name}`);
+                          }} style={{
                             fontSize: 13, fontWeight: 500, color: "var(--text-2)", cursor: "pointer",
                             padding: "10px 16px", borderRadius: 8, transition: "background 0.2s"
                           }} onMouseEnter={(e) => e.currentTarget.style.background = "var(--bg-hover)"}
