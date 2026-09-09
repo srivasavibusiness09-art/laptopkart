@@ -52,7 +52,6 @@ import {
   Calendar,
   Target,
   Settings as SettingsIcon,
-  MessageSquare,
   Briefcase
 } from 'lucide-react';
 
