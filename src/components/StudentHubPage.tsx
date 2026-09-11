@@ -185,7 +185,7 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
             LAPTOPKART <span style={{ color: "#0062FF" }}>STUDENT HUB</span>
           </h1>
           <p style={{ color: COLORS.muted, fontSize: isMobile ? 14 : 16, margin: "0 auto 32px", maxWidth: 560 }}>
-            Learn. Write. Win. Publish a tech blog, grow your reads, and win this week&apos;s giveaway prize.
+            Learn. Write. Win. Publish a tech blog and win this week&apos;s giveaway prize.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <button
@@ -241,7 +241,7 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
                   )}
                 </div>
                 <p style={{ color: COLORS.muted, fontSize: 14, fontWeight: 500, margin: "0 0 24px" }}>
-                  Publish one quality tech article, earn reads, and the top contributor takes it home.
+                  Publish one quality tech article and become this week&apos;s top contributor.
                 </p>
                 <div style={{ display: "flex", gap: isMobile ? 8 : 12 }}>
                   {[
@@ -292,7 +292,7 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
         {/* ── Leaderboard ── */}
         <Reveal delay={0.05}>
           <div style={{ marginTop: isMobile ? 56 : 72 }}>
-            {sectionTitle("leaderboard", <Trophy size={22} color="#0062FF" />, "Leaderboard", "Top contributors this month by total reads")}
+            {sectionTitle("leaderboard", <Trophy size={22} color="#0062FF" />, "Leaderboard", "Top contributors this month")}
             <div style={{
               background: COLORS.cardBg,
               border: "1px solid var(--border)",
@@ -328,11 +328,8 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
                             {isMe && <span style={{ background: "#0062FF", color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 100 }}>YOU</span>}
                           </p>
                           <p style={{ color: COLORS.muted, fontSize: 11, margin: "2px 0 0" }}>
-                            {entry.articles} article{entry.articles !== 1 ? "s" : ""} · {entry.reads.toLocaleString("en-IN")} reads
+                            {entry.articles} article{entry.articles !== 1 ? "s" : ""} published
                           </p>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#38BDF8", fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
-                          <TrendingUp size={14} /> {entry.reads.toLocaleString("en-IN")}
                         </div>
                       </div>
                     );
@@ -488,7 +485,7 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 20 }}>
               {[
                 { icon: <PenLine size={26} color="#0062FF" />, step: "STEP 1", title: "Write a Blog", desc: "Publish a genuinely helpful tech article on laptops, AI, gadgets, or college life." },
-                { icon: <TrendingUp size={26} color="#0062FF" />, step: "STEP 2", title: "Get Reads", desc: "Share your article and grow your reads. Every read counts toward your rank." },
+                { icon: <TrendingUp size={26} color="#0062FF" />, step: "STEP 2", title: "Build Momentum", desc: "Share your article and grow your audience to improve your ranking." },
                 { icon: <Trophy size={26} color="#0062FF" />, step: "STEP 3", title: "Win the Prize", desc: "The top contributor at the deadline wins this week's prize. New contest every week!" },
               ].map((s, i) => (
                 <div key={i} style={{
@@ -515,7 +512,7 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
               <CheckCircle2 size={18} color="#38BDF8" style={{ flexShrink: 0 }} />
               <p style={{ color: COLORS.muted, fontSize: 13, margin: 0 }}>
                 Guidelines: Original content only · Min. 400 words · No AI-generated filler · Keep it helpful & plagiarism-free. <br />
-                <strong>Judging Criteria:</strong> The winner blog is chosen by both read views and an admin review for creativity.
+                <strong>Judging Criteria:</strong> The winner blog is chosen by audience engagement and an admin review for creativity.
               </p>
             </div>
           </div>
@@ -540,7 +537,7 @@ export default function StudentHubPage({ setPage, user, initialSection, autoSele
                         <h3 style={{ color: COLORS.text, fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 15, lineHeight: 1.45, margin: "10px 0 10px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.title || "Untitled"}</h3>
                         <div style={{ color: COLORS.muted, fontSize: 11, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                           <span style={{ display: "flex", alignItems: "center", gap: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            <TrendingUp size={11} /> {(post.reads || 0).toLocaleString("en-IN")} reads
+                            <BookOpen size={11} /> Contest entry
                           </span>
                           <span style={{ color: "#38BDF8", fontWeight: 700 }}>By {post.authorName || post.author || "Student"}</span>
                         </div>

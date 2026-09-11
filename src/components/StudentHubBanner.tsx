@@ -327,7 +327,7 @@ export default function StudentHubBanner({ setPage }: StudentHubBannerProps) {
                       </div>
                       <div style={{ flex: 1 }}>
                         <p style={{ color: "#111827", fontSize: 14, fontWeight: 700, margin: "0 0 2px" }}>{user.name}</p>
-                        <p style={{ color: "#6B7280", fontSize: 11, margin: 0, fontWeight: 600 }}>Articles: {user.articles} | Reads: {user.reads >= 1000 ? (user.reads / 1000).toFixed(1) + 'K' : user.reads}</p>
+                        <p style={{ color: "#6B7280", fontSize: 11, margin: 0, fontWeight: 600 }}>{user.articles} articles published</p>
                       </div>
                     </div>
                   ))

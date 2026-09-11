@@ -340,7 +340,6 @@ export function BlogPage({ user, setPage }: { user: any; setPage: (p: string) =>
                   <span>{post.date || (post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Today')}</span>
                   <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 4 }}><BookOpen size={11} /> {post.readTime || '3 min read'}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Eye size={11} /> {post.reads || 0}</span>
                   </span>
                 </div>
                 <div style={{ color: COLORS.green, fontWeight: 600 }}>By {post.author || "Contest Writer"}</div>
@@ -493,9 +492,6 @@ export function BlogDetail({ postId, setPage }: { postId: string; setPage: (p: s
         </span>
         <span style={{ color: COLORS.green, fontWeight: 700, fontSize: 13 }}>
           By {post.author || "Contest Writer"}
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 6, color: COLORS.muted, fontSize: 13 }}>
-          <Eye size={14} /> {post.reads || 0} views
         </span>
       </div>
         <div style={{ lineHeight: 1.8, color: "var(--text)" }} dangerouslySetInnerHTML={{

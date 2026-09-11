@@ -749,7 +749,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert, init
               </div>
               <div>
                 <h3 style={{ fontFamily: "'Sora', sans-serif", color: COLORS.text, fontSize: 16, fontWeight: 700, margin: 0 }}>Your Leaderboard Rank</h3>
-                <p style={{ color: COLORS.muted, fontSize: 12, margin: 0 }}>Based on articles published & reads earned</p>
+                <p style={{ color: COLORS.muted, fontSize: 12, margin: 0 }}>Based on articles published and contest activity</p>
               </div>
             </div>
 
@@ -768,7 +768,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert, init
                     {myRank === 1 ? "🥇 You're the top contributor!" : myRank === 2 ? "🥈 Amazing work, keep it up!" : myRank === 3 ? "🥉 You're in the top 3!" : `You rank #${myRank} of ${leaderboard.length} contributors`}
                   </p>
                   <p style={{ color: COLORS.muted, fontSize: 12, margin: 0 }}>
-                    {leaderboard.find(e => e.email === user.email?.toLowerCase())?.articles || 0} articles · {(leaderboard.find(e => e.email === user.email?.toLowerCase())?.reads || 0).toLocaleString("en-IN")} total reads
+                    {leaderboard.find(e => e.email === user.email?.toLowerCase())?.articles || 0} articles published
                   </p>
                 </div>
               </div>
@@ -851,9 +851,6 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert, init
                             {new Date(blog.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                           </span>
                         )}
-                        <span style={{ display: "flex", alignItems: "center", gap: 3, color: COLORS.muted, fontSize: 11 }}>
-                          <TrendingUp size={10} /> {(blog.reads || 0).toLocaleString("en-IN")} reads
-                        </span>
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -915,7 +912,7 @@ export default function ProfilePage({ user, setUser, setPage, triggerAlert, init
                         <p style={{ color: COLORS.text, fontSize: 13, fontWeight: isMe ? 800 : 600, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {entry.name} {isMe && <span style={{ color: "var(--accent)", fontSize: 10 }}>• You</span>}
                         </p>
-                        <p style={{ color: COLORS.muted, fontSize: 11, margin: 0 }}>{entry.articles} articles · {entry.reads.toLocaleString("en-IN")} reads</p>
+                        <p style={{ color: COLORS.muted, fontSize: 11, margin: 0 }}>{entry.articles} articles published</p>
                       </div>
                     </div>
                   );
